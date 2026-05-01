@@ -212,4 +212,12 @@ def main():
         print(f"\n❌ No se pudo convertir ninguna skill. Ejecuta con --debug para diagnosticar.")
 
 if __name__ == '__main__':
+    # Requerimiento: PyYAML
+    try:
+        import yaml
+    except ImportError:
+        print("⚠️  Instalando dependencia PyYAML...")
+        import subprocess
+        subprocess.check_call(['pip', 'install', 'pyyaml'])
+    
     main()
