@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-66-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-76-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-13-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -103,7 +103,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to 
 | [Wireless](#wireless) | 13 | 802.11, WPA2/3, EAP, WPS, evil-twin, BLE, Zigbee, Z-Wave, LoRa, sub-GHz |
 | [Cloud](#cloud) | 1 | AWS / Azure / GCP attack paths *(expanding)* |
 | [Mobile](#mobile) | 1 | Android + iOS pentest *(expanding)* |
-| [IoT & Embedded](#iot--embedded) | 1 | Hardware, firmware, RTOS, ICS *(expanding)* |
+| [IoT & Embedded](#iot--embedded) | 11 | Hardware, firmware, RTOS, ICS, MQTT/CoAP, fault injection |
 | [Infrastructure & Red Team](#infrastructure--red-team) | 7 | Initial access, EDR evasion, Windows ops |
 | [Exploit Development](#exploit-development) | 6 | Stack/heap, mitigations, crash analysis, TOCTOU |
 | [Fuzzing & VR](#fuzzing--vulnerability-research) | 4 | libFuzzer, AFL++, bug ID, vuln classes |
@@ -210,9 +210,17 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to 
 
 | Skill | Description |
 |---|---|
-| [`offensive-iot`](Skills/iot/offensive-iot/SKILL.md) | Hardware recon, firmware, RTOS, ICS/OT, MQTT/CoAP |
-
-> **Note:** Being split into 10 focused skills (UART/JTAG, flash dump, fault injection, U-Boot, secure boot, RTOS, ICS protocols). See [Roadmap](#roadmap).
+| [`offensive-iot`](Skills/iot/offensive-iot/SKILL.md) | IoT/embedded overview — entrypoint into the category |
+| [`offensive-iot-hardware-recon`](Skills/iot/offensive-iot-hardware-recon/SKILL.md) | PCB inspection, SoC ID, debug-pad discovery |
+| [`offensive-uart-jtag-swd`](Skills/iot/offensive-uart-jtag-swd/SKILL.md) | UART console, JTAG/SWD debug, RDP bypass |
+| [`offensive-flash-dumping`](Skills/iot/offensive-flash-dumping/SKILL.md) | SPI NOR / eMMC / NAND extraction |
+| [`offensive-fault-injection`](Skills/iot/offensive-fault-injection/SKILL.md) | Voltage/clock/EM glitching, ChipWhisperer |
+| [`offensive-firmware-analysis`](Skills/iot/offensive-firmware-analysis/SKILL.md) | binwalk, filesystem extraction, CGI auditing |
+| [`offensive-uboot-bypass`](Skills/iot/offensive-uboot-bypass/SKILL.md) | U-Boot console drop, env injection, persistence |
+| [`offensive-secure-boot-bypass`](Skills/iot/offensive-secure-boot-bypass/SKILL.md) | Anti-rollback, downgrade, signature glitch, key extraction |
+| [`offensive-rtos-pwn`](Skills/iot/offensive-rtos-pwn/SKILL.md) | FreeRTOS / Zephyr / ThreadX exploitation |
+| [`offensive-ics-ot-protocols`](Skills/iot/offensive-ics-ot-protocols/SKILL.md) | Modbus, BACnet, OPC-UA, S7, DNP3, IEC 60870-5-104 |
+| [`offensive-mqtt-coap`](Skills/iot/offensive-mqtt-coap/SKILL.md) | MQTT broker abuse, retained messages, CoAP/DTLS |
 
 ### Infrastructure & Red Team
 

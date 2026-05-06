@@ -62,6 +62,16 @@ mindmap
       mobile
     IoT
       iot
+      iot-hardware-recon
+      uart-jtag-swd
+      flash-dumping
+      fault-injection
+      firmware-analysis
+      uboot-bypass
+      secure-boot-bypass
+      rtos-pwn
+      ics-ot-protocols
+      mqtt-coap
     Infrastructure
       initial-access
       advanced-redteam

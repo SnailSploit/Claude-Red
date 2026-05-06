@@ -41,7 +41,17 @@
       "offensive-windows-mitigations"
     ],
     "iot": [
-      "offensive-iot"
+      "offensive-fault-injection",
+      "offensive-firmware-analysis",
+      "offensive-flash-dumping",
+      "offensive-ics-ot-protocols",
+      "offensive-iot",
+      "offensive-iot-hardware-recon",
+      "offensive-mqtt-coap",
+      "offensive-rtos-pwn",
+      "offensive-secure-boot-bypass",
+      "offensive-uart-jtag-swd",
+      "offensive-uboot-bypass"
     ],
     "mobile": [
       "offensive-mobile"
@@ -231,10 +241,70 @@
       "description": ""
     },
     {
+      "name": "offensive-fault-injection",
+      "category": "iot",
+      "path": "Skills/iot/offensive-fault-injection/SKILL.md",
+      "description": "Fault injection (glitching) attack methodology for embedded systems — voltage glitching, clock glitching, electromagnetic fault injection (EMFI), laser fault injection (LFI), tooling with ChipWhisperer-Lite/Husky / PicoEMP / custom MOSFET crowbar, target identification (signature checks, RDP read, fuse reads), glitch parameter sweeping (delay, width, voltage), success-rate quantification, and when to apply (RDP bypass, secure-boot signature corruption, JTAG re-enable, OTP read). Use against secure boot, RDP-locked microcontrollers, anti-rollback fuses, and any target where a signature/CRC check stands between you and the firmware."
+    },
+    {
+      "name": "offensive-firmware-analysis",
+      "category": "iot",
+      "path": "Skills/iot/offensive-firmware-analysis/SKILL.md",
+      "description": "Firmware analysis methodology — initial triage with binwalk and entropy plots, filesystem extraction (SquashFS, JFFS2, UBIFS, CPIO, ROMFS), credential and key hunting (etc/passwd, etc/shadow, hardcoded secrets in binaries), CGI / web admin auditing, vulnerable component identification (BusyBox, Dropbear, OpenSSL, lighttpd versions), reverse engineering ELF binaries with Ghidra / Binary Ninja, and structured walkthrough for finding RCE bugs in CGI / API handlers. Use after firmware extraction to map the device's attack surface and find vulnerabilities offline before runtime testing."
+    },
+    {
+      "name": "offensive-flash-dumping",
+      "category": "iot",
+      "path": "Skills/iot/offensive-flash-dumping/SKILL.md",
+      "description": "Flash memory extraction methodology for embedded devices — SPI NOR in-circuit dumping with CH341A / Bus Pirate / flashrom, eMMC chip-off and BGA-to-SD adapter reading, NAND extraction with bit-flip and ECC handling, NOR EPROM reading, in-circuit vs desolder decision tree, post-extraction integrity verification, and conversion to mountable filesystems with binwalk. Use when device has no usable debug interface or when complete firmware extraction is required (versus runtime memory dump)."
+    },
+    {
+      "name": "offensive-ics-ot-protocols",
+      "category": "iot",
+      "path": "Skills/iot/offensive-ics-ot-protocols/SKILL.md",
+      "description": "Industrial Control Systems (ICS) and Operational Technology (OT) protocol attack methodology — Modbus TCP/RTU read/write without authentication, BACnet building automation enumeration and write attacks, OPC-UA security profile downgrade and anonymous browse, S7 (Siemens PLC) commands via Snap7, DNP3 (electric utility) parsing flaws, EtherNet/IP, IEC 60870-5-104 (electric grid), and the operational/safety implications of OT engagement (do not just send packets without understanding the physical process). Use when the engagement scope includes industrial PLCs, building management, electric grid SCADA, water/wastewater, or manufacturing systems."
+    },
+    {
       "name": "offensive-iot",
       "category": "iot",
       "path": "Skills/iot/offensive-iot/SKILL.md",
       "description": "IoT and embedded device security testing methodology. Covers hardware reconnaissance (UART, JTAG, SWD, SPI flash, I2C EEPROM, eMMC chip-off), firmware acquisition (vendor portals, OTA capture, flash dump, binwalk extraction), firmware analysis (filesystem mounting, binary triage, hardcoded secrets, default credential discovery), bootloader attacks (U-Boot console, secure-boot bypass, fault injection), runtime attacks on embedded Linux/RTOS (busybox CVEs, MTD writes, /dev/mem), wireless protocol attacks (Zigbee, BLE, Z-Wave, LoRaWAN, Thread/Matter, sub-GHz), MQTT/CoAP/Modbus/BACnet/OPC-UA exploitation, mobile companion app analysis, cloud-IoT API abuse, and side-channel/glitching basics. Use for IoT pentest, smart-home assessment, ICS/OT testing, or embedded vulnerability research."
+    },
+    {
+      "name": "offensive-iot-hardware-recon",
+      "category": "iot",
+      "path": "Skills/iot/offensive-iot-hardware-recon/SKILL.md",
+      "description": "IoT hardware reconnaissance methodology — PCB visual inspection, SoC and chipset identification by markings, flash chip identification (SPI NOR, eMMC, NAND, NOR by package), debug header discovery (UART, JTAG, SWD test points and pads), boundary-scan via JTAG ID code, voltage rail identification with multimeter, and pre-attack power/RF profiling with logic analyzer. Use as the first step in any embedded device assessment before any firmware extraction or runtime attack."
+    },
+    {
+      "name": "offensive-mqtt-coap",
+      "category": "iot",
+      "path": "Skills/iot/offensive-mqtt-coap/SKILL.md",
+      "description": "MQTT and CoAP IoT messaging protocol attack methodology — MQTT anonymous broker subscription with wildcard topics for credential / sensor / command interception, MQTT topic ACL bypass, retained-message poisoning, will-message abuse, MQTT 5 reason-code analysis, CoAP discovery via .well-known/core, CoAP DTLS PSK extraction from firmware, CoAP block-wise transfer attacks, and pivots from broker access to device control. Use when in-scope IoT devices use cloud or local MQTT/CoAP brokers — common in smart home, industrial telemetry, and automotive telematics."
+    },
+    {
+      "name": "offensive-rtos-pwn",
+      "category": "iot",
+      "path": "Skills/iot/offensive-rtos-pwn/SKILL.md",
+      "description": "Real-Time Operating System exploitation methodology — FreeRTOS, Zephyr, ThreadX, Mbed OS, ESP-IDF, QNX. Covers single-binary ELF analysis, MMU/MPU bypass when memory protection is misconfigured, stack overflow exploitation in tasks, FreeRTOS task and queue corruption, Zephyr usermode boundaries, MCU peripheral abuse via DMA, supply-chain risks in third-party RTOS components (Amnesia:33 / Ripple20 / Forescout-disclosed bug families), and exploitation differences from full-OS Linux pwn. Use when the target firmware runs on a microcontroller-class device with an embedded RTOS rather than a Linux-class SoC."
+    },
+    {
+      "name": "offensive-secure-boot-bypass",
+      "category": "iot",
+      "path": "Skills/iot/offensive-secure-boot-bypass/SKILL.md",
+      "description": "Secure boot and chain-of-trust bypass methodology — anti-rollback fuse analysis, downgrade attacks to older signed images with known kernel CVEs, signature-check fault injection, key-extraction from boot ROM via bus snooping or invasive analysis, vendor-key compromise paths (PKI failures, SoC family-wide keys), and practical secure-boot weaknesses in major SoC families (ESP32 v1, NXP, TI, Allwinner). Use when the device enforces signed firmware and you need to load attacker-controlled kernel/userspace."
+    },
+    {
+      "name": "offensive-uart-jtag-swd",
+      "category": "iot",
+      "path": "Skills/iot/offensive-uart-jtag-swd/SKILL.md",
+      "description": "UART, JTAG, and SWD debug interface attack methodology — UART baud-rate discovery, console drop with U-Boot/Linux init shells, USB-UART adapter selection (FT232, CP2102, CH340), JTAG enumeration with OpenOCD/UrJTAG, JTAG-based memory dump, ARM SWD with J-Link / Black Magic Probe, RDP (read-out protection) bypass, and debug-port-based runtime instrumentation. Use after hardware recon to gain low-level access to firmware, memory, and the running kernel."
+    },
+    {
+      "name": "offensive-uboot-bypass",
+      "category": "iot",
+      "path": "Skills/iot/offensive-uboot-bypass/SKILL.md",
+      "description": "U-Boot bootloader attack methodology — autoboot countdown bypass, env-variable injection, custom bootargs for init=/bin/sh, U-Boot console commands for memory dump and TFTP boot, locked U-Boot bypass via env-variable corruption / fault injection, U-Boot CVE exploitation, and modifying U-Boot env on flash to gain persistent boot-time access. Use to bypass authentication and acquire root shells on devices that present a U-Boot console on UART."
     },
     {
       "name": "offensive-mobile",
@@ -495,6 +565,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 66,
+  "skill_count": 76,
   "category_count": 13
 }
