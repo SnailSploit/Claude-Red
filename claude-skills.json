@@ -14,6 +14,18 @@
     "cloud": [
       "offensive-cloud"
     ],
+    "cloud-identity": [
+      "offensive-aadconnect-attacks",
+      "offensive-conditional-access-bypass",
+      "offensive-device-code-phish",
+      "offensive-entra-privesc",
+      "offensive-entra-recon",
+      "offensive-golden-saml",
+      "offensive-illicit-consent",
+      "offensive-m365-recon",
+      "offensive-okta-attacks",
+      "offensive-pass-the-prt"
+    ],
     "exploit-dev": [
       "offensive-basic-exploitation",
       "offensive-crash-analysis",
@@ -157,6 +169,66 @@
       "category": "cloud",
       "path": "Skills/cloud/offensive-cloud/SKILL.md",
       "description": "Cloud security attack methodology covering AWS, Azure, and GCP. Includes credential harvesting (IMDS, ~/.aws, env vars, leaked CI secrets, instance roles), enumeration with cloud-specific tools (pacu, ScoutSuite, Prowler, ROADtools, gcp_enum), privilege escalation paths (IAM PassRole, AssumeRole chains, Lambda/Functions privilege flips, Azure Owner-on-self, GCP serviceAccountTokenCreator), persistence techniques (IAM user/key creation, AAD app registration, GCP svc account key creation, EventBridge/Logic Apps backdoors), data exfiltration (S3/Blob/GCS, snapshot share, RDS/CosmosDB/Cloud SQL exfil), cloud-native lateral movement (cross-account assume, Azure AD multi-tenant, GCP project hierarchy), serverless attacks (Lambda env vars, layer hijack, Step Functions), Kubernetes-on-cloud (EKS/AKS/GKE-specific paths to node and AWS metadata), and CSPM evasion (CloudTrail blind spots, GuardDuty mute, Sentinel rule shaping). Use when the engagement scope is cloud accounts, when you've stolen cloud credentials, or when assessing cloud posture."
+    },
+    {
+      "name": "offensive-aadconnect-attacks",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-aadconnect-attacks/SKILL.md",
+      "description": "Hybrid identity attacks via Azure AD Connect — Password Hash Sync (PHS) extraction, Pass-Through Authentication (PTA) agent hijack, Seamless SSO (forge AZUREADSSOACC$ Kerberos ticket), MSOL_ account abuse for DCSync on-prem, and ADSync database secret extraction. Use when AAD Connect is in scope or compromised — provides the bridge between on-prem AD and Entra ID."
+    },
+    {
+      "name": "offensive-conditional-access-bypass",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-conditional-access-bypass/SKILL.md",
+      "description": "Conditional Access bypass methodology — legacy authentication paths exempt from MFA, trusted location IP spoofing, named locations gap analysis, app-specific policy gaps, device compliance via fake compliant device, MFA exclusion lists, break-glass account enumeration, and CA misconfiguration patterns. Use to bypass MFA / location / device-state requirements when targeting an Entra ID tenant."
+    },
+    {
+      "name": "offensive-device-code-phish",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-device-code-phish/SKILL.md",
+      "description": "OAuth Device Code phishing — abuse the legitimate device-code flow (RFC 8628) to capture access + refresh tokens without traditional credential handoff. The user enters a code at microsoft.com/devicelogin which links the attacker's pending auth request to the user's session — yields long-lived tokens with no MFA prompt for many configs. Use as a high-success phishing primitive against Entra ID tenants."
+    },
+    {
+      "name": "offensive-entra-privesc",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-entra-privesc/SKILL.md",
+      "description": "Microsoft Entra ID privilege escalation paths — Application Administrator / Cloud Application Administrator role abuse, Privileged Authentication Administrator MFA reset, custom role with */write on RBAC, App Registration owner adding credentials, group-based role assignment, and PIM activation patterns. Use when you have a non-admin Entra foothold and need to reach Global Admin or comparable."
+    },
+    {
+      "name": "offensive-entra-recon",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-entra-recon/SKILL.md",
+      "description": "Microsoft Entra ID (formerly Azure AD) reconnaissance — ROADtools authentication and offline analysis, AzureHound for BloodHound integration, Microsoft Graph API enumeration, tenant fingerprinting (federation provider, sign-in name format), user / group / app registration enumeration, Conditional Access policy discovery, and identifying high-value targets (Global Admins, Privileged Identity Management roles). Use as the first step in any cloud-identity engagement to map the tenant before active credential attacks."
+    },
+    {
+      "name": "offensive-golden-saml",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-golden-saml/SKILL.md",
+      "description": "Golden SAML attack methodology — token-signing certificate theft from ADFS / federation servers, forging SAML assertions for any user against any SP that trusts the IdP. Use when ADFS or comparable federation server is compromised or the token-signing cert is otherwise obtained — provides persistent post-rotation access to cloud services."
+    },
+    {
+      "name": "offensive-illicit-consent",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-illicit-consent/SKILL.md",
+      "description": "OAuth illicit consent grant attack — register an attacker-controlled app in your own tenant, request high-privilege scopes, phish the target user (or admin) to grant consent, then use the granted permissions to access mailbox / OneDrive / Teams / Graph. Use as an alternative to credential phishing — relies on user clicking 'Accept' on an OAuth consent screen, which feels safer to many users than entering passwords."
+    },
+    {
+      "name": "offensive-m365-recon",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-m365-recon/SKILL.md",
+      "description": "Microsoft 365 reconnaissance — Outlook / Exchange Online enumeration, mailbox content access, SharePoint Online site enumeration, OneDrive search, Teams chat history extraction, Power Platform discovery, M365 user existence enumeration, and discovering shared resources / external sharing settings. Use after gaining a foothold in a tenant to identify high-value data and pivot opportunities."
+    },
+    {
+      "name": "offensive-okta-attacks",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-okta-attacks/SKILL.md",
+      "description": "Okta-specific attack methodology — Okta tenant fingerprinting, push fatigue / MFA bombing, password spraying with rate-limit awareness, session token theft, OAuth integration abuse, Okta Verify push-based phishing, post-authentication SSO chain abuse, and lateral pivots from Okta to downstream SaaS. Use when target uses Okta as primary IdP — common in mid-large enterprises and SaaS-heavy organizations."
+    },
+    {
+      "name": "offensive-pass-the-prt",
+      "category": "cloud-identity",
+      "path": "Skills/cloud-identity/offensive-pass-the-prt/SKILL.md",
+      "description": "Pass-the-PRT attack methodology — Primary Refresh Token theft from a logged-on Windows device, replaying it for cloud session as that user, mimikatz / ROADtoken extraction, and persistence via long-lived PRT use. Use when you have local admin / SYSTEM on a Windows device joined to Entra ID — the PRT yields the user's full cloud session."
     },
     {
       "name": "offensive-basic-exploitation",
@@ -747,6 +819,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 102,
-  "category_count": 13
+  "skill_count": 112,
+  "category_count": 14
 }

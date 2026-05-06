@@ -36,11 +36,52 @@ mindmap
       cors-misconfig
       cache-poisoning-deception
       clickjacking
+      prototype-pollution
+      mass-assignment
+      saml-attacks
+      oidc-attacks
+      websocket
+      grpc
+      postmessage
+      ssi-esi
+      csti
+      dom-clobbering
     Auth
       jwt
       oauth
-    Active-Directory
+    Internal
       active-directory
+      internal-recon
+      network-poisoning
+      ntlm-relay
+      coercion
+      kerberoasting
+      asreproasting
+      acl-abuse
+      adcs
+      kerberos-delegation
+      pass-the-x
+      lsass-dumping
+      ticket-forgery
+      dcsync-dcshadow
+      gpo-abuse
+      trust-attacks
+      network-pivoting
+      edr-evasion
+      windows-mitigations
+      windows-boundaries
+      keylogger-arch
+    Cloud-Identity
+      entra-recon
+      entra-privesc
+      aadconnect-attacks
+      golden-saml
+      pass-the-prt
+      conditional-access-bypass
+      device-code-phish
+      illicit-consent
+      m365-recon
+      okta-attacks
     Wireless
       wifi
       wifi-recon
@@ -75,11 +116,7 @@ mindmap
     Infrastructure
       initial-access
       advanced-redteam
-      edr-evasion
       shellcode
-      keylogger-arch
-      windows-mitigations
-      windows-boundaries
     Exploit-Dev
       exploit-development
       exploit-dev-course
@@ -106,91 +143,103 @@ mindmap
 
 ## Coverage Cross-Reference
 
-Use this table to confirm coverage of common offensive surfaces. If a row has no skill, it's a gap.
+Use this table to confirm coverage of common offensive surfaces. Every row maps to one or more skills.
 
 ### Web Application (OWASP WSTG)
 
 | Surface | Skill |
 |---|---|
-| Information gathering | `recon/offensive-osint`, `recon/offensive-osint-methodology` |
-| Configuration / deployment | `web/offensive-waf-bypass` |
-| Identity management | `auth/offensive-jwt`, `auth/offensive-oauth` |
-| Authentication | _(planned: `web/auth-bypass`)_ |
-| Authorization | `web/offensive-idor` |
-| Session management | `auth/offensive-jwt`, `auth/offensive-oauth` |
-| Input validation | `web/offensive-sqli`, `web/offensive-xss`, `web/offensive-xxe`, `web/offensive-ssti`, `web/offensive-ssrf` |
-| Error handling | _(implicit across web skills)_ |
-| Cryptography | _(planned)_ |
+| Information gathering | `web/offensive-web-recon`, `recon/*` |
+| Configuration / deployment | `web/offensive-waf-bypass`, `web/offensive-header-attacks` |
+| Identity management | `auth/offensive-jwt`, `auth/offensive-oauth`, `web/offensive-saml-attacks`, `web/offensive-oidc-attacks` |
+| Authentication | `web/offensive-auth-bypass` |
+| Authorization | `web/offensive-idor`, `web/offensive-access-control`, `web/offensive-mass-assignment` |
+| Session management | `web/offensive-csrf-samesite`, `auth/*` |
+| Input validation | `web/offensive-sqli`, `web/offensive-xss`, `web/offensive-xxe`, `web/offensive-ssti`, `web/offensive-ssrf`, `web/offensive-deserialization`, `web/offensive-file-upload`, `web/offensive-rce` |
+| Cryptography | _(handled implicitly across skills)_ |
 | Business logic | `web/offensive-business-logic` |
-| Client-side | `web/offensive-xss`, `web/offensive-open-redirect` |
-| API testing | `web/offensive-graphql` |
+| Client-side | `web/offensive-xss`, `web/offensive-csti`, `web/offensive-dom-clobbering`, `web/offensive-postmessage`, `web/offensive-clickjacking` |
+| API testing | `web/offensive-graphql`, `web/offensive-grpc`, `web/offensive-websocket` |
+| Cache / CDN | `web/offensive-cache-poisoning-deception`, `web/offensive-ssi-esi` |
+| Server-side prototype | `web/offensive-prototype-pollution` |
+| CORS / cross-origin | `web/offensive-cors-misconfig` |
 
-### Internal Network / Active Directory (MITRE ATT&CK Enterprise)
+### Internal / Active Directory (MITRE ATT&CK Enterprise)
 
 | Tactic | Skill |
 |---|---|
-| Reconnaissance | `recon/offensive-osint`, `active-directory/offensive-active-directory` |
+| Reconnaissance | `internal/offensive-internal-recon`, `recon/*` |
 | Initial Access | `infrastructure/offensive-initial-access` |
 | Execution | `infrastructure/offensive-advanced-redteam` |
-| Persistence | `active-directory/offensive-active-directory` |
-| Privilege Escalation | `active-directory/offensive-active-directory` |
-| Defense Evasion | `infrastructure/offensive-edr-evasion`, `infrastructure/offensive-windows-mitigations`, `infrastructure/offensive-windows-boundaries` |
-| Credential Access | `active-directory/offensive-active-directory` |
-| Discovery | `recon/offensive-osint`, `active-directory/offensive-active-directory` |
-| Lateral Movement | `active-directory/offensive-active-directory`, `infrastructure/offensive-advanced-redteam` |
+| Persistence | `internal/offensive-ticket-forgery`, `internal/offensive-dcsync-dcshadow`, `internal/offensive-gpo-abuse` |
+| Privilege Escalation | `internal/offensive-acl-abuse`, `internal/offensive-adcs`, `internal/offensive-kerberos-delegation`, `internal/offensive-kerberoasting`, `internal/offensive-asreproasting` |
+| Defense Evasion | `internal/offensive-edr-evasion`, `internal/offensive-windows-mitigations`, `internal/offensive-windows-boundaries` |
+| Credential Access | `internal/offensive-network-poisoning`, `internal/offensive-ntlm-relay`, `internal/offensive-coercion`, `internal/offensive-lsass-dumping`, `internal/offensive-pass-the-x` |
+| Discovery | `internal/offensive-internal-recon` |
+| Lateral Movement | `internal/offensive-pass-the-x`, `internal/offensive-network-pivoting`, `internal/offensive-kerberos-delegation` |
 | Collection | `infrastructure/offensive-advanced-redteam` |
 | Command and Control | `infrastructure/offensive-advanced-redteam` |
 | Exfiltration | `infrastructure/offensive-advanced-redteam` |
-| Impact | `infrastructure/offensive-advanced-redteam` |
+| Trust Attacks | `internal/offensive-trust-attacks` |
+
+### Cloud Identity (Hybrid)
+
+| Surface | Skill |
+|---|---|
+| Entra ID recon | `cloud-identity/offensive-entra-recon` |
+| Entra ID privesc | `cloud-identity/offensive-entra-privesc` |
+| AAD Connect / hybrid | `cloud-identity/offensive-aadconnect-attacks` |
+| ADFS / federation | `cloud-identity/offensive-golden-saml` |
+| Device PRT theft | `cloud-identity/offensive-pass-the-prt` |
+| Conditional Access | `cloud-identity/offensive-conditional-access-bypass` |
+| OAuth flow phishing | `cloud-identity/offensive-device-code-phish`, `cloud-identity/offensive-illicit-consent` |
+| Microsoft 365 surface | `cloud-identity/offensive-m365-recon` |
+| Okta IdP | `cloud-identity/offensive-okta-attacks` |
 
 ### Wireless
 
 | Surface | Skill |
 |---|---|
 | Recon / war-driving | `wireless/offensive-wifi-recon` |
-| WPA2-PSK | `wireless/offensive-wifi` |
-| WPA3-SAE | `wireless/offensive-wifi` |
-| WPA-Enterprise | `wireless/offensive-wifi` |
-| WPS | `wireless/offensive-wifi` |
-| Evil twin / KARMA / Mana | `wireless/offensive-wifi` |
-| KRACK / FragAttacks | `wireless/offensive-wifi` |
-| Bluetooth (BLE + Classic) | `wireless/offensive-wifi` |
-| Zigbee / Thread / Matter | `wireless/offensive-wifi` |
-| Z-Wave | `wireless/offensive-wifi` |
-| LoRa / sub-GHz | `wireless/offensive-wifi` |
+| WPA2-PSK | `wireless/offensive-wpa2-psk` |
+| WPA3-SAE | `wireless/offensive-wpa3-sae` |
+| WPA-Enterprise | `wireless/offensive-wpa-enterprise` |
+| WPS | `wireless/offensive-wps` |
+| Evil twin / KARMA / Mana | `wireless/offensive-evil-twin` |
+| KRACK / FragAttacks | `wireless/offensive-krack-fragattacks` |
+| Deauth / disassoc | `wireless/offensive-deauth-disassoc` |
+| BLE | `wireless/offensive-bluetooth-ble` |
+| Bluetooth Classic | `wireless/offensive-bluetooth-classic` |
+| Zigbee / Thread / Matter | `wireless/offensive-zigbee-thread-matter` |
+| Z-Wave | `wireless/offensive-z-wave` |
+| LoRa / sub-GHz | `wireless/offensive-lorawan-sub-ghz` |
 
-### Cloud
+### Cloud (Infrastructure)
 
 | Provider / Surface | Skill |
 |---|---|
-| AWS — privesc, IMDS, persistence | `cloud/offensive-cloud` |
-| Azure — privesc, IMDS, persistence | `cloud/offensive-cloud` |
-| GCP — privesc, IMDS, persistence | `cloud/offensive-cloud` |
-| Cross-cloud / OIDC trust | `cloud/offensive-cloud` |
-| Hybrid identity (AAD Connect, ADFS) | _(planned: `cloud-identity/`)_ |
+| AWS / Azure / GCP — IAM, IMDS, persistence | `cloud/offensive-cloud` |
 
 ### Mobile
 
-| Platform / Surface | Skill |
+| Platform | Skill |
 |---|---|
-| Android static + dynamic | `mobile/offensive-mobile` |
-| iOS static + dynamic | `mobile/offensive-mobile` |
-| Firebase / cloud misconfig | `mobile/offensive-mobile` |
-| Mobile API testing | `mobile/offensive-mobile` |
-| Biometric / pinning bypass | `mobile/offensive-mobile` |
+| Android + iOS | `mobile/offensive-mobile` |
 
 ### IoT / Embedded
 
 | Layer | Skill |
 |---|---|
-| Hardware recon | `iot/offensive-iot` |
-| UART / JTAG / SWD | `iot/offensive-iot` |
-| Flash extraction | `iot/offensive-iot` |
-| Firmware analysis | `iot/offensive-iot` |
-| Bootloader / secure boot | `iot/offensive-iot` |
-| RTOS exploitation | `iot/offensive-iot` |
-| ICS / OT protocols | `iot/offensive-iot` |
-| MQTT / CoAP | `iot/offensive-iot` |
+| Hardware recon | `iot/offensive-iot-hardware-recon` |
+| UART / JTAG / SWD | `iot/offensive-uart-jtag-swd` |
+| Flash extraction | `iot/offensive-flash-dumping` |
+| Fault injection | `iot/offensive-fault-injection` |
+| Firmware analysis | `iot/offensive-firmware-analysis` |
+| Bootloader | `iot/offensive-uboot-bypass` |
+| Secure boot bypass | `iot/offensive-secure-boot-bypass` |
+| RTOS exploitation | `iot/offensive-rtos-pwn` |
+| ICS / OT protocols | `iot/offensive-ics-ot-protocols` |
+| MQTT / CoAP | `iot/offensive-mqtt-coap` |
 
 ### Exploit Development
 

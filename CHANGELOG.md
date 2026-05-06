@@ -1,17 +1,46 @@
 # Changelog
 
-All notable changes to `claude-red` are documented here. The library follows a phased roadmap (see [README.md](README.md#roadmap)). Versions follow [Semantic Versioning](https://semver.org/) where breaking changes mean skill renames, removals, or category restructures.
+All notable changes to `claude-red` are documented here. Versions follow [Semantic Versioning](https://semver.org/) where breaking changes mean skill renames, removals, or category restructures.
 
-## [Unreleased]
+## [0.3.0] — 2025-05
 
-### Planned
+### Added — 67 new focused skills (45 → 112)
 
-- Phase 1 — Internal AD/Windows split (16 skills)
-- Phase 2 — Cloud Identity / Hybrid (10 skills)
-- Phase 3 — Wireless split (12 skills) — **mandatory for v0.3.0**
-- Phase 4 — IoT split (10 skills)
-- Phase 5 — Web Basics (8 skills)
-- Phase 6 — Web Advanced (10 skills)
+**Internal (`Skills/internal/`)** — renamed from `active-directory/`, +16 skills:
+- internal-recon, network-poisoning, ntlm-relay, coercion, kerberoasting,
+  asreproasting, acl-abuse, adcs, kerberos-delegation, pass-the-x,
+  lsass-dumping, ticket-forgery, dcsync-dcshadow, gpo-abuse, trust-attacks,
+  network-pivoting
+
+**Cloud Identity (`Skills/cloud-identity/`, new)** — 10 skills:
+- entra-recon, entra-privesc, aadconnect-attacks, golden-saml, pass-the-prt,
+  conditional-access-bypass, device-code-phish, illicit-consent, m365-recon,
+  okta-attacks
+
+**Wireless (`Skills/wireless/`)** — +12 skills:
+- wifi-recon, wpa2-psk, wpa3-sae, wpa-enterprise, wps, evil-twin,
+  krack-fragattacks, deauth-disassoc, bluetooth-ble, bluetooth-classic,
+  zigbee-thread-matter, z-wave, lorawan-sub-ghz
+
+**IoT (`Skills/iot/`)** — +10 skills:
+- iot-hardware-recon, uart-jtag-swd, flash-dumping, fault-injection,
+  firmware-analysis, uboot-bypass, secure-boot-bypass, rtos-pwn,
+  ics-ot-protocols, mqtt-coap
+
+**Web (`Skills/web/`)** — +18 skills (8 basics + 10 advanced):
+- Basics: web-recon, auth-bypass, access-control, csrf-samesite,
+  header-attacks, cors-misconfig, cache-poisoning-deception, clickjacking
+- Advanced: prototype-pollution, mass-assignment, saml-attacks, oidc-attacks,
+  websocket, grpc, postmessage, ssi-esi, csti, dom-clobbering
+
+### Changed
+
+- Windows-side skills (edr-evasion, windows-mitigations, windows-boundaries,
+  keylogger-arch) moved from `infrastructure/` into `internal/`
+- README rewritten with full categorized navigation
+- MINDMAP.md added — Mermaid mindmap + MITRE ATT&CK / OWASP cross-reference
+
+## [0.2.0] — 2025-05
 
 ## [0.2.0] — 2025-05
 
