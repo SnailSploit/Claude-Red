@@ -4,9 +4,6 @@
   "license": "MIT",
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
-    "active-directory": [
-      "offensive-active-directory"
-    ],
     "ai": [
       "offensive-ai-security"
     ],
@@ -33,10 +30,29 @@
     ],
     "infrastructure": [
       "offensive-advanced-redteam",
-      "offensive-edr-evasion",
       "offensive-initial-access",
+      "offensive-shellcode"
+    ],
+    "internal": [
+      "offensive-acl-abuse",
+      "offensive-active-directory",
+      "offensive-adcs",
+      "offensive-asreproasting",
+      "offensive-coercion",
+      "offensive-dcsync-dcshadow",
+      "offensive-edr-evasion",
+      "offensive-gpo-abuse",
+      "offensive-internal-recon",
+      "offensive-kerberoasting",
+      "offensive-kerberos-delegation",
       "offensive-keylogger-arch",
-      "offensive-shellcode",
+      "offensive-lsass-dumping",
+      "offensive-network-pivoting",
+      "offensive-network-poisoning",
+      "offensive-ntlm-relay",
+      "offensive-pass-the-x",
+      "offensive-ticket-forgery",
+      "offensive-trust-attacks",
       "offensive-windows-boundaries",
       "offensive-windows-mitigations"
     ],
@@ -118,12 +134,6 @@
     ]
   },
   "skills": [
-    {
-      "name": "offensive-active-directory",
-      "category": "active-directory",
-      "path": "Skills/active-directory/offensive-active-directory/SKILL.md",
-      "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
-    },
     {
       "name": "offensive-ai-security",
       "category": "ai",
@@ -215,21 +225,9 @@
       "description": ""
     },
     {
-      "name": "offensive-edr-evasion",
-      "category": "infrastructure",
-      "path": "Skills/infrastructure/offensive-edr-evasion/SKILL.md",
-      "description": ""
-    },
-    {
       "name": "offensive-initial-access",
       "category": "infrastructure",
       "path": "Skills/infrastructure/offensive-initial-access/SKILL.md",
-      "description": ""
-    },
-    {
-      "name": "offensive-keylogger-arch",
-      "category": "infrastructure",
-      "path": "Skills/infrastructure/offensive-keylogger-arch/SKILL.md",
       "description": ""
     },
     {
@@ -239,15 +237,129 @@
       "description": "Shellcode development reference for offensive security engagements. Use when writing custom x86/x64 shellcode, implementing position-independent code (PIC), building shellcode loaders, evading AV/EDR detection, or converting PE files to shellcode. Covers null byte avoidance, API hashing, encoder/decoder patterns, staged vs stageless payloads, Windows PEB traversal, and cross-platform shellcode techniques."
     },
     {
+      "name": "offensive-acl-abuse",
+      "category": "internal",
+      "path": "Skills/internal/offensive-acl-abuse/SKILL.md",
+      "description": "Active Directory ACL abuse methodology — exploiting object permissions like GenericAll, GenericWrite, WriteDacl, WriteOwner, AllExtendedRights, AddMember, WriteSPN, ForceChangePassword, and DCSync rights to escalate privileges within AD. Each ACL grants specific exploitation paths — this skill maps each right to its abuse primitive and provides BloodHound-driven path navigation. Use after BloodHound recon shows an attack path involving ACL grants on privileged objects."
+    },
+    {
+      "name": "offensive-active-directory",
+      "category": "internal",
+      "path": "Skills/internal/offensive-active-directory/SKILL.md",
+      "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
+    },
+    {
+      "name": "offensive-adcs",
+      "category": "internal",
+      "path": "Skills/internal/offensive-adcs/SKILL.md",
+      "description": "Active Directory Certificate Services attack methodology — ESC1 through ESC15 misconfigurations, certipy enumeration and exploitation, certificate-to-NT-hash via UnPAC-the-Hash, NTLM relay to ADCS Web Enrollment (ESC8), Shadow Credentials (msDS-KeyCredentialLink) for password-less authentication, and CA compromise paths. Use when AD CS is in scope — virtually every modern AD environment runs an internal CA, and ADCS misconfigurations frequently provide the most direct path to Domain Admin."
+    },
+    {
+      "name": "offensive-asreproasting",
+      "category": "internal",
+      "path": "Skills/internal/offensive-asreproasting/SKILL.md",
+      "description": "ASREProasting — capturing AS-REP (Authentication Service Reply) for accounts with DONT_REQUIRE_PREAUTH set, then cracking the encrypted timestamp with hashcat 18200. Anyone with a username list can attempt this; no authentication required. Use early in engagement on unauthenticated network access — the hash list comes free of charge if any accounts have pre-auth disabled."
+    },
+    {
+      "name": "offensive-coercion",
+      "category": "internal",
+      "path": "Skills/internal/offensive-coercion/SKILL.md",
+      "description": "Authentication coercion attack methodology — primitives that force a Windows machine (especially DCs and file servers) to authenticate to an attacker-controlled host. Covers PetitPotam (MS-EFSRPC), PrinterBug (MS-RPRN), DFSCoerce (MS-DFSNM), ShadowCoerce (MS-FSRVP), WebDAV (UNC path embedded in any web fetch), Coercer unified toolkit, and the full coercion-to-relay-to-RBCD chain. Use to generate captured authentication for NTLM relay attacks when LLMNR poisoning isn't yielding the right targets."
+    },
+    {
+      "name": "offensive-dcsync-dcshadow",
+      "category": "internal",
+      "path": "Skills/internal/offensive-dcsync-dcshadow/SKILL.md",
+      "description": "DCSync (request replication, dump krbtgt and other secrets) and DCShadow (register a rogue DC, push attacker-controlled changes that bypass standard audit). Use to extract domain hashes via DCSync, or to make persistent AD changes that don't appear in normal DC audit logs via DCShadow."
+    },
+    {
+      "name": "offensive-edr-evasion",
+      "category": "internal",
+      "path": "Skills/internal/offensive-edr-evasion/SKILL.md",
+      "description": ""
+    },
+    {
+      "name": "offensive-gpo-abuse",
+      "category": "internal",
+      "path": "Skills/internal/offensive-gpo-abuse/SKILL.md",
+      "description": "Group Policy Object abuse — finding GPOs you can edit (WriteProperty / WriteDacl on gpcfilesyspath / GPO link), SharpGPOAbuse for adding scheduled tasks, immediate tasks, computer-side / user-side script injection, GPO link manipulation, and GPP cpassword decryption from older GPP-stored credentials. Use when a low-priv user has unintended GPO write access or you find legacy GPP cpassword artifacts."
+    },
+    {
+      "name": "offensive-internal-recon",
+      "category": "internal",
+      "path": "Skills/internal/offensive-internal-recon/SKILL.md",
+      "description": "Internal network and Active Directory reconnaissance — BloodHound collection (SharpHound, bloodhound-python, AzureHound), PowerView enumeration without binaries, ADExplorer offline snapshots, RPC and SMB null-session enumeration, LDAP queries (anonymous and authenticated), DNS service-record harvesting, and network scanning with proper noise levels. Use as the first step after assumed-breach foothold to map the AD/internal environment before attempting credential, lateral, or escalation actions."
+    },
+    {
+      "name": "offensive-kerberoasting",
+      "category": "internal",
+      "path": "Skills/internal/offensive-kerberoasting/SKILL.md",
+      "description": "Kerberoasting attack methodology — SPN enumeration, TGS-REQ requests for SPN-bearing accounts, AES-vs-RC4 hash mode selection, Rubeus / impacket-GetUserSPNs / nxc workflows, hashcat 13100 and 19700 cracking, targeted Kerberoasting via SPN write (when WriteSPN ACL exists), and crack-rate optimization (rules, masks, GPU tuning). Use during authenticated AD recon to extract crackable hashes for service accounts — high hit rate where service accounts have human-set passwords."
+    },
+    {
+      "name": "offensive-kerberos-delegation",
+      "category": "internal",
+      "path": "Skills/internal/offensive-kerberos-delegation/SKILL.md",
+      "description": "Kerberos delegation attack methodology — unconstrained delegation (TGT capture from coerced authentications), constrained delegation S4U2self/S4U2proxy abuse for impersonation, and Resource-Based Constrained Delegation (RBCD) where any GenericAll/GenericWrite on a target computer enables full impersonation. Use when BloodHound surfaces delegation paths or when GenericAll exists on a computer object."
+    },
+    {
+      "name": "offensive-keylogger-arch",
+      "category": "internal",
+      "path": "Skills/internal/offensive-keylogger-arch/SKILL.md",
+      "description": ""
+    },
+    {
+      "name": "offensive-lsass-dumping",
+      "category": "internal",
+      "path": "Skills/internal/offensive-lsass-dumping/SKILL.md",
+      "description": "LSASS process memory dumping for credential extraction — comsvcs.dll MiniDump, Task Manager GUI dump, nanodump, lsassy, ProcDump, Mimikatz live extraction, parsing offline with pypykatz. Covers AV/EDR-evasion variants and the modern landscape where LSASS protection (RunAsPPL, Credential Guard) blocks most direct dumps."
+    },
+    {
+      "name": "offensive-network-pivoting",
+      "category": "internal",
+      "path": "Skills/internal/offensive-network-pivoting/SKILL.md",
+      "description": "Network pivoting and tunneling — Chisel reverse SOCKS, Ligolo-ng tun-based pivoting, sshuttle for port-forward over SSH, ssh -D / -L / -R local port forwards, proxychains routing, RDP-based pivots, web shells with reverse SOCKS, and bring-your-own-tunneling-binary considerations. Use to reach internal segments from a foothold without dedicated VPN access."
+    },
+    {
+      "name": "offensive-network-poisoning",
+      "category": "internal",
+      "path": "Skills/internal/offensive-network-poisoning/SKILL.md",
+      "description": "Broadcast resolution poisoning attacks for credential capture — LLMNR / NBT-NS / mDNS poisoning with Responder/Inveigh, IPv6 mitm6 attacks (DHCPv6 takeover, DNS spoofing for WPAD), DHCP exhaustion + rogue DHCP, ARP spoofing (DAI-aware), WPAD discovery abuse, and signal-level evasion (analyze mode, targeted poisoning). Use during assumed-breach engagements to harvest NetNTLMv2 hashes from clients trying to resolve unresolvable hostnames — extremely effective against default Windows configurations."
+    },
+    {
+      "name": "offensive-ntlm-relay",
+      "category": "internal",
+      "path": "Skills/internal/offensive-ntlm-relay/SKILL.md",
+      "description": "NTLM relay attack chains using impacket-ntlmrelayx — relay targets identified by signing-not-required, SMB→SMB code execution, SMB→LDAP for ACL grants and computer-account creation, HTTP→LDAP for delegation, HTTP→ADCS Web Enrollment (ESC8), MSSQL relay, krbrelayx for Kerberos relay variants, EPA (Extended Protection for Authentication) bypass research, and the complete coercion-to-relay chain. Use after capturing LLMNR/NBT-NS/IPv6 hashes — relay them rather than crack when relay is feasible."
+    },
+    {
+      "name": "offensive-pass-the-x",
+      "category": "internal",
+      "path": "Skills/internal/offensive-pass-the-x/SKILL.md",
+      "description": "Pass-the-Hash (PtH), Pass-the-Ticket (PtT), Overpass-the-Hash (OPth), and Pass-the-Cert variants — replaying captured credential material as Kerberos / NTLM authentication without knowing the cleartext password. Use after credential dumping (LSASS, DCSync, kerberoast crack) to authenticate to additional resources."
+    },
+    {
+      "name": "offensive-ticket-forgery",
+      "category": "internal",
+      "path": "Skills/internal/offensive-ticket-forgery/SKILL.md",
+      "description": "Kerberos ticket forgery — Golden Ticket (forged TGT signed by krbtgt), Silver Ticket (forged TGS signed by service account), Diamond Ticket (modify legitimate TGT in-flight, evades MDI), Sapphire Ticket (PAC modification variant). Use after acquiring krbtgt or service account hashes for persistent post-exploitation domain access."
+    },
+    {
+      "name": "offensive-trust-attacks",
+      "category": "internal",
+      "path": "Skills/internal/offensive-trust-attacks/SKILL.md",
+      "description": "Forest and domain trust attacks — SID History injection in Golden Tickets (cross-forest admin via parent-RID 519), trust ticket forging for inter-realm TGT, SIDFiltering bypass, parent/child domain abuse (SIDFiltering disabled by default within forest), and external/forest trust enumeration. Use when the engagement spans multiple AD domains or when BloodHound surfaces cross-trust paths."
+    },
+    {
       "name": "offensive-windows-boundaries",
-      "category": "infrastructure",
-      "path": "Skills/infrastructure/offensive-windows-boundaries/SKILL.md",
+      "category": "internal",
+      "path": "Skills/internal/offensive-windows-boundaries/SKILL.md",
       "description": ""
     },
     {
       "name": "offensive-windows-mitigations",
-      "category": "infrastructure",
-      "path": "Skills/infrastructure/offensive-windows-mitigations/SKILL.md",
+      "category": "internal",
+      "path": "Skills/internal/offensive-windows-mitigations/SKILL.md",
       "description": ""
     },
     {
@@ -635,6 +747,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 86,
+  "skill_count": 102,
   "category_count": 13
 }
