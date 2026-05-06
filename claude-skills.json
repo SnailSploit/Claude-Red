@@ -55,10 +55,17 @@
       "offensive-reporting"
     ],
     "web": [
+      "offensive-access-control",
+      "offensive-auth-bypass",
       "offensive-business-logic",
+      "offensive-cache-poisoning-deception",
+      "offensive-clickjacking",
+      "offensive-cors-misconfig",
+      "offensive-csrf-samesite",
       "offensive-deserialization",
       "offensive-file-upload",
       "offensive-graphql",
+      "offensive-header-attacks",
       "offensive-idor",
       "offensive-open-redirect",
       "offensive-parameter-pollution",
@@ -69,6 +76,7 @@
       "offensive-ssrf",
       "offensive-ssti",
       "offensive-waf-bypass",
+      "offensive-web-recon",
       "offensive-xss",
       "offensive-xxe"
     ],
@@ -259,10 +267,46 @@
       "description": "Penetration test and red team report writing methodology. Covers executive summary structuring (risk-led narrative for non-technical readers), technical finding format (title, severity, affected scope, narrative, reproduction steps, impact, remediation, references), CVSS v3.1 / v4.0 scoring with vector justification, OWASP risk rating, evidence hygiene (redacting credentials, hashing client data, time-stamping every action), screenshot and PoC artifact management, finding chain narratives, scope/limitations/assumptions documentation, retest evidence and remediation tracking, deliverable formats (PDF, DOCX, HTML, JSON for SIEM ingestion), client-customer-deliverable separation, and common report mistakes (over-CVSSing, undermining the triager, missing the 'so what'). Use at the end of an engagement when authoring a deliverable, when restructuring a draft for executive readability, or when establishing a reusable report template for a consulting practice."
     },
     {
+      "name": "offensive-access-control",
+      "category": "web",
+      "path": "Skills/web/offensive-access-control/SKILL.md",
+      "description": "Authorization / access control testing methodology — RBAC and ABAC bypass beyond IDOR, vertical privilege escalation (low-priv → admin), horizontal privilege escalation (one user → another), tenant boundary violations in multi-tenant SaaS, role parameter mass assignment, function-level missing authorization (admin endpoint reachable by user), method-based ACL gaps (GET vs POST/PATCH), HTTP verb tampering, path traversal in authorization (//admin//, .. encoding), and post-token-introspection authorization gaps. Use after authentication is established to test what the user is and isn't allowed to do."
+    },
+    {
+      "name": "offensive-auth-bypass",
+      "category": "web",
+      "path": "Skills/web/offensive-auth-bypass/SKILL.md",
+      "description": "Authentication bypass methodology — broken authentication patterns, password reset abuse (token predictability, host header injection in reset links, race conditions), MFA bypass (response manipulation, token reuse, alternate factors, recovery code abuse), brute force and credential stuffing with rate-limit evasion, default credential testing, SSO misconfigurations (SAML/OIDC), magic-link abuse, and session-fixation. Use when assessing the login surface — distinct from access control after login (see offensive-access-control)."
+    },
+    {
       "name": "offensive-business-logic",
       "category": "web",
       "path": "Skills/web/offensive-business-logic/SKILL.md",
       "description": "Business logic vulnerability testing for web/mobile/API engagements. Covers workflow bypass, state machine violations, multi-step process abuse, price/quantity/discount manipulation, currency confusion, coupon stacking, refund/chargeback abuse, race conditions on logic boundaries, parameter tampering for hidden flows, role/tenant boundary violations, time-of-check vs use, anti-automation defeat, fraud-detection evasion, and subscription/quota abuse. Use when scoping an application after surface-level OWASP Top 10 has been covered, or when the asset is a transactional/marketplace/fintech/e-commerce/SaaS app where logic flaws produce direct financial impact."
+    },
+    {
+      "name": "offensive-cache-poisoning-deception",
+      "category": "web",
+      "path": "Skills/web/offensive-cache-poisoning-deception/SKILL.md",
+      "description": "Web cache poisoning and cache deception attack methodology — keyed-vs-unkeyed input research with Param Miner, header-based cache poisoning, fat GET cache poisoning, cache key normalization flaws (case, encoding, trailing slash), parameter cloaking, cache deception (path-confusion-based caching of authenticated content), CDN-specific behaviors (Cloudflare, Fastly, Akamai, CloudFront), and chained DoS / XSS / open-redirect via cache. Use when an engagement target sits behind a CDN or any caching reverse proxy."
+    },
+    {
+      "name": "offensive-clickjacking",
+      "category": "web",
+      "path": "Skills/web/offensive-clickjacking/SKILL.md",
+      "description": "Clickjacking and UI redress attack methodology — iframe overlay attacks, transparent layer techniques, drag-and-drop interaction hijacking, double-click exploitation, cursor-jacking, X-Frame-Options and CSP frame-ancestors bypass research, click amplification chains (CSRF + clickjacking, OAuth consent hijacking, payment confirmation hijacking), and modern same-origin-policy exceptions. Use when assessing whether sensitive single-click actions are framing-protected."
+    },
+    {
+      "name": "offensive-cors-misconfig",
+      "category": "web",
+      "path": "Skills/web/offensive-cors-misconfig/SKILL.md",
+      "description": "CORS (Cross-Origin Resource Sharing) misconfiguration testing — Access-Control-Allow-Origin reflection, Origin null bypass, wildcard with credentials, regex flaws (subdomain.target.com.attacker.com matching), preflight handling errors, exposed headers leaking sensitive data, and chaining CORS misconfig with CSRF for read-after-write attacks. Use when an API responds to cross-origin requests with credentials, or when a SPA uses XHR / fetch against a cookie-authenticated backend."
+    },
+    {
+      "name": "offensive-csrf-samesite",
+      "category": "web",
+      "path": "Skills/web/offensive-csrf-samesite/SKILL.md",
+      "description": "CSRF (Cross-Site Request Forgery) attack methodology and SameSite cookie bypass — classic CSRF token absence, token validation flaws (token-not-bound-to-session, token comparison weaknesses), CSRF on JSON endpoints (Content-Type bypass), CSRF via XHR/Fetch, SameSite=Lax bypasses (top-level GET, 2-minute fresh-creation window), SameSite=None implications, CORS misconfiguration enabling CSRF, login CSRF, and clickjacking-as-CSRF-amplifier. Use when assessing state-changing endpoints' anti-CSRF posture or analyzing SameSite cookie defenses."
     },
     {
       "name": "offensive-deserialization",
@@ -281,6 +325,12 @@
       "category": "web",
       "path": "Skills/web/offensive-graphql/SKILL.md",
       "description": ""
+    },
+    {
+      "name": "offensive-header-attacks",
+      "category": "web",
+      "path": "Skills/web/offensive-header-attacks/SKILL.md",
+      "description": "HTTP header attack methodology — Host header injection (password reset abuse, web cache poisoning, virtual host confusion), X-Forwarded-* abuse (IP allowlist bypass, log injection, audit confusion), header smuggling for cache poisoning, request line injection / CRLF in headers, custom backend-trust headers (X-User-Id, X-Forwarded-User), Server-Side Request Forgery via header (Referer, User-Agent reflected into outbound request), and HTTP response splitting. Use when the engagement involves CDNs, reverse proxies, web application firewalls, or any architecture where multiple components parse the same request differently."
     },
     {
       "name": "offensive-idor",
@@ -341,6 +391,12 @@
       "category": "web",
       "path": "Skills/web/offensive-waf-bypass/SKILL.md",
       "description": ""
+    },
+    {
+      "name": "offensive-web-recon",
+      "category": "web",
+      "path": "Skills/web/offensive-web-recon/SKILL.md",
+      "description": "Web application reconnaissance methodology — content discovery (ffuf, feroxbuster, dirsearch, gobuster), JavaScript bundle analysis for endpoints / API keys / hidden routes, technology fingerprinting (Wappalyzer CLI, whatweb, httpx tech-detect), virtual host enumeration, hidden parameter discovery (Arjun, ParamSpider, x8), API spec discovery (OpenAPI / Swagger / GraphQL introspection), historical content via Wayback Machine, robots.txt / sitemap.xml / .well-known mining, and structured target inventory before active testing. Use at the start of any web app engagement to map the attack surface before probing for bugs."
     },
     {
       "name": "offensive-xss",
@@ -439,6 +495,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 58,
+  "skill_count": 66,
   "category_count": 13
 }

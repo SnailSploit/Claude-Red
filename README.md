@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-58-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-66-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-13-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -97,7 +97,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to 
 
 | Category | Skills | Focus |
 |---|---:|---|
-| [Web Application](#web-application) | 16 | OWASP Top 10 + business logic + advanced web bug classes |
+| [Web Application](#web-application) | 24 | OWASP Top 10, business logic, web recon, auth, access control, CSRF, headers, CORS, cache, clickjacking |
 | [Auth & Identity](#auth--identity) | 2 | JWT, OAuth |
 | [Active Directory](#active-directory) | 1 | On-prem AD attack methodology *(expanding)* |
 | [Wireless](#wireless) | 13 | 802.11, WPA2/3, EAP, WPS, evil-twin, BLE, Zigbee, Z-Wave, LoRa, sub-GHz |
@@ -137,6 +137,14 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to 
 | [`offensive-graphql`](Skills/web/offensive-graphql/SKILL.md) | GraphQL — introspection, batching, IDOR via aliases |
 | [`offensive-waf-bypass`](Skills/web/offensive-waf-bypass/SKILL.md) | WAF bypass — encoding, chunking, case mutation |
 | [`offensive-business-logic`](Skills/web/offensive-business-logic/SKILL.md) | Business logic — workflow bypass, pricing, refunds, chains |
+| [`offensive-web-recon`](Skills/web/offensive-web-recon/SKILL.md) | Content discovery, JS bundle analysis, hidden parameters, API spec mining |
+| [`offensive-auth-bypass`](Skills/web/offensive-auth-bypass/SKILL.md) | Login bypass, password reset abuse, MFA bypass, default creds |
+| [`offensive-access-control`](Skills/web/offensive-access-control/SKILL.md) | RBAC bypass, vertical/horizontal privesc, mass assignment, method tampering |
+| [`offensive-csrf-samesite`](Skills/web/offensive-csrf-samesite/SKILL.md) | CSRF, JSON CSRF, SameSite=Lax bypass, login CSRF |
+| [`offensive-header-attacks`](Skills/web/offensive-header-attacks/SKILL.md) | Host injection, X-Forwarded-* abuse, CRLF, custom backend headers |
+| [`offensive-cors-misconfig`](Skills/web/offensive-cors-misconfig/SKILL.md) | Origin reflection, null bypass, regex flaws, exposed headers |
+| [`offensive-cache-poisoning-deception`](Skills/web/offensive-cache-poisoning-deception/SKILL.md) | Unkeyed input, fat GET, cache deception, CDN-specific |
+| [`offensive-clickjacking`](Skills/web/offensive-clickjacking/SKILL.md) | iframe overlay, frame-busting bypass, OAuth consent hijack, tapjacking |
 
 ### Auth & Identity
 

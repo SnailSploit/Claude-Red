@@ -28,6 +28,14 @@ mindmap
       graphql
       waf-bypass
       business-logic
+      web-recon
+      auth-bypass
+      access-control
+      csrf-samesite
+      header-attacks
+      cors-misconfig
+      cache-poisoning-deception
+      clickjacking
     Auth
       jwt
       oauth
