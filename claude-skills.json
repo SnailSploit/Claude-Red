@@ -72,21 +72,31 @@
       "offensive-clickjacking",
       "offensive-cors-misconfig",
       "offensive-csrf-samesite",
+      "offensive-csti",
       "offensive-deserialization",
+      "offensive-dom-clobbering",
       "offensive-file-upload",
       "offensive-graphql",
+      "offensive-grpc",
       "offensive-header-attacks",
       "offensive-idor",
+      "offensive-mass-assignment",
+      "offensive-oidc-attacks",
       "offensive-open-redirect",
       "offensive-parameter-pollution",
+      "offensive-postmessage",
+      "offensive-prototype-pollution",
       "offensive-race-condition",
       "offensive-rce",
       "offensive-request-smuggling",
+      "offensive-saml-attacks",
       "offensive-sqli",
+      "offensive-ssi-esi",
       "offensive-ssrf",
       "offensive-ssti",
       "offensive-waf-bypass",
       "offensive-web-recon",
+      "offensive-websocket",
       "offensive-xss",
       "offensive-xxe"
     ],
@@ -379,10 +389,22 @@
       "description": "CSRF (Cross-Site Request Forgery) attack methodology and SameSite cookie bypass — classic CSRF token absence, token validation flaws (token-not-bound-to-session, token comparison weaknesses), CSRF on JSON endpoints (Content-Type bypass), CSRF via XHR/Fetch, SameSite=Lax bypasses (top-level GET, 2-minute fresh-creation window), SameSite=None implications, CORS misconfiguration enabling CSRF, login CSRF, and clickjacking-as-CSRF-amplifier. Use when assessing state-changing endpoints' anti-CSRF posture or analyzing SameSite cookie defenses."
     },
     {
+      "name": "offensive-csti",
+      "category": "web",
+      "path": "Skills/web/offensive-csti/SKILL.md",
+      "description": "Client-Side Template Injection (CSTI) — Angular (1.x and 2+/Ivy) sandbox bypasses, Vue.js template injection, AngularJS expression sandbox CVE chain, sandbox escape gadget chains, classic Angular sandbox escape evolution (1.0–1.5.x bypasses), and CSTI-vs-XSS distinction (CSTI doesn't require <script> — bypasses many XSS-only filters). Use when the application uses a client-side template engine and reflects user input into the DOM where it could be evaluated as a template expression."
+    },
+    {
       "name": "offensive-deserialization",
       "category": "web",
       "path": "Skills/web/offensive-deserialization/SKILL.md",
       "description": ""
+    },
+    {
+      "name": "offensive-dom-clobbering",
+      "category": "web",
+      "path": "Skills/web/offensive-dom-clobbering/SKILL.md",
+      "description": "DOM Clobbering attack methodology — named element injection that overrides JavaScript globals (window.config, window.url, window.user), HTMLCollection-based clobbering for nested objects, document.* property override (document.cookie, document.URL), defaultView clobbering, and chaining DOM clobbering with sanitizer bypasses (DOMPurify, sanitize-html) to escape allowlists. Use against modern apps that load user-controlled HTML through 'safe' sanitizers — DOM clobbering bypasses many sanitizer allowlists because the injected HTML contains no `<script>` or `javascript:`."
     },
     {
       "name": "offensive-file-upload",
@@ -397,6 +419,12 @@
       "description": ""
     },
     {
+      "name": "offensive-grpc",
+      "category": "web",
+      "path": "Skills/web/offensive-grpc/SKILL.md",
+      "description": "gRPC and Protocol Buffers attack methodology — service / method enumeration via reflection, .proto file recovery, schema-driven fuzzing, authentication / interceptor bypass, gRPC-Web bridge attacks, message replay, oversized message DoS, transcoded REST gateway abuse, and gRPC-specific tooling (grpcurl, evans, ghz, BloodHound for gRPC). Use when targets expose gRPC endpoints (typically port 50051 or behind grpc-web on standard HTTPS) — common in modern microservices, Kubernetes intra-cluster traffic, and mobile / IoT app backends."
+    },
+    {
       "name": "offensive-header-attacks",
       "category": "web",
       "path": "Skills/web/offensive-header-attacks/SKILL.md",
@@ -409,6 +437,18 @@
       "description": ""
     },
     {
+      "name": "offensive-mass-assignment",
+      "category": "web",
+      "path": "Skills/web/offensive-mass-assignment/SKILL.md",
+      "description": "Mass assignment / over-posting attack methodology — spraying privileged fields (isAdmin, role, tenantId, balance) into create/update endpoints, ORM auto-binding flaws (Active Record / Eloquent / Sequelize / TypeORM / Hibernate), GraphQL mutation bulk-binding, JSON:API attribute injection, hidden field discovery via OpenAPI / DB schema / response inference, and chaining mass assignment with horizontal/vertical access bypass. Use when assessing endpoints that accept JSON / form data and persist to a database — the bug is broader than IDOR and often gives instant privilege escalation."
+    },
+    {
+      "name": "offensive-oidc-attacks",
+      "category": "web",
+      "path": "Skills/web/offensive-oidc-attacks/SKILL.md",
+      "description": "OpenID Connect (OIDC) specific attack methodology beyond OAuth 2.0 — ID token validation flaws, alg:none and key confusion (RS256-vs-HS256, RS256-vs-secret), JWKS endpoint poisoning, nonce / state replay, ID token swap (ID token vs access token confusion), audience and issuer confusion, dynamic client registration abuse, request_uri SSRF, mix-up attacks across multiple IdPs, and PKCE downgrade. Use when assessing applications using OIDC SSO (vs raw OAuth) — authentication-purpose flows have different threat model than authorization-purpose ones."
+    },
+    {
       "name": "offensive-open-redirect",
       "category": "web",
       "path": "Skills/web/offensive-open-redirect/SKILL.md",
@@ -419,6 +459,18 @@
       "category": "web",
       "path": "Skills/web/offensive-parameter-pollution/SKILL.md",
       "description": ""
+    },
+    {
+      "name": "offensive-postmessage",
+      "category": "web",
+      "path": "Skills/web/offensive-postmessage/SKILL.md",
+      "description": "window.postMessage origin abuse — missing or wildcard origin checks, source origin verification flaws, prototype-pollution via crafted messages, message-handler XSS sinks, OAuth flow hijacking via postMessage, and embedded-iframe communication abuse. Use when a target uses iframes / cross-window messaging — common in OAuth implementations, payment integrations, third-party embedded widgets (chat, analytics, customer support), and SSO post-handlers."
+    },
+    {
+      "name": "offensive-prototype-pollution",
+      "category": "web",
+      "path": "Skills/web/offensive-prototype-pollution/SKILL.md",
+      "description": "Prototype pollution attack methodology for client-side and server-side JavaScript — __proto__ / constructor / prototype gadget chains, finding sinks (auth bypass via isAdmin pollution, command injection via spawn arg pollution, RCE via property-injected lodash/jquery/express helpers), prototype pollution gadget databases, server-side via Express/Mongoose/Sequelize/koa-body, client-side via document.location / hash injection, and PortSwigger DOM Invader-style automated discovery. Use when assessing JS-heavy applications, especially Node.js backends or SPAs with deep object merging."
     },
     {
       "name": "offensive-race-condition",
@@ -439,10 +491,22 @@
       "description": ""
     },
     {
+      "name": "offensive-saml-attacks",
+      "category": "web",
+      "path": "Skills/web/offensive-saml-attacks/SKILL.md",
+      "description": "SAML (Security Assertion Markup Language) attack methodology — XML signature wrapping (XSW1-XSW8), comment injection in NameID, KeyInfo confusion, signature exclusion, AssertionConsumer redirect abuse, IdP-initiated SSO replay, Golden SAML (token-signing certificate theft from compromised ADFS / federation server), and post-exploitation pivots into SaaS platforms (Salesforce, Microsoft 365, AWS, etc.). Use when the application uses SAML SSO for authentication — common in enterprise SaaS, federation-protected internal apps, and SP-IdP relationships."
+    },
+    {
       "name": "offensive-sqli",
       "category": "web",
       "path": "Skills/web/offensive-sqli/SKILL.md",
       "description": "SQL injection testing skill for offensive security assessments and bug bounty hunting. Covers error-based, UNION-based, boolean/time-based blind, out-of-band, second-order, NoSQL, GraphQL, WebSocket, and JSON-operator SQLi. Includes WAF bypass techniques, database-specific exploitation (MySQL, MSSQL, PostgreSQL, Oracle), cloud-native attack paths, ORM CVE tracking, and SQLmap automation. Use when performing web application SQL injection testing, database enumeration, privilege escalation via SQLi, or assessing injection vectors in APIs and modern stacks."
+    },
+    {
+      "name": "offensive-ssi-esi",
+      "category": "web",
+      "path": "Skills/web/offensive-ssi-esi/SKILL.md",
+      "description": "Server-Side Includes (SSI) and Edge-Side Includes (ESI) injection methodology — SSI directive injection in cached pages, ESI tag injection across CDN-origin boundary (Akamai, Fastly, Varnish, Cloudflare), ESI-to-SSRF, ESI-to-XSS via include source, X-Forwarded-For-style header reflection into ESI, and chained cache poisoning + ESI for stored exploitation. Use when targets are behind a CDN that processes ESI tags or run Apache/IIS with mod_include enabled."
     },
     {
       "name": "offensive-ssrf",
@@ -467,6 +531,12 @@
       "category": "web",
       "path": "Skills/web/offensive-web-recon/SKILL.md",
       "description": "Web application reconnaissance methodology — content discovery (ffuf, feroxbuster, dirsearch, gobuster), JavaScript bundle analysis for endpoints / API keys / hidden routes, technology fingerprinting (Wappalyzer CLI, whatweb, httpx tech-detect), virtual host enumeration, hidden parameter discovery (Arjun, ParamSpider, x8), API spec discovery (OpenAPI / Swagger / GraphQL introspection), historical content via Wayback Machine, robots.txt / sitemap.xml / .well-known mining, and structured target inventory before active testing. Use at the start of any web app engagement to map the attack surface before probing for bugs."
+    },
+    {
+      "name": "offensive-websocket",
+      "category": "web",
+      "path": "Skills/web/offensive-websocket/SKILL.md",
+      "description": "WebSocket security testing methodology — handshake / Origin validation, authentication / authorization on the WebSocket layer (token validation flaws, anonymous access), message-injection attacks (XSS via reflected messages, command injection through ws-bridge to backend), Cross-Site WebSocket Hijacking (CSWSH), CSWSH against authenticated WebSockets, message replay and tampering, denial of service via large frames, and Burp's WebSocket interception workflow. Use when an application uses WebSocket connections (chat, real-time collaboration, trading platforms, IoT dashboards)."
     },
     {
       "name": "offensive-xss",
@@ -565,6 +635,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 76,
+  "skill_count": 86,
   "category_count": 13
 }
