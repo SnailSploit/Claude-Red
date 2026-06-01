@@ -125,11 +125,7 @@ def build_manifest(platform: str) -> tuple[dict, list[str]]:
                 )
             else:
                 seen_names[skill_name] = skill_dir
-            install_path = (
-                f"{install_roots[platform]}/{category}/{skill_dir.name}"
-                if platform == "claude"
-                else f"{install_roots[platform]}/{skill_dir.name}"
-            )
+            install_path = f"{install_roots[platform]}/{category}/{skill_dir.name}"
             entry = {
                 "name": skill_name,
                 "category": category,

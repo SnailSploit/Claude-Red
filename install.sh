@@ -4,18 +4,18 @@
 #
 # Usage:
 #   ./install.sh                                # interactive Codex install
-#   ./install.sh --platform codex              # install flattened Codex skills
+#   ./install.sh --platform codex              # install Codex skills under skills-red category tree
 #   ./install.sh --platform claude             # install Claude category tree
-#   ./install.sh --platform opencode           # install flattened OpenCode skills
-#   ./install.sh --target ~/.codex/skills      # explicit target
+#   ./install.sh --platform opencode           # install OpenCode skills under skills-red category tree
+#   ./install.sh --target ~/.codex/skills/skills-red  # explicit target
 #   ./install.sh --category web                # one category only
 #   ./install.sh --target DIR --category web   # combined
 #   ./install.sh --list                        # list available categories
 #   ./install.sh --dry-run                     # show what would be copied
 #
-# Default Codex target: ~/.codex/skills
+# Default Codex target: ~/.codex/skills/skills-red
 # Default Claude target: ~/.claude/skills/skills-red
-# Default OpenCode target: ~/.config/opencode/skills
+# Default OpenCode target: ~/.config/opencode/skills/skills-red
 
 set -euo pipefail
 
@@ -46,7 +46,7 @@ list_categories() {
   done
 }
 
-validate_flattened_metadata() {
+validate_skill_metadata() {
   local source_root="$1"
   local platform="$2"
   local seen_names=""
@@ -78,7 +78,7 @@ validate_flattened_metadata() {
     fi
     case " $seen_names " in
       *" $skill_name "*)
-        echo "Error: duplicate flattened skill folder name '$skill_name'" >&2
+        echo "Error: duplicate skill folder name '$skill_name'" >&2
         errors=$((errors + 1))
         ;;
     esac
@@ -134,7 +134,7 @@ copy_tree() {
   fi
 }
 
-install_flattened_skills() {
+install_platform_skills() {
   local source_root="$1"
   local target_root="$2"
   local platform="$3"
@@ -146,7 +146,8 @@ install_flattened_skills() {
   while IFS= read -r -d '' skill_md; do
     skill_dir=$(dirname "$skill_md")
     skill_name=$(basename "$skill_dir")
-    dest="$target_root/$skill_name"
+    category="$(basename "$(dirname "$skill_dir")")"
+    dest="$target_root/$category/$skill_name"
     if [ "$DRY_RUN" -eq 1 ]; then
       printf "  %s -> %s\n" "$skill_dir" "$dest"
     else
@@ -211,12 +212,10 @@ else
   SOURCE="$SKILLS_DIR"
 fi
 
-if [ "$PLATFORM" = "claude" ]; then
-  if [ -n "$CATEGORY" ]; then
-    DEST="$TARGET/$CATEGORY"
-  else
-    DEST="$TARGET"
-  fi
+if [ "$PLATFORM" = "codex" ] || [ "$PLATFORM" = "opencode" ]; then
+  DEST="$TARGET"
+elif [ -n "$CATEGORY" ]; then
+  DEST="$TARGET/$CATEGORY"
 else
   DEST="$TARGET"
 fi
@@ -231,8 +230,8 @@ if [ "$DRY_RUN" -eq 1 ]; then
 fi
 
 if [ "$PLATFORM" = "codex" ] || [ "$PLATFORM" = "opencode" ]; then
-  validate_flattened_metadata "$SOURCE" "$PLATFORM"
-  install_flattened_skills "$SOURCE" "$DEST" "$PLATFORM"
+  validate_skill_metadata "$SOURCE" "$PLATFORM"
+  install_platform_skills "$SOURCE" "$DEST" "$PLATFORM"
   skill_count="$SKILL_COUNT"
 else
   if [ "$DRY_RUN" -eq 1 ]; then

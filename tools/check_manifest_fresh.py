@@ -53,11 +53,7 @@ def validate_manifest_install_paths() -> list[str]:
         platform = manifest["platform"]
         root = roots[platform]
         for skill in manifest["skills"]:
-            expected = (
-                f"{root}/{skill['category']}/{skill['name']}"
-                if platform == "claude"
-                else f"{root}/{skill['name']}"
-            )
+            expected = f"{root}/{skill['category']}/{skill['name']}"
             if skill["install_path"] != expected:
                 errors.append(
                     f"{manifest_name}: {skill['name']} install_path is "

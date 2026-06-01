@@ -49,7 +49,7 @@ Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
 
 `skills-red` is a curated library of offensive security skills for Claude, Codex, and OpenCode skill systems. Each skill is a structured `SKILL.md` file that primes an AI coding agent with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to ADCS abuse.
 
-Install skills into `$CODEX_HOME/skills` for Codex, `~/.claude/skills/skills-red` for Claude, or `~/.config/opencode/skills` for OpenCode. The same `SKILL.md` files are portable across all supported platforms; the installer chooses the layout each platform expects.
+Install skills into `$CODEX_HOME/skills/skills-red` for Codex, `~/.claude/skills/skills-red` for Claude, or `~/.config/opencode/skills/skills-red` for OpenCode. The same `SKILL.md` files are portable across all supported platforms; the installer preserves the category tree under the `skills-red` namespace for each platform.
 
 **Use it for:** authorized red team engagements, bug bounty triage, security research, CTF preparation, training operators, and exploring attack surfaces methodically.
 
@@ -60,7 +60,7 @@ Install skills into `$CODEX_HOME/skills` for Codex, `~/.claude/skills/skills-red
 ### Codex Skills System
 
 ```bash
-# Clone this repo and install all skills into ~/.codex/skills/<skill-name>
+# Clone this repo and install all skills into ~/.codex/skills/skills-red/<category>/<skill-name>
 git clone https://github.com/trewwwsec/skills-red
 cd skills-red
 ./install.sh --platform codex
@@ -69,19 +69,19 @@ cd skills-red
 ./install.sh --platform codex --category web
 ```
 
-Restart Codex after installation so the skill metadata is picked up. Codex reads each skill from a directory like `$CODEX_HOME/skills/offensive-sqli/SKILL.md`, so the installer flattens category folders into individual skill directories.
+Restart Codex after installation so the skill metadata is picked up. Current Codex releases recursively discover `SKILL.md` files under `$CODEX_HOME/skills`, so the installer keeps skills namespaced as `$CODEX_HOME/skills/skills-red/<category>/<skill-name>/SKILL.md`.
 
 ### Manual Codex install
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R Skills/web/offensive-sqli ~/.codex/skills/offensive-sqli
+mkdir -p ~/.codex/skills/skills-red/web
+cp -R Skills/web/offensive-sqli ~/.codex/skills/skills-red/web/offensive-sqli
 ```
 
 ### OpenCode Agent Skills
 
 ```bash
-# Install all skills into ~/.config/opencode/skills/<skill-name>
+# Install all skills into ~/.config/opencode/skills/skills-red/<category>/<skill-name>
 git clone https://github.com/trewwwsec/skills-red
 cd skills-red
 ./install.sh --platform opencode
@@ -90,13 +90,13 @@ cd skills-red
 ./install.sh --platform opencode --category web
 ```
 
-Start a new OpenCode session after installation so the `skill` tool refreshes its available skills. OpenCode discovers one folder per skill at `~/.config/opencode/skills/<skill-name>/SKILL.md`, so the installer flattens category folders the same way Codex does.
+Start a new OpenCode session after installation so the `skill` tool refreshes its available skills. OpenCode's public docs show the simple one-folder layout, but current OpenCode releases recursively scan `SKILL.md` files under configured skill roots (`{skill,skills}/**/SKILL.md` in the upstream loader). The installer relies on that current recursive discovery behavior to keep skills namespaced as `~/.config/opencode/skills/skills-red/<category>/<skill-name>/SKILL.md`.
 
 ### Manual OpenCode install
 
 ```bash
-mkdir -p ~/.config/opencode/skills
-cp -R Skills/web/offensive-sqli ~/.config/opencode/skills/offensive-sqli
+mkdir -p ~/.config/opencode/skills/skills-red/web
+cp -R Skills/web/offensive-sqli ~/.config/opencode/skills/skills-red/web/offensive-sqli
 ```
 
 ### Claude Skills System
@@ -132,8 +132,8 @@ cat Skills/active-directory/**/SKILL.md | claude --system-file -
 ./install.sh --platform codex          # explicit Codex install
 ./install.sh --platform claude         # Claude-compatible install
 ./install.sh --platform opencode       # OpenCode agent-skill install
-./install.sh --target ~/.codex/skills  # explicit target
-./install.sh --platform opencode --target ~/.config/opencode/skills  # explicit OpenCode target
+./install.sh --target ~/.codex/skills/skills-red  # explicit target
+./install.sh --platform opencode --target ~/.config/opencode/skills/skills-red  # explicit OpenCode target
 ./install.sh --category web            # one category
 ./install.sh --dry-run                 # preview copy plan
 ```
@@ -148,9 +148,7 @@ summarize the `Skills/<category>/<skill-name>/SKILL.md` tree for platform
 tooling, marketplace/index consumers, and release review while keeping each
 `SKILL.md` file as the source of truth.
 
-Manifest `install_path` values are default metadata for indexes and review.
-Runtime installation behavior, including `--target`, `CODEX_HOME`, and
-`OPENCODE_CONFIG_HOME` overrides, is owned by [`install.sh`](install.sh).
+Manifest `install_path` values are default metadata for indexes and review. They intentionally include the `skills-red/<category>/<skill-name>` namespace so generated indexes match the default installer layout. For Codex and OpenCode this depends on current recursive skill discovery; if either platform drops recursive scanning, update `tools/platform_defaults.sh`, `install.sh`, and regenerated manifests together. Runtime installation behavior, including `--target`, `CODEX_HOME`, and `OPENCODE_CONFIG_HOME` overrides, is owned by [`install.sh`](install.sh).
 
 Regenerate them after any skill metadata, category, or install-path change:
 
