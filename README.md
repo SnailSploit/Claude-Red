@@ -22,6 +22,7 @@ Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
 
 - [What is this](#what-is-this)
 - [Quickstart](#quickstart)
+- [Generated manifests](#generated-manifests)
 - [Categories](#categories)
 - [Skill Index](#skill-index)
   - [Web Application](#web-application)
@@ -136,6 +137,35 @@ cat Skills/active-directory/**/SKILL.md | claude --system-file -
 ./install.sh --category web            # one category
 ./install.sh --dry-run                 # preview copy plan
 ```
+
+---
+
+## Generated manifests
+
+The root `claude-skills.json`, `codex-skills.json`, and `opencode-skills.json`
+files are generated distribution indexes, not hand-authored skill sources. They
+summarize the `Skills/<category>/<skill-name>/SKILL.md` tree for platform
+tooling, marketplace/index consumers, and release review while keeping each
+`SKILL.md` file as the source of truth.
+
+Manifest `install_path` values are default metadata for indexes and review.
+Runtime installation behavior, including `--target`, `CODEX_HOME`, and
+`OPENCODE_CONFIG_HOME` overrides, is owned by [`install.sh`](install.sh).
+
+Regenerate them after any skill metadata, category, or install-path change:
+
+```bash
+python3 tools/build_manifest.py
+python3 tools/check_manifest_fresh.py
+```
+
+The freshness check also validates manifest `install_path` values against the
+shared defaults in `tools/platform_defaults.sh`, which are consumed by both the
+installer and manifest tooling.
+
+Do not edit the root manifest JSON files by hand; update the relevant
+`SKILL.md` frontmatter or `tools/build_manifest.py`, then regenerate and commit
+the resulting manifest diff.
 
 ---
 

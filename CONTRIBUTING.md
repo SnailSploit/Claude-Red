@@ -89,8 +89,12 @@ The `description` is what Codex and Claude use for trigger matching. Make it den
 3. Write the frontmatter and body following the structure above.
 4. Update [`README.md`](README.md) — add the skill to the relevant category table.
 5. Update [`CHANGELOG.md`](CHANGELOG.md) under the next version.
-6. Update the generated manifests (`claude-skills.json`, `codex-skills.json`, and `opencode-skills.json`) by running `python tools/build_manifest.py`.
-7. Run any local lint:
+6. Update the generated manifests (`claude-skills.json`, `codex-skills.json`, and `opencode-skills.json`) by running `python3 tools/build_manifest.py`.
+7. Confirm the generated manifests are fresh:
+   ```bash
+   python3 tools/check_manifest_fresh.py
+   ```
+8. Run any local lint:
    ```bash
    ./tools/check-skill.sh Skills/<category>/<skill-name>/SKILL.md
    ```
@@ -107,7 +111,7 @@ When a skill grows beyond one surface (e.g. `offensive-wifi` covering WPA2, WPA3
 
 1. Keep the original as a brief overview that points to the new focused skills
 2. Move detailed content into new per-surface skills
-3. Update README, CHANGELOG, and the manifest
+3. Update README, CHANGELOG, and the generated manifests
 
 The roadmap in README tracks current splits.
 

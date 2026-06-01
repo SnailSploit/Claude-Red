@@ -21,9 +21,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$SCRIPT_DIR/Skills"
-DEFAULT_CODEX_TARGET="${CODEX_HOME:-${HOME}/.codex}/skills"
-DEFAULT_CLAUDE_TARGET="${HOME}/.claude/skills/skills-red"
-DEFAULT_OPENCODE_TARGET="${OPENCODE_CONFIG_HOME:-${HOME}/.config/opencode}/skills"
+# shellcheck source=tools/platform_defaults.sh
+. "$SCRIPT_DIR/tools/platform_defaults.sh"
 
 PLATFORM="codex"
 TARGET=""

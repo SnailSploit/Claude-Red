@@ -20,10 +20,12 @@ MANIFESTS = {
     "codex": ROOT / "codex-skills.json",
     "opencode": ROOT / "opencode-skills.json",
 }
+PLATFORM_DEFAULTS = ROOT / "tools" / "platform_defaults.sh"
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 OPENCODE_DESCRIPTION_LIMIT = 1024
+MANIFEST_ROOT_RE = re.compile(r"^MANIFEST_(CODEX|CLAUDE|OPENCODE)_INSTALL_ROOT='([^']+)'$", re.MULTILINE)
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -61,6 +63,17 @@ def normalize_opencode_description(description: str) -> str:
     return f"{truncated}…"
 
 
+def manifest_install_roots() -> dict[str, str]:
+    defaults = {
+        platform.lower(): root
+        for platform, root in MANIFEST_ROOT_RE.findall(PLATFORM_DEFAULTS.read_text(encoding="utf-8"))
+    }
+    missing = sorted({"codex", "claude", "opencode"} - defaults.keys())
+    if missing:
+        raise ValueError(f"{PLATFORM_DEFAULTS} missing manifest install root(s): {', '.join(missing)}")
+    return defaults
+
+
 def validate_skill_metadata(skill_dir: Path, fm: dict[str, str], platform: str) -> list[str]:
     errors: list[str] = []
     name = fm.get("name", "").strip()
@@ -80,6 +93,7 @@ def validate_skill_metadata(skill_dir: Path, fm: dict[str, str], platform: str) 
 
 def build_manifest(platform: str) -> tuple[dict, list[str]]:
     homepage = "https://github.com/trewwwsec/skills-red"
+    install_roots = manifest_install_roots()
     manifest: dict = {
         "name": "skills-red",
         "version": "0.2.0",
@@ -111,16 +125,16 @@ def build_manifest(platform: str) -> tuple[dict, list[str]]:
                 )
             else:
                 seen_names[skill_name] = skill_dir
-            install_paths = {
-                "codex": f"$CODEX_HOME/skills/{skill_dir.name}",
-                "claude": f"~/.claude/skills/skills-red/{category}/{skill_dir.name}",
-                "opencode": f"~/.config/opencode/skills/{skill_dir.name}",
-            }
+            install_path = (
+                f"{install_roots[platform]}/{category}/{skill_dir.name}"
+                if platform == "claude"
+                else f"{install_roots[platform]}/{skill_dir.name}"
+            )
             entry = {
                 "name": skill_name,
                 "category": category,
                 "path": str(skill_md.relative_to(ROOT)),
-                "install_path": install_paths[platform],
+                "install_path": install_path,
                 "description": normalize_opencode_description(fm.get("description", ""))
                 if platform == "opencode"
                 else fm.get("description", ""),
