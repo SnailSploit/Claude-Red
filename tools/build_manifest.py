@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate Claude and Codex skill manifests from the Skills/ tree.
+"""Generate Claude, Codex, and OpenCode skill manifests from the Skills/ tree.
 
 Reads YAML frontmatter from each SKILL.md and emits compact JSON manifests
 of all skills, grouped by category, for tooling that needs a machine-readable
@@ -18,9 +18,12 @@ SKILLS_DIR = ROOT / "Skills"
 MANIFESTS = {
     "claude": ROOT / "claude-skills.json",
     "codex": ROOT / "codex-skills.json",
+    "opencode": ROOT / "opencode-skills.json",
 }
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
+SKILL_NAME_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
+OPENCODE_DESCRIPTION_LIMIT = 1024
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -50,7 +53,15 @@ def parse_frontmatter(text: str) -> dict[str, str]:
     return out
 
 
-def validate_skill_metadata(skill_dir: Path, fm: dict[str, str]) -> list[str]:
+def normalize_opencode_description(description: str) -> str:
+    """Return an OpenCode-compatible description without changing source SKILL.md."""
+    if len(description) <= OPENCODE_DESCRIPTION_LIMIT:
+        return description
+    truncated = description[: OPENCODE_DESCRIPTION_LIMIT - 1].rsplit(" ", 1)[0].rstrip(",;:.- ")
+    return f"{truncated}…"
+
+
+def validate_skill_metadata(skill_dir: Path, fm: dict[str, str], platform: str) -> list[str]:
     errors: list[str] = []
     name = fm.get("name", "").strip()
     description = fm.get("description", "").strip()
@@ -60,6 +71,8 @@ def validate_skill_metadata(skill_dir: Path, fm: dict[str, str]) -> list[str]:
         errors.append(f"{skill_dir}: missing frontmatter name")
     elif name != skill_dir.name:
         errors.append(f"{skill_dir}: frontmatter name '{name}' does not match folder '{skill_dir.name}'")
+    elif platform == "opencode" and not SKILL_NAME_RE.fullmatch(name):
+        errors.append(f"{skill_dir}: frontmatter name '{name}' is not OpenCode-compatible kebab-case")
     if not description:
         errors.append(f"{skill_dir}: missing frontmatter description")
     return errors
@@ -90,7 +103,7 @@ def build_manifest(platform: str) -> tuple[dict, list[str]]:
             if not skill_md.is_file():
                 continue
             fm = parse_frontmatter(skill_md.read_text(encoding="utf-8"))
-            errors.extend(validate_skill_metadata(skill_dir, fm))
+            errors.extend(validate_skill_metadata(skill_dir, fm, platform))
             skill_name = fm.get("name", skill_dir.name)
             if skill_name in seen_names:
                 errors.append(
@@ -98,14 +111,19 @@ def build_manifest(platform: str) -> tuple[dict, list[str]]:
                 )
             else:
                 seen_names[skill_name] = skill_dir
+            install_paths = {
+                "codex": f"$CODEX_HOME/skills/{skill_dir.name}",
+                "claude": f"~/.claude/skills/skills-red/{category}/{skill_dir.name}",
+                "opencode": f"~/.config/opencode/skills/{skill_dir.name}",
+            }
             entry = {
                 "name": skill_name,
                 "category": category,
                 "path": str(skill_md.relative_to(ROOT)),
-                "install_path": f"$CODEX_HOME/skills/{skill_dir.name}"
-                if platform == "codex"
-                else f"~/.claude/skills/skills-red/{category}/{skill_dir.name}",
-                "description": fm.get("description", ""),
+                "install_path": install_paths[platform],
+                "description": normalize_opencode_description(fm.get("description", ""))
+                if platform == "opencode"
+                else fm.get("description", ""),
             }
             manifest["categories"][category].append(entry["name"])
             manifest["skills"].append(entry)
@@ -119,7 +137,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--platform",
-        choices=("all", "codex", "claude"),
+        choices=("all", "codex", "claude", "opencode"),
         default="all",
         help="Which manifest to write (default: all).",
     )
@@ -129,7 +147,7 @@ def main() -> int:
         print(f"Error: {SKILLS_DIR} not found", file=sys.stderr)
         return 1
 
-    platforms = ("claude", "codex") if args.platform == "all" else (args.platform,)
+    platforms = ("claude", "codex", "opencode") if args.platform == "all" else (args.platform,)
     all_errors: list[str] = []
     manifests: list[tuple[str, dict]] = []
     for platform in platforms:

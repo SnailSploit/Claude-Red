@@ -89,7 +89,7 @@ The `description` is what Codex and Claude use for trigger matching. Make it den
 3. Write the frontmatter and body following the structure above.
 4. Update [`README.md`](README.md) — add the skill to the relevant category table.
 5. Update [`CHANGELOG.md`](CHANGELOG.md) under the next version.
-6. Update the generated manifests (`claude-skills.json` and `codex-skills.json`) by running `python tools/build_manifest.py`.
+6. Update the generated manifests (`claude-skills.json`, `codex-skills.json`, and `opencode-skills.json`) by running `python tools/build_manifest.py`.
 7. Run any local lint:
    ```bash
    ./tools/check-skill.sh Skills/<category>/<skill-name>/SKILL.md

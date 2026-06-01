@@ -4,7 +4,7 @@
 
 # skills-red
 
-**Offensive security skills for Claude and Codex — portable `SKILL.md` files that turn AI coding agents into context-aware red team operators.**
+**Offensive security skills for Claude, Codex, and OpenCode — portable `SKILL.md` files that turn AI coding agents into context-aware red team operators.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/skills-58-red.svg)](#skill-index)
@@ -46,9 +46,9 @@ Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
 
 ## What is this
 
-`skills-red` is a curated library of offensive security skills for Claude and Codex skill systems. Each skill is a structured `SKILL.md` file that primes an AI coding agent with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to ADCS abuse.
+`skills-red` is a curated library of offensive security skills for Claude, Codex, and OpenCode skill systems. Each skill is a structured `SKILL.md` file that primes an AI coding agent with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to ADCS abuse.
 
-Install skills into `$CODEX_HOME/skills` for Codex or `~/.claude/skills/skills-red` for Claude. The same `SKILL.md` files are portable across both platforms; the installer chooses the layout each platform expects.
+Install skills into `$CODEX_HOME/skills` for Codex, `~/.claude/skills/skills-red` for Claude, or `~/.config/opencode/skills` for OpenCode. The same `SKILL.md` files are portable across all supported platforms; the installer chooses the layout each platform expects.
 
 **Use it for:** authorized red team engagements, bug bounty triage, security research, CTF preparation, training operators, and exploring attack surfaces methodically.
 
@@ -75,6 +75,27 @@ Restart Codex after installation so the skill metadata is picked up. Codex reads
 ```bash
 mkdir -p ~/.codex/skills
 cp -R Skills/web/offensive-sqli ~/.codex/skills/offensive-sqli
+```
+
+### OpenCode Agent Skills
+
+```bash
+# Install all skills into ~/.config/opencode/skills/<skill-name>
+git clone https://github.com/trewwwsec/skills-red
+cd skills-red
+./install.sh --platform opencode
+
+# Or install only one category
+./install.sh --platform opencode --category web
+```
+
+Start a new OpenCode session after installation so the `skill` tool refreshes its available skills. OpenCode discovers one folder per skill at `~/.config/opencode/skills/<skill-name>/SKILL.md`, so the installer flattens category folders the same way Codex does.
+
+### Manual OpenCode install
+
+```bash
+mkdir -p ~/.config/opencode/skills
+cp -R Skills/web/offensive-sqli ~/.config/opencode/skills/offensive-sqli
 ```
 
 ### Claude Skills System
@@ -109,7 +130,9 @@ cat Skills/active-directory/**/SKILL.md | claude --system-file -
 ./install.sh                           # Codex install (interactive target if TTY)
 ./install.sh --platform codex          # explicit Codex install
 ./install.sh --platform claude         # Claude-compatible install
+./install.sh --platform opencode       # OpenCode agent-skill install
 ./install.sh --target ~/.codex/skills  # explicit target
+./install.sh --platform opencode --target ~/.config/opencode/skills  # explicit OpenCode target
 ./install.sh --category web            # one category
 ./install.sh --dry-run                 # preview copy plan
 ```

@@ -1,0 +1,503 @@
+{
+  "name": "skills-red",
+  "version": "0.2.0",
+  "platform": "opencode",
+  "license": "MIT",
+  "homepage": "https://github.com/trewwwsec/skills-red",
+  "categories": {
+    "active-directory": [
+      "offensive-active-directory"
+    ],
+    "ai": [
+      "offensive-ai-security"
+    ],
+    "auth": [
+      "offensive-jwt",
+      "offensive-oauth"
+    ],
+    "cloud": [
+      "offensive-cloud"
+    ],
+    "exploit-dev": [
+      "offensive-basic-exploitation",
+      "offensive-crash-analysis",
+      "offensive-exploit-dev-course",
+      "offensive-exploit-development",
+      "offensive-mitigations",
+      "offensive-toctou"
+    ],
+    "fuzzing": [
+      "offensive-bug-identification",
+      "offensive-fuzzing",
+      "offensive-fuzzing-course",
+      "offensive-vuln-classes"
+    ],
+    "infrastructure": [
+      "offensive-advanced-redteam",
+      "offensive-edr-evasion",
+      "offensive-initial-access",
+      "offensive-keylogger-arch",
+      "offensive-shellcode",
+      "offensive-windows-boundaries",
+      "offensive-windows-mitigations"
+    ],
+    "iot": [
+      "offensive-iot"
+    ],
+    "mobile": [
+      "offensive-mobile"
+    ],
+    "recon": [
+      "offensive-osint",
+      "offensive-osint-methodology"
+    ],
+    "utility": [
+      "offensive-fast-checking",
+      "offensive-reporting"
+    ],
+    "web": [
+      "offensive-business-logic",
+      "offensive-deserialization",
+      "offensive-file-upload",
+      "offensive-graphql",
+      "offensive-idor",
+      "offensive-open-redirect",
+      "offensive-parameter-pollution",
+      "offensive-race-condition",
+      "offensive-rce",
+      "offensive-request-smuggling",
+      "offensive-sqli",
+      "offensive-ssrf",
+      "offensive-ssti",
+      "offensive-waf-bypass",
+      "offensive-xss",
+      "offensive-xxe"
+    ],
+    "wireless": [
+      "offensive-bluetooth-ble",
+      "offensive-bluetooth-classic",
+      "offensive-deauth-disassoc",
+      "offensive-evil-twin",
+      "offensive-krack-fragattacks",
+      "offensive-lorawan-sub-ghz",
+      "offensive-wifi",
+      "offensive-wifi-recon",
+      "offensive-wpa-enterprise",
+      "offensive-wpa2-psk",
+      "offensive-wpa3-sae",
+      "offensive-wps",
+      "offensive-z-wave",
+      "offensive-zigbee-thread-matter"
+    ]
+  },
+  "skills": [
+    {
+      "name": "offensive-active-directory",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-active-directory/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-active-directory",
+      "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
+    },
+    {
+      "name": "offensive-ai-security",
+      "category": "ai",
+      "path": "Skills/ai/offensive-ai-security/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-ai-security",
+      "description": "AI/LLM security offensive checklist: prompt injection, jailbreaking, model extraction, training data poisoning, adversarial inputs, LLM-assisted attack automation, and AI system reconnaissance. Use when assessing AI/ML systems, red-teaming LLMs, or researching AI attack vectors."
+    },
+    {
+      "name": "offensive-jwt",
+      "category": "auth",
+      "path": "Skills/auth/offensive-jwt/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-jwt",
+      "description": "JWT attack methodology for penetration testers. Covers algorithm confusion (alg:none, RS256→HS256), weak HMAC secret brute force, kid parameter injection (SQLi, path traversal), jku/x5u/jwk header injection, JWKS cache poisoning, JWS/JWE confusion, timing attacks, and mobile JWT storage extraction. Use when testing JWT-based authentication, hunting auth bypass via token manipulation, or evaluating JWT implementation security in web or mobile apps."
+    },
+    {
+      "name": "offensive-oauth",
+      "category": "auth",
+      "path": "Skills/auth/offensive-oauth/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-oauth",
+      "description": "OAuth 2.0 attack checklist: authorization code interception, redirect_uri bypass, CSRF on OAuth flow, state parameter abuse, open redirector chaining, token leakage via Referer, PKCE bypass, and scope escalation. Use when testing OAuth implementations in web apps or bug bounty."
+    },
+    {
+      "name": "offensive-cloud",
+      "category": "cloud",
+      "path": "Skills/cloud/offensive-cloud/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-cloud",
+      "description": "Cloud security attack methodology covering AWS, Azure, and GCP. Includes credential harvesting (IMDS, ~/.aws, env vars, leaked CI secrets, instance roles), enumeration with cloud-specific tools (pacu, ScoutSuite, Prowler, ROADtools, gcp_enum), privilege escalation paths (IAM PassRole, AssumeRole chains, Lambda/Functions privilege flips, Azure Owner-on-self, GCP serviceAccountTokenCreator), persistence techniques (IAM user/key creation, AAD app registration, GCP svc account key creation, EventBridge/Logic Apps backdoors), data exfiltration (S3/Blob/GCS, snapshot share, RDS/CosmosDB/Cloud SQL exfil), cloud-native lateral movement (cross-account assume, Azure AD multi-tenant, GCP project hierarchy), serverless attacks (Lambda env vars, layer hijack, Step Functions), Kubernetes-on-cloud (EKS/AKS/GKE-specific paths to node and AWS metadata), and CSPM evasion (CloudTrail blind spots, GuardDuty mute, Sentinel rule shaping). Use when the engagement scope is cloud accounts, when you've stolen cloud credentials, or…"
+    },
+    {
+      "name": "offensive-basic-exploitation",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/offensive-basic-exploitation/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-basic-exploitation",
+      "description": "Week 5 exploit development curriculum. Foundational exploitation techniques: controlling EIP/RIP, ROP chain construction, ret2libc, shellcode injection, heap spraying, bypass techniques for ASLR/NX/stack canaries. Use when building initial PoCs or understanding classic exploitation primitives."
+    },
+    {
+      "name": "offensive-crash-analysis",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/offensive-crash-analysis/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-crash-analysis",
+      "description": "Week 4 exploit development curriculum. Crash triage and analysis methodology: WinDbg/GDB analysis, ASAN/MSAN output interpretation, exploitability assessment, register/stack trace reading, root cause identification. Use when analyzing crash dumps, assessing exploitability, or understanding fuzzer-generated crashes."
+    },
+    {
+      "name": "offensive-exploit-dev-course",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/offensive-exploit-dev-course/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-exploit-dev-course",
+      "description": "Full exploit development course roadmap and syllabus: weekly topics, recommended reading, lab setup, and learning path from vulnerability classes through advanced exploitation. Use to structure exploit dev training or onboard new researchers."
+    },
+    {
+      "name": "offensive-exploit-development",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/offensive-exploit-development/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-exploit-development",
+      "description": "Exploit development operational guide: environment setup, debugging workflow, PoC development lifecycle, writing reliable exploits, using pwntools/pwndbg, heap exploitation techniques, and weaponization considerations. Use when actively developing exploits or setting up an exploit dev environment."
+    },
+    {
+      "name": "offensive-mitigations",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/offensive-mitigations/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-mitigations",
+      "description": "Security mitigation reference and bypass catalog: ASLR, DEP/NX, RELRO, stack canaries, CFI, sandboxing, seccomp. Covers both detection of enabled mitigations and known bypass techniques. Use when assessing target hardening or planning exploit mitigation bypasses."
+    },
+    {
+      "name": "offensive-toctou",
+      "category": "exploit-dev",
+      "path": "Skills/exploit-dev/offensive-toctou/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-toctou",
+      "description": "Time-of-Check / Time-of-Use (TOCTOU) race condition exploitation methodology across binary, kernel, filesystem, web, and container layers. Covers symbolic-link races (open/access/stat split), file-descriptor races, fopen/realpath traversal races, /proc and procfs races, FUSE-backed slow-fs races to widen the window, ptrace and signal races, kernel double-fetch / userspace pointer races, container/runc/symlink escape primitives, kubernetes admission/authz TOCTOU, web auth-vs-authz TOCTOU, JWT-claim TOCTOU at gateway vs service, payment/idempotency races, and modern race-amplification techniques (single-packet attack, slow loris, FUSE pause, cgroup freeze, scheduler shaping). Use when you've identified a 'check then act' pattern in code, when fuzzing for race conditions, or when exploiting concurrency bugs in privileged binaries / kernel / orchestrators."
+    },
+    {
+      "name": "offensive-bug-identification",
+      "category": "fuzzing",
+      "path": "Skills/fuzzing/offensive-bug-identification/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-bug-identification",
+      "description": "Systematic bug identification methodology: source code review patterns, black-box testing strategies, taint analysis, dangerous function hunting, data flow tracing, and automated scanning setup. Use for code audits, bug bounty triage, or building vulnerability identification pipelines."
+    },
+    {
+      "name": "offensive-fuzzing",
+      "category": "fuzzing",
+      "path": "Skills/fuzzing/offensive-fuzzing/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-fuzzing",
+      "description": "Practical offensive fuzzing methodology covering target identification, fuzzer selection (AFL++, libFuzzer, Honggfuzz, Boofuzz, syzkaller), harness writing, corpus curation, mutation strategies, coverage measurement, and crash triage. Use when setting up or running fuzz campaigns against any target: file parsers, network protocols, kernel drivers, EDR engines, embedded firmware, or language runtimes."
+    },
+    {
+      "name": "offensive-fuzzing-course",
+      "category": "fuzzing",
+      "path": "Skills/fuzzing/offensive-fuzzing-course/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-fuzzing-course",
+      "description": "Week 2 of the exploit development curriculum. Covers fuzzing methodology: target selection, corpus generation, coverage-guided fuzzing with AFL++/libFuzzer, structured fuzzing, and triage/deduplication. Use when setting up fuzz campaigns, selecting harness strategies, or triaging fuzzer output."
+    },
+    {
+      "name": "offensive-vuln-classes",
+      "category": "fuzzing",
+      "path": "Skills/fuzzing/offensive-vuln-classes/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-vuln-classes",
+      "description": "Exploit development curriculum covering core vulnerability classes with real-world CVE case studies: stack/heap buffer overflows, use-after-free, integer overflows, format strings, type confusion, and race conditions. Use when learning or teaching vuln classes, researching specific CVE patterns, or building exploit dev knowledge."
+    },
+    {
+      "name": "offensive-advanced-redteam",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/offensive-advanced-redteam/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-advanced-redteam",
+      "description": "Practical advanced red team operations guide: OPSEC discipline, C2 infrastructure design, living-off-the-land techniques, lateral movement, persistence, data exfiltration, and evading modern defenses. Use for planning advanced red team engagements or understanding APT TTPs."
+    },
+    {
+      "name": "offensive-edr-evasion",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/offensive-edr-evasion/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-edr-evasion",
+      "description": "EDR evasion offensive checklist: hook unhooking (user/kernel), direct syscalls, PPID spoofing, process injection variants, AMSI bypass, ETW patching, memory encryption, and behavior-based evasion. Use when planning EDR bypass during red team engagements or researching AV/EDR evasion techniques."
+    },
+    {
+      "name": "offensive-initial-access",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/offensive-initial-access/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-initial-access",
+      "description": "Initial access techniques checklist: phishing (spear/smishing), credential stuffing, exposed service exploitation, supply chain attacks, watering hole, VPN/RDP brute force, public-facing application exploitation. Maps to MITRE ATT&CK TA0001. Use when planning initial access phases of red team engagements."
+    },
+    {
+      "name": "offensive-keylogger-arch",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/offensive-keylogger-arch/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-keylogger-arch",
+      "description": "Low-level keylogger architecture design: kernel driver hooks (WH_KEYBOARD_LL, SetWindowsHookEx), ETW-based input capture, user-mode vs kernel-mode approaches, stealth techniques, and data exfiltration. Use for understanding input capture mechanisms, EDR evasion research, or malware architecture analysis."
+    },
+    {
+      "name": "offensive-shellcode",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/offensive-shellcode/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-shellcode",
+      "description": "Shellcode development reference for offensive security engagements. Use when writing custom x86/x64 shellcode, implementing position-independent code (PIC), building shellcode loaders, evading AV/EDR detection, or converting PE files to shellcode. Covers null byte avoidance, API hashing, encoder/decoder patterns, staged vs stageless payloads, Windows PEB traversal, and cross-platform shellcode techniques."
+    },
+    {
+      "name": "offensive-windows-boundaries",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/offensive-windows-boundaries/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-windows-boundaries",
+      "description": "Windows security boundary taxonomy and attack surface enumeration: kernel/user boundary, sandbox boundaries (LPAC, AppContainer), COM/RPC boundaries, hypervisor boundary, trust level transitions. Use when planning privilege escalation paths, sandbox escapes, or understanding Windows security architecture."
+    },
+    {
+      "name": "offensive-windows-mitigations",
+      "category": "infrastructure",
+      "path": "Skills/infrastructure/offensive-windows-mitigations/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-windows-mitigations",
+      "description": "Deep-dive on Windows exploit mitigations: ASLR, DEP/NX, CFG, CET/Shadow Stack, SEHOP, Heap Guard, ACG, Arbitrary Code Guard. Covers both the protection mechanism and known bypass techniques. Use when researching Windows exploit mitigations, planning bypass strategies, or understanding protection depth."
+    },
+    {
+      "name": "offensive-iot",
+      "category": "iot",
+      "path": "Skills/iot/offensive-iot/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-iot",
+      "description": "IoT and embedded device security testing methodology. Covers hardware reconnaissance (UART, JTAG, SWD, SPI flash, I2C EEPROM, eMMC chip-off), firmware acquisition (vendor portals, OTA capture, flash dump, binwalk extraction), firmware analysis (filesystem mounting, binary triage, hardcoded secrets, default credential discovery), bootloader attacks (U-Boot console, secure-boot bypass, fault injection), runtime attacks on embedded Linux/RTOS (busybox CVEs, MTD writes, /dev/mem), wireless protocol attacks (Zigbee, BLE, Z-Wave, LoRaWAN, Thread/Matter, sub-GHz), MQTT/CoAP/Modbus/BACnet/OPC-UA exploitation, mobile companion app analysis, cloud-IoT API abuse, and side-channel/glitching basics. Use for IoT pentest, smart-home assessment, ICS/OT testing, or embedded vulnerability research."
+    },
+    {
+      "name": "offensive-mobile",
+      "category": "mobile",
+      "path": "Skills/mobile/offensive-mobile/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-mobile",
+      "description": "Mobile (Android + iOS) application penetration testing methodology. Covers static analysis (apktool/jadx for Android, class-dump/Hopper/IDA for iOS), dynamic instrumentation with Frida and Objection, SSL pinning bypass strategies, root/jailbreak detection bypass, deep-link / URL-scheme abuse, exported component attacks (Android activities, services, providers, receivers; iOS XPC, URL schemes, universal links), insecure data storage (SharedPrefs, KeyStore misuse, NSUserDefaults, Keychain ACL bypass), IPC / Intent redirection, WebView vulnerabilities (JavaScriptInterface, file:// access), Firebase/AWS/Azure misconfiguration leakage, mobile API testing, biometric/Face ID/Touch ID bypass, app-cloning and runtime patching, and mobile malware/RAT analysis primitives. Use for mobile pentest, bug bounty mobile triage, or app-store reconnaissance."
+    },
+    {
+      "name": "offensive-osint",
+      "category": "recon",
+      "path": "Skills/recon/offensive-osint/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-osint",
+      "description": "Comprehensive OSINT methodology skill for offensive security, red team intelligence gathering, and bug bounty reconnaissance. Covers domain recon, email harvesting, social media profiling, GitHub/code leaks, Shodan/Censys enumeration, breach data lookup, employee profiling, infrastructure mapping, cryptocurrency tracing, geospatial intelligence, and AI-assisted analysis workflows. Use when performing reconnaissance against a target domain or organization, investigating a person or entity, tracing cryptocurrency flows, geolocating images or events, or building an attack-surface map."
+    },
+    {
+      "name": "offensive-osint-methodology",
+      "category": "recon",
+      "path": "Skills/recon/offensive-osint-methodology/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-osint-methodology",
+      "description": "Structured OSINT methodology framework: target definition, source selection, collection workflows, data correlation, timeline reconstruction, and reporting. Use to guide systematic OSINT campaigns or teach OSINT methodology."
+    },
+    {
+      "name": "offensive-fast-checking",
+      "category": "utility",
+      "path": "Skills/utility/offensive-fast-checking/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-fast-checking",
+      "description": "Speed-optimized offensive checklist for rapid assessment: quick-win vulnerability patterns, fast recon shortcuts, automated scanner configurations, and triage shortcuts. Use for time-boxed assessments, CTF-speed engagements, or initial rapid surface mapping."
+    },
+    {
+      "name": "offensive-reporting",
+      "category": "utility",
+      "path": "Skills/utility/offensive-reporting/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-reporting",
+      "description": "Penetration test and red team report writing methodology. Covers executive summary structuring (risk-led narrative for non-technical readers), technical finding format (title, severity, affected scope, narrative, reproduction steps, impact, remediation, references), CVSS v3.1 / v4.0 scoring with vector justification, OWASP risk rating, evidence hygiene (redacting credentials, hashing client data, time-stamping every action), screenshot and PoC artifact management, finding chain narratives, scope/limitations/assumptions documentation, retest evidence and remediation tracking, deliverable formats (PDF, DOCX, HTML, JSON for SIEM ingestion), client-customer-deliverable separation, and common report mistakes (over-CVSSing, undermining the triager, missing the 'so what'). Use at the end of an engagement when authoring a deliverable, when restructuring a draft for executive readability, or when establishing a reusable report template for a consulting practice."
+    },
+    {
+      "name": "offensive-business-logic",
+      "category": "web",
+      "path": "Skills/web/offensive-business-logic/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-business-logic",
+      "description": "Business logic vulnerability testing for web/mobile/API engagements. Covers workflow bypass, state machine violations, multi-step process abuse, price/quantity/discount manipulation, currency confusion, coupon stacking, refund/chargeback abuse, race conditions on logic boundaries, parameter tampering for hidden flows, role/tenant boundary violations, time-of-check vs use, anti-automation defeat, fraud-detection evasion, and subscription/quota abuse. Use when scoping an application after surface-level OWASP Top 10 has been covered, or when the asset is a transactional/marketplace/fintech/e-commerce/SaaS app where logic flaws produce direct financial impact."
+    },
+    {
+      "name": "offensive-deserialization",
+      "category": "web",
+      "path": "Skills/web/offensive-deserialization/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-deserialization",
+      "description": "Insecure deserialization attack checklist: identifying deserialization sinks, Java/PHP/.NET/Python deserialization exploitation, ysoserial gadget chains, magic method abuse, and detection evasion. Use when testing deserialization endpoints or developing deserialization exploits."
+    },
+    {
+      "name": "offensive-file-upload",
+      "category": "web",
+      "path": "Skills/web/offensive-file-upload/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-file-upload",
+      "description": "File upload vulnerability checklist: MIME type bypass, extension bypass, magic byte manipulation, path traversal in filenames, stored XSS via SVG/HTML upload, server-side processing attacks, and race conditions. Use for assessing file upload endpoints in web app pentests or bug bounty."
+    },
+    {
+      "name": "offensive-graphql",
+      "category": "web",
+      "path": "Skills/web/offensive-graphql/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-graphql",
+      "description": "GraphQL security testing checklist: introspection abuse, batching attacks, query depth/complexity DoS, field suggestion enumeration, IDOR via GraphQL, injection through arguments, authorization bypass. Use when assessing GraphQL endpoints in web app tests or bug bounty."
+    },
+    {
+      "name": "offensive-idor",
+      "category": "web",
+      "path": "Skills/web/offensive-idor/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-idor",
+      "description": "IDOR (Insecure Direct Object Reference) testing checklist: object ID enumeration, horizontal/vertical privilege escalation, GUID predictability, indirect references via hashes, chained IDOR, and API endpoint IDOR. Use for web app pentests and bug bounty IDOR discovery."
+    },
+    {
+      "name": "offensive-open-redirect",
+      "category": "web",
+      "path": "Skills/web/offensive-open-redirect/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-open-redirect",
+      "description": "Open redirect vulnerability checklist: parameter identification, bypass techniques (URL encoding, double slashes, CRLF injection, protocol handlers), chaining with OAuth/SSRF, and impact escalation paths. Use for web app testing and bug bounty open redirect discovery."
+    },
+    {
+      "name": "offensive-parameter-pollution",
+      "category": "web",
+      "path": "Skills/web/offensive-parameter-pollution/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-parameter-pollution",
+      "description": "HTTP parameter pollution (HPP) checklist: duplicate parameter injection, backend vs frontend parsing differences, WAF bypass via HPP, server-side vs client-side HPP, and practical exploitation patterns. Use when testing web applications for parameter handling flaws."
+    },
+    {
+      "name": "offensive-race-condition",
+      "category": "web",
+      "path": "Skills/web/offensive-race-condition/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-race-condition",
+      "description": "Race condition (TOCTOU) testing checklist: identifying timing windows, Burp Suite Turbo Intruder, Last-Byte sync technique, rate limit bypass, double-spend attacks, and concurrent request exploitation. Use for web app race condition testing or bug bounty time-of-check-to-time-of-use bugs."
+    },
+    {
+      "name": "offensive-rce",
+      "category": "web",
+      "path": "Skills/web/offensive-rce/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-rce",
+      "description": "Remote Code Execution testing checklist: OS command injection, SSTI-to-RCE, deserialization RCE, file upload RCE, XXE with SSRF to RCE, RCE via dependency confusion, and CVE-based RCE patterns. Use for web app pentests and bug bounty RCE discovery."
+    },
+    {
+      "name": "offensive-request-smuggling",
+      "category": "web",
+      "path": "Skills/web/offensive-request-smuggling/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-request-smuggling",
+      "description": "HTTP request smuggling checklist: CL.TE, TE.CL, TE.TE variants, detection with timing and differential responses, WAF bypass, cache poisoning, credential hijacking, and request smuggling via HTTP/2. Use when testing reverse proxy/load balancer configurations."
+    },
+    {
+      "name": "offensive-sqli",
+      "category": "web",
+      "path": "Skills/web/offensive-sqli/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-sqli",
+      "description": "SQL injection testing skill for offensive security assessments and bug bounty hunting. Covers error-based, UNION-based, boolean/time-based blind, out-of-band, second-order, NoSQL, GraphQL, WebSocket, and JSON-operator SQLi. Includes WAF bypass techniques, database-specific exploitation (MySQL, MSSQL, PostgreSQL, Oracle), cloud-native attack paths, ORM CVE tracking, and SQLmap automation. Use when performing web application SQL injection testing, database enumeration, privilege escalation via SQLi, or assessing injection vectors in APIs and modern stacks."
+    },
+    {
+      "name": "offensive-ssrf",
+      "category": "web",
+      "path": "Skills/web/offensive-ssrf/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-ssrf",
+      "description": "Server-Side Request Forgery testing checklist: SSRF discovery, blind SSRF with out-of-band, cloud metadata endpoints (AWS/GCP/Azure), SSRF filter bypass techniques (IP encoding, DNS rebinding, redirect chains), and SSRF to RCE escalation. Use for web app SSRF testing and bug bounty."
+    },
+    {
+      "name": "offensive-ssti",
+      "category": "web",
+      "path": "Skills/web/offensive-ssti/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-ssti",
+      "description": "Server-Side Template Injection testing checklist: template engine identification (Jinja2, Twig, Freemarker, Pebble, Velocity), polyglot detection payloads, engine-specific RCE payloads, blind SSTI, and filter bypass. Use when testing web apps for template injection vulnerabilities."
+    },
+    {
+      "name": "offensive-waf-bypass",
+      "category": "web",
+      "path": "Skills/web/offensive-waf-bypass/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-waf-bypass",
+      "description": "WAF bypass techniques checklist: encoding bypass (URL/HTML/Unicode/double encoding), case variation, comment injection, HTTP header manipulation, chunked encoding, IP rotation, timing attacks, and payload obfuscation per WAF vendor. Use when WAF is blocking payloads during web app tests."
+    },
+    {
+      "name": "offensive-xss",
+      "category": "web",
+      "path": "Skills/web/offensive-xss/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-xss",
+      "description": "Cross-Site Scripting testing checklist: stored/reflected/DOM/blind XSS discovery, polyglot payloads, CSP bypass, XSS filter bypass, event handler injection, DOM clobbering, mutation XSS, and impact escalation (session hijack, phishing, keylogging). Use for web app XSS testing and bug bounty."
+    },
+    {
+      "name": "offensive-xxe",
+      "category": "web",
+      "path": "Skills/web/offensive-xxe/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-xxe",
+      "description": "XML External Entity injection testing checklist: classic XXE, blind XXE (out-of-band), XXE via file upload (SVG/docx), XXE in SOAP/REST, error-based XXE, XInclude attacks, and XXE filter bypass. Use for web app XXE testing and bug bounty."
+    },
+    {
+      "name": "offensive-bluetooth-ble",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-bluetooth-ble/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-bluetooth-ble",
+      "description": "Bluetooth Low Energy (BLE) attack methodology — GATT enumeration, characteristic read/write without auth, pairing downgrade (Just Works forced), LE Secure Connections bypass, MITM via active relay, sniffing with Sniffle (TI CC1352) / Ubertooth / Frontline, encryption key extraction (LE Legacy Pairing crackable, LE Secure Connections strong), proximity authentication abuse (cars, locks), and companion-app trust analysis. Use for IoT BLE devices, smart locks, fitness trackers, medical devices, BLE beacons, or any device pairing over BLE."
+    },
+    {
+      "name": "offensive-bluetooth-classic",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-bluetooth-classic/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-bluetooth-classic",
+      "description": "Bluetooth Classic (BR/EDR) attack methodology — device discovery, service enumeration via SDP, LMP/L2CAP layer attacks, legacy PIN cracking (BlueBorne / KNOB), Bluetooth file-transfer abuse (BlueSnarfing legacy), unauthenticated profile abuse (HSP, HFP, OPP), and modern relevance against older industrial / automotive / accessory targets. Use when in-scope devices use Bluetooth Classic (Bluetooth ≤ 4.0 BR/EDR) — common in legacy car kits, industrial sensors, older medical devices, and audio accessories."
+    },
+    {
+      "name": "offensive-deauth-disassoc",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-deauth-disassoc/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-deauth-disassoc",
+      "description": "Deauthentication and disassociation attacks against 802.11 networks — targeted single-client deauth for handshake capture, broadcast deauth for DoS (with authorization), action-frame attacks bypassing 802.11w (PMF), beacon flooding, mdk4 / aireplay-ng tooling, and rate-limit / PMF-aware operation. Use to coerce client reconnection (handshake capture, evil-twin roaming), as targeted DoS, or to test PMF posture."
+    },
+    {
+      "name": "offensive-evil-twin",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-evil-twin/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-evil-twin",
+      "description": "Evil Twin / KARMA / Mana access point methodology — rogue AP construction with hostapd-mana / wifiphisher / airgeddon, KARMA universal probe response, Mana selective probe response, captive portal phishing, deauth-driven client coercion to attacker AP, MAC randomization defeat via PNL leak analysis, post-association MITM (DNS, ARP, transparent proxy), credential capture for portal/web/SMB, and detection-evasion tactics. Use to coerce client devices onto an attacker-controlled AP, intercept their traffic, harvest credentials, or deliver payloads via captive portal."
+    },
+    {
+      "name": "offensive-krack-fragattacks",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-krack-fragattacks/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-krack-fragattacks",
+      "description": "KRACK (CVE-2017-13077..082) and FragAttacks (CVE-2020-24586..588 + 26139-26147) — key reinstallation, fragmentation, and aggregation attacks against WPA2 supplicants. Covers Vanhoef's test scripts, viability against modern patched stacks (mostly mitigated post-2021), residual unpatched embedded devices and IoT vendors, and the practical limitations of these attacks in modern engagements. Use when assessing legacy supplicants, embedded clients, or vendors with poor patch cadence."
+    },
+    {
+      "name": "offensive-lorawan-sub-ghz",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-lorawan-sub-ghz/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-lorawan-sub-ghz",
+      "description": "LoRaWAN and sub-GHz (433 / 868 / 915 MHz) attack methodology — LoRaWAN ABP/OTAA join attack, network/session key reuse, frame counter replay, downlink injection on TTN/Helium-style networks, sub-GHz protocol replay (KeeLoq garage doors, fixed-code remotes, TPMS spoofing, smart plug telemetry), HackRF / RTL-SDR / Flipper Zero workflows, signal analysis with Inspectrum / Universal Radio Hacker, and reconstruction of proprietary packet formats. Use for LoRaWAN deployments (smart cities, asset tracking, industrial telemetry), or any wireless device using the unlicensed 433/868/915 MHz bands (garage openers, doorbells, IoT sensors, RC equipment)."
+    },
+    {
+      "name": "offensive-wifi",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-wifi/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-wifi",
+      "description": "Wireless / 802.11 attack methodology for red team engagements and wireless security assessments. Covers monitor-mode setup, WPA/WPA2-PSK handshake capture and PMKID attacks, WPA3 SAE downgrade and Dragonblood, WPA-Enterprise (EAP) attacks (MSCHAPv2 cracking, EAP-TLS cert theft, evil-twin RADIUS), Karma / Known Beacons / Mana evil twin attacks, captive-portal phishing, KRACK and FragAttacks, WPS Pixie Dust, deauthentication and disassociation attacks, rogue AP construction (hostapd-mana), 802.1X bypass, MAC randomization defeat, BLE/Zigbee/IEEE 802.15.4 sidebands, and Wi-Fi 6/6E/7 considerations. Use when scoping wireless pentest, war-driving an estate, or testing corporate wireless segmentation."
+    },
+    {
+      "name": "offensive-wifi-recon",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-wifi-recon/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-wifi-recon",
+      "description": "Wi-Fi reconnaissance methodology — adapter selection, monitor mode and packet injection setup, regulatory domain handling, multi-band airspace mapping, hidden SSID discovery, BSSID/ESSID/channel/PMF/encryption fingerprinting, client probe analysis, vendor OUI lookup, war-driving with Kismet/airodump-ng/Wigle, and structured airspace data capture for downstream attacks. Use at the start of any wireless engagement to build the target map before active attacks; covers 2.4 GHz, 5 GHz, and 6 GHz (Wi-Fi 6E) bands and adapter compatibility for each."
+    },
+    {
+      "name": "offensive-wpa-enterprise",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-wpa-enterprise/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-wpa-enterprise",
+      "description": "WPA/WPA2/WPA3-Enterprise (802.1X / EAP) attack methodology — EAP method identification (PEAP-MSCHAPv2, EAP-TTLS, EAP-TLS, EAP-GTC, EAP-PWD, EAP-FAST), evil-twin RADIUS attacks with eaphammer for credential capture, MSCHAPv2 challenge-response cracking, EAP-TLS client certificate theft paths (DPAPI, NDES, AD CS auto-enrollment), supplicant validation bypass (missing server cert validation, missing CN pinning, BYOD misconfigurations), and post-capture pivots into AD via cracked domain credentials. Use for corporate Wi-Fi engagements where the network is 802.1X authenticated."
+    },
+    {
+      "name": "offensive-wpa2-psk",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-wpa2-psk/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-wpa2-psk",
+      "description": "WPA/WPA2-PSK attack methodology — four-way handshake capture via targeted deauthentication, PMKID attacks (no client required), hcxdumptool / hcxpcapngtool conversion to hashcat hc22000 format, GPU-accelerated cracking with dictionary, mask, and rule-based attacks, vendor default-PSK generators (UPC, Sky, BT, etc.), 802.11r FT key cracking, opportunistic key cache analysis, and signal-level optimization. Use when the in-scope network is WPA/WPA2 Personal — the most common consumer/SMB encryption mode."
+    },
+    {
+      "name": "offensive-wpa3-sae",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-wpa3-sae/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-wpa3-sae",
+      "description": "WPA3 / SAE (Simultaneous Authentication of Equals) attack methodology — transition-mode (mixed WPA2/WPA3) downgrade, Dragonblood side-channel attacks (CVE-2019-9494, 9495, 13377, 13456), SAE auth flooding for AP CPU exhaustion, Hash-to-Element (H2E) timing analysis, group downgrade, and 6 GHz / Wi-Fi 6E spec implications (PMF mandatory, no transition mode allowed). Use when target advertises WPA3-SAE or WPA3-Personal/Enterprise, or operates in 6 GHz where WPA3 + PMF are required by spec."
+    },
+    {
+      "name": "offensive-wps",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-wps/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-wps",
+      "description": "WPS (Wi-Fi Protected Setup) PIN attack methodology — Pixie Dust offline attack against vulnerable chipsets (Ralink, Realtek, Broadcom, MediaTek), online PIN brute-force with reaver/bully, lockout handling, time-of-day evasion, WPS push-button vulnerability windows, and PIN-to-PSK derivation. Use when a target SOHO router exposes WPS — common on consumer ISP gear, often left enabled by default even when WPS attacks have been known for over a decade."
+    },
+    {
+      "name": "offensive-z-wave",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-z-wave/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-z-wave",
+      "description": "Z-Wave attack methodology — sniffing with Z-Force / EZ-Wave / RTL-SDR + ZniffMobile, S0 (legacy) network-key derivation flaw and key reuse, S2 (modern) ECDH commissioning analysis, replay/injection on unauthenticated nodes, default-key brute-force on test deployments, and home-automation hub pivots. Use when targeting Z-Wave smart home devices (door locks, sensors, garage controllers) — common in mid-2010s smart home deployments still in production."
+    },
+    {
+      "name": "offensive-zigbee-thread-matter",
+      "category": "wireless",
+      "path": "Skills/wireless/offensive-zigbee-thread-matter/SKILL.md",
+      "install_path": "~/.config/opencode/skills/offensive-zigbee-thread-matter",
+      "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
+    }
+  ],
+  "skill_count": 58,
+  "category_count": 13
+}
