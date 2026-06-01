@@ -3,16 +3,17 @@
 # Copies offensive security skills into a Codex, Claude, or OpenCode skills directory.
 #
 # Usage:
-#   ./install.sh                                # interactive Codex install
+#   ./install.sh                                # prompt for platform, then target
 #   ./install.sh --platform codex              # install Codex skills under skills-red category tree
 #   ./install.sh --platform claude             # install Claude category tree
 #   ./install.sh --platform opencode           # install OpenCode skills under skills-red category tree
-#   ./install.sh --target ~/.codex/skills/skills-red  # explicit target
+#   ./install.sh --target ~/.codex/skills/skills-red  # prompt for platform, explicit target
 #   ./install.sh --category web                # one category only
 #   ./install.sh --target DIR --category web   # combined
 #   ./install.sh --list                        # list available categories
-#   ./install.sh --dry-run                     # show what would be copied
+#   ./install.sh --dry-run                     # prompt for platform and show copy plan
 #
+# No platform is selected by default; omit --platform only in an interactive TTY.
 # Default Codex target: ~/.codex/skills/skills-red
 # Default Claude target: ~/.claude/skills/skills-red
 # Default OpenCode target: ~/.config/opencode/skills/skills-red
@@ -24,7 +25,7 @@ SKILLS_DIR="$SCRIPT_DIR/Skills"
 # shellcheck source=tools/platform_defaults.sh
 . "$SCRIPT_DIR/tools/platform_defaults.sh"
 
-PLATFORM="codex"
+PLATFORM=""
 TARGET=""
 CATEGORY=""
 DRY_RUN=0
@@ -34,6 +35,32 @@ SKILL_COUNT=0
 usage() {
   sed -n '2,18p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
+}
+
+
+validate_platform() {
+  case "$1" in
+    codex|claude|opencode) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+prompt_platform() {
+  local choice=""
+  echo "Select install platform:"
+  echo "  1) codex"
+  echo "  2) claude"
+  echo "  3) opencode"
+  while true; do
+    read -r -p "Platform (codex/claude/opencode): " choice || true
+    case "$choice" in
+      1|codex) PLATFORM="codex"; return ;;
+      2|claude) PLATFORM="claude"; return ;;
+      3|opencode) PLATFORM="opencode"; return ;;
+      "") echo "Error: platform is required; there is no default platform." >&2 ;;
+      *) echo "Error: platform must be codex, claude, or opencode." >&2 ;;
+    esac
+  done
 }
 
 list_categories() {
@@ -165,8 +192,15 @@ install_platform_skills() {
 while [ $# -gt 0 ]; do
   case "$1" in
     --platform)
+      if [ $# -lt 2 ]; then
+        echo "Error: --platform requires codex, claude, or opencode" >&2
+        exit 1
+      fi
       PLATFORM="$2"
-      case "$PLATFORM" in codex|claude|opencode) ;; *) echo "Error: --platform must be codex, claude, or opencode" >&2; exit 1 ;; esac
+      if ! validate_platform "$PLATFORM"; then
+        echo "Error: --platform must be codex, claude, or opencode" >&2
+        exit 1
+      fi
       shift 2
       ;;
     --target)   TARGET="$2"; shift 2 ;;
@@ -186,6 +220,15 @@ fi
 if [ ! -d "$SKILLS_DIR" ]; then
   echo "Error: Skills directory not found at $SKILLS_DIR" >&2
   exit 1
+fi
+
+if [ -z "$PLATFORM" ]; then
+  if [ -t 0 ]; then
+    prompt_platform
+  else
+    echo "Error: platform is required when not running interactively. Use --platform codex, --platform claude, or --platform opencode." >&2
+    exit 1
+  fi
 fi
 
 if [ -z "$TARGET" ]; then

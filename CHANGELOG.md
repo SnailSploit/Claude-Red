@@ -6,13 +6,13 @@ All notable changes to `skills-red` are documented here. The library follows a p
 
 ### Added
 
-- Cross-platform installation paths in `install.sh`: flattened `$CODEX_HOME/skills/<skill-name>` for Codex and category-preserving `~/.claude/skills/skills-red` for Claude.
-- `codex-skills.json` manifest generated alongside the Claude-compatible manifest.
+- Cross-platform installation paths in `install.sh` for Codex, Claude, and OpenCode, selected explicitly by prompt or `--platform`.
+- `codex-skills.json` and `opencode-skills.json` manifests generated alongside the Claude-compatible manifest.
 - Root `AGENTS.md` with cross-platform repository operating guidance.
 
 ### Changed
 
-- README and contributor guidance now document both Codex and Claude as first-class installation targets.
+- README and contributor guidance now document Codex, Claude, and OpenCode as first-class installation targets with no default installer platform.
 - Legacy platform-specific skill headings now use platform-neutral `Operational Instructions`.
 
 ### Planned

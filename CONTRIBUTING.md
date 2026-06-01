@@ -94,7 +94,7 @@ The `description` is what Codex and Claude use for trigger matching. Make it den
    ```bash
    python3 tools/check_manifest_fresh.py
    ```
-   Default manifest install paths preserve `skills-red/<category>/<skill-name>` under each platform skill root; update `tools/platform_defaults.sh` rather than editing generated JSON by hand.
+   Manifest install paths preserve `skills-red/<category>/<skill-name>` under each platform skill root; update `tools/platform_defaults.sh` rather than editing generated JSON by hand.
 8. Run any local lint:
    ```bash
    ./tools/check-skill.sh Skills/<category>/<skill-name>/SKILL.md

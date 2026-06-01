@@ -128,14 +128,14 @@ cat Skills/active-directory/**/SKILL.md | claude --system-file -
 ### Install Script
 
 ```bash
-./install.sh                           # Codex install (interactive target if TTY)
-./install.sh --platform codex          # explicit Codex install
+./install.sh                           # prompt for platform, then target
+./install.sh --platform codex          # Codex install
 ./install.sh --platform claude         # Claude-compatible install
 ./install.sh --platform opencode       # OpenCode agent-skill install
-./install.sh --target ~/.codex/skills/skills-red  # explicit target
+./install.sh --target ~/.codex/skills/skills-red  # prompt for platform, explicit target
 ./install.sh --platform opencode --target ~/.config/opencode/skills/skills-red  # explicit OpenCode target
 ./install.sh --category web            # one category
-./install.sh --dry-run                 # preview copy plan
+./install.sh --dry-run                 # prompt for platform and preview copy plan
 ```
 
 ---
@@ -148,7 +148,7 @@ summarize the `Skills/<category>/<skill-name>/SKILL.md` tree for platform
 tooling, marketplace/index consumers, and release review while keeping each
 `SKILL.md` file as the source of truth.
 
-Manifest `install_path` values are default metadata for indexes and review. They intentionally include the `skills-red/<category>/<skill-name>` namespace so generated indexes match the default installer layout. For Codex and OpenCode this depends on current recursive skill discovery; if either platform drops recursive scanning, update `tools/platform_defaults.sh`, `install.sh`, and regenerated manifests together. Runtime installation behavior, including `--target`, `CODEX_HOME`, and `OPENCODE_CONFIG_HOME` overrides, is owned by [`install.sh`](install.sh).
+Manifest `install_path` values are install-location metadata for indexes and review. They intentionally include the `skills-red/<category>/<skill-name>` namespace so generated indexes match each platform's target layout after the installer prompts for, or receives, an explicit platform. For Codex and OpenCode this depends on current recursive skill discovery; if either platform drops recursive scanning, update `tools/platform_defaults.sh`, `install.sh`, and regenerated manifests together. Runtime installation behavior, including platform selection, `--target`, `CODEX_HOME`, and `OPENCODE_CONFIG_HOME` overrides, is owned by [`install.sh`](install.sh).
 
 Regenerate them after any skill metadata, category, or install-path change:
 
