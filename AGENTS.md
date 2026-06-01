@@ -2,7 +2,7 @@
 
 ## Project purpose
 
-`codex-red` is a Codex-optimized fork of the Claude Red offensive-security skill library. The repository ships portable `SKILL.md` files for authorized red-team, penetration-testing, bug-bounty, CTF, and security-research workflows.
+`skills-red` is a cross-platform offensive-security skill library for Claude and Codex, forked from Claude Red. The repository ships portable `SKILL.md` files for authorized red-team, penetration-testing, bug-bounty, CTF, and security-research workflows.
 
 ## Safety boundaries
 

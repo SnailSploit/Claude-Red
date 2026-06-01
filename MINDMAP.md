@@ -1,4 +1,4 @@
-# claude-red — Library Mindmap
+# skills-red — Library Mindmap
 
 A visual map of every skill in the library, by category. Use it to navigate, to discover skills you didn't know existed, and to spot coverage gaps before an engagement.
 
@@ -10,7 +10,7 @@ References for completeness checking: [MITRE ATT&CK](https://attack.mitre.org/),
 
 ```mermaid
 mindmap
-  root((claude-red))
+  root((skills-red))
     Web
       sqli
       xss

@@ -1,6 +1,6 @@
 # Security Policy
 
-`claude-red` is an offensive security tooling library. Its content describes attack methodologies for use by authorized red team operators, penetration testers, and security researchers.
+`skills-red` is an offensive security tooling library. Its content describes attack methodologies for use by authorized red team operators, penetration testers, and security researchers.
 
 ## Intended Use
 
@@ -13,7 +13,7 @@ These skills are intended for:
 
 These skills are **not** intended for unauthorized access to systems you do not own or do not have explicit, written permission to test. Misuse may violate computer-misuse laws in your jurisdiction (CFAA in the US, Computer Misuse Act in the UK, equivalent statutes elsewhere).
 
-## Reporting a Vulnerability in claude-red Itself
+## Reporting a Vulnerability in skills-red Itself
 
 If you discover a security issue in this repository — for example a malicious payload accidentally committed, a credential leaked in an example, a typosquat-prone install path, or an unsafe shell command in `install.sh` — please report it privately rather than opening a public issue.
 
@@ -30,7 +30,7 @@ We aim to acknowledge reports within 72 hours and resolve confirmed issues withi
 
 ## Reporting a Vulnerability Found Using This Library
 
-If you discover a vulnerability in a third-party product or service while using `claude-red`'s methodologies, follow that vendor's responsible disclosure process. The [`offensive-reporting`](Skills/utility/offensive-reporting/SKILL.md) skill includes guidance on responsible disclosure, evidence handling, and report writing.
+If you discover a vulnerability in a third-party product or service while using `skills-red`'s methodologies, follow that vendor's responsible disclosure process. The [`offensive-reporting`](Skills/utility/offensive-reporting/SKILL.md) skill includes guidance on responsible disclosure, evidence handling, and report writing.
 
 If the vendor has no published security contact:
 
@@ -47,7 +47,7 @@ This repository is signed by SnailSploit. Verify commit signatures with:
 git log --show-signature
 ```
 
-If you receive a `claude-red` archive from a third party (mirror, pastebin, package manager), verify it against the upstream repository before using.
+If you receive a `skills-red` archive from a third party (mirror, pastebin, package manager), verify it against the upstream repository before using.
 
 ## Scope
 

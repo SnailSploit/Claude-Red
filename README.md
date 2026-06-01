@@ -1,16 +1,16 @@
-![codex-red banner](/assets/banner.png)
+![skills-red banner](/assets/banner.png)
 
 <div align="center">
 
-# codex-red
+# skills-red
 
-**Offensive security skills for Codex — drop-in `SKILL.md` files that turn Codex into a context-aware red team operator.**
+**Offensive security skills for Claude and Codex — portable `SKILL.md` files that turn AI coding agents into context-aware red team operators.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/skills-58-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-13-orange.svg)](#categories)
-[![Stars](https://img.shields.io/github/stars/trewwwsec/codex-Red?style=social)](https://github.com/trewwwsec/codex-Red)
-[![Forks](https://img.shields.io/github/forks/trewwwsec/codex-Red?style=social)](https://github.com/trewwwsec/codex-Red/network/members)
+[![Stars](https://img.shields.io/github/stars/trewwwsec/skills-red?style=social)](https://github.com/trewwwsec/skills-red)
+[![Forks](https://img.shields.io/github/forks/trewwwsec/skills-red?style=social)](https://github.com/trewwwsec/skills-red/network/members)
 
 Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
 
@@ -46,9 +46,9 @@ Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
 
 ## What is this
 
-`codex-red` is a curated library of offensive security skills for the Codex Skills system. Each skill is a structured `SKILL.md` file that primes Codex with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to ADCS abuse.
+`skills-red` is a curated library of offensive security skills for Claude and Codex skill systems. Each skill is a structured `SKILL.md` file that primes an AI coding agent with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to ADCS abuse.
 
-Install a skill into `$CODEX_HOME/skills` (defaults to `~/.codex/skills`) and Codex can load it on demand from its `name` and `description` metadata. The same `SKILL.md` files remain portable to Claude Skills; Codex is the optimized default for this fork.
+Install skills into `$CODEX_HOME/skills` for Codex or `~/.claude/skills/skills-red` for Claude. The same `SKILL.md` files are portable across both platforms; the installer chooses the layout each platform expects.
 
 **Use it for:** authorized red team engagements, bug bounty triage, security research, CTF preparation, training operators, and exploring attack surfaces methodically.
 
@@ -56,12 +56,12 @@ Install a skill into `$CODEX_HOME/skills` (defaults to `~/.codex/skills`) and Co
 
 ## Quickstart
 
-### Codex Skills System (recommended)
+### Codex Skills System
 
 ```bash
 # Clone this repo and install all skills into ~/.codex/skills/<skill-name>
-git clone https://github.com/trewwwsec/codex-Red
-cd codex-Red
+git clone https://github.com/trewwwsec/skills-red
+cd skills-red
 ./install.sh --platform codex
 
 # Or install only one category
@@ -85,9 +85,9 @@ git clone https://github.com/SnailSploit/claude-red ~/.claude/skills/claude-red
 ```
 
 ```bash
-# Or install this Codex-optimized fork while preserving Claude's category tree
-git clone https://github.com/trewwwsec/codex-Red
-cd codex-Red
+# Or install skills-red while preserving Claude's category tree
+git clone https://github.com/trewwwsec/skills-red
+cd skills-red
 ./install.sh --platform claude
 ```
 

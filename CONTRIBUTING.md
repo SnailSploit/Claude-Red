@@ -1,11 +1,11 @@
-# Contributing to codex-red
+# Contributing to skills-red
 
 Thanks for contributing. This guide explains the skill format, the review process, and the conventions to keep the library coherent as it grows.
 
 ## Quick Rules
 
 1. **One skill, one surface.** Prefer focused skills (`offensive-kerberoasting`) over monolithic overviews (`offensive-active-directory`).
-2. **YAML frontmatter is required.** Skills without it won't load via the Codex Skills system (and remain portable to Claude Skills).
+2. **YAML frontmatter is required.** Skills without it won't load reliably via Codex or Claude skill discovery.
 3. **Cite sources.** Every technique should be attributable. Link CVEs, advisories, original research.
 4. **No unauthorized targeting.** Don't include hardcoded victim domains, real customer data, or credentials.
 5. **Use code blocks with language tags.** It's how Claude (and humans) parse them best.
@@ -31,7 +31,7 @@ description: "One paragraph (50–500 words). State the surface, the techniques 
 ---
 ```
 
-The `description` is what Codex matches against. Make it dense with relevant terms an operator would mention. Avoid marketing language.
+The `description` is what Codex and Claude use for trigger matching. Make it dense with relevant terms an operator would mention. Avoid marketing language.
 
 ### Body Structure (recommended)
 

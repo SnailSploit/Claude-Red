@@ -1,9 +1,9 @@
 {
-  "name": "codex-red",
+  "name": "skills-red",
   "version": "0.2.0",
   "platform": "codex",
   "license": "MIT",
-  "homepage": "https://github.com/trewwwsec/codex-Red",
+  "homepage": "https://github.com/trewwwsec/skills-red",
   "categories": {
     "active-directory": [
       "offensive-active-directory"

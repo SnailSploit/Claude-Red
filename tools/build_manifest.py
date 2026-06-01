@@ -66,13 +66,9 @@ def validate_skill_metadata(skill_dir: Path, fm: dict[str, str]) -> list[str]:
 
 
 def build_manifest(platform: str) -> tuple[dict, list[str]]:
-    homepage = (
-        "https://github.com/trewwwsec/codex-Red"
-        if platform == "codex"
-        else "https://github.com/SnailSploit/claude-red"
-    )
+    homepage = "https://github.com/trewwwsec/skills-red"
     manifest: dict = {
-        "name": f"{platform}-red",
+        "name": "skills-red",
         "version": "0.2.0",
         "platform": platform,
         "license": "MIT",
@@ -108,7 +104,7 @@ def build_manifest(platform: str) -> tuple[dict, list[str]]:
                 "path": str(skill_md.relative_to(ROOT)),
                 "install_path": f"$CODEX_HOME/skills/{skill_dir.name}"
                 if platform == "codex"
-                else f"~/.claude/skills/claude-red/{category}/{skill_dir.name}",
+                else f"~/.claude/skills/skills-red/{category}/{skill_dir.name}",
                 "description": fm.get("description", ""),
             }
             manifest["categories"][category].append(entry["name"])

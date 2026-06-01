@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# codex-red / claude-red installer
+# skills-red installer
 # Copies offensive security skills into a Codex or Claude skills directory.
 #
 # Usage:
@@ -13,14 +13,14 @@
 #   ./install.sh --dry-run                     # show what would be copied
 #
 # Default Codex target: ~/.codex/skills
-# Default Claude target: ~/.claude/skills/claude-red
+# Default Claude target: ~/.claude/skills/skills-red
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILLS_DIR="$SCRIPT_DIR/Skills"
 DEFAULT_CODEX_TARGET="${CODEX_HOME:-${HOME}/.codex}/skills"
-DEFAULT_CLAUDE_TARGET="${HOME}/.claude/skills/claude-red"
+DEFAULT_CLAUDE_TARGET="${HOME}/.claude/skills/skills-red"
 
 PLATFORM="codex"
 TARGET=""
