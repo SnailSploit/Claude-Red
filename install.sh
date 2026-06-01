@@ -45,6 +45,17 @@ validate_platform() {
   esac
 }
 
+validate_category() {
+  local category="$1"
+
+  # Categories are first-level Skills/<category> directories, not path fragments.
+  if [[ -z "$category" || "$category" == "." || "$category" == ".." || "$category" == */* || "$category" == *\\* ]]; then
+    return 1
+  fi
+
+  [ -d "$SKILLS_DIR/$category" ]
+}
+
 prompt_platform() {
   local choice=""
   echo "Select install platform:"
@@ -244,8 +255,8 @@ if [ -z "$TARGET" ]; then
 fi
 
 if [ -n "$CATEGORY" ]; then
-  if [ ! -d "$SKILLS_DIR/$CATEGORY" ]; then
-    echo "Error: Category '$CATEGORY' not found." >&2
+  if ! validate_category "$CATEGORY"; then
+    echo "Error: Category '$CATEGORY' not found or invalid." >&2
     echo "" >&2
     list_categories >&2
     exit 1
