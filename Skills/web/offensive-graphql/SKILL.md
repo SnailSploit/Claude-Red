@@ -1,3 +1,8 @@
+---
+name: offensive-graphql
+description: "GraphQL security testing checklist: introspection abuse, batching attacks, query depth/complexity DoS, field suggestion enumeration, IDOR via GraphQL, injection through arguments, authorization bypass. Use when assessing GraphQL endpoints in web app tests or bug bounty."
+---
+
 # SKILL: GraphQL Vulnerabilities
 
 ## Metadata
@@ -12,7 +17,7 @@ GraphQL security testing checklist: introspection abuse, batching attacks, query
 Use this skill when the conversation involves any of:
 `GraphQL, introspection, batching attack, query depth, GraphQL injection, GraphQL IDOR, field suggestion, GraphQL auth bypass, GraphQL DoS, GraphQL security`
 
-## Instructions for Claude
+## Operational Instructions
 
 When this skill is active:
 1. Load and apply the full methodology below as your operational checklist

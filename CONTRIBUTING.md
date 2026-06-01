@@ -1,11 +1,11 @@
-# Contributing to claude-red
+# Contributing to codex-red
 
 Thanks for contributing. This guide explains the skill format, the review process, and the conventions to keep the library coherent as it grows.
 
 ## Quick Rules
 
 1. **One skill, one surface.** Prefer focused skills (`offensive-kerberoasting`) over monolithic overviews (`offensive-active-directory`).
-2. **YAML frontmatter is required.** Skills without it won't load via the Claude Skills system.
+2. **YAML frontmatter is required.** Skills without it won't load via the Codex Skills system (and remain portable to Claude Skills).
 3. **Cite sources.** Every technique should be attributable. Link CVEs, advisories, original research.
 4. **No unauthorized targeting.** Don't include hardcoded victim domains, real customer data, or credentials.
 5. **Use code blocks with language tags.** It's how Claude (and humans) parse them best.
@@ -27,11 +27,11 @@ The folder name **must** match the `name:` field in the frontmatter.
 ```yaml
 ---
 name: offensive-<bug-class-or-domain>
-description: "One paragraph (50–500 words). State the surface, the techniques covered, and when to use this skill. Claude uses this for trigger matching — be specific about scenarios, tools, and sub-topics."
+description: "One paragraph (50–500 words). State the surface, the techniques covered, and when to use this skill. Codex uses this for trigger matching — be specific about scenarios, tools, and sub-topics."
 ---
 ```
 
-The `description` is what Claude matches against. Make it dense with relevant terms an operator would mention. Avoid marketing language.
+The `description` is what Codex matches against. Make it dense with relevant terms an operator would mention. Avoid marketing language.
 
 ### Body Structure (recommended)
 
@@ -89,7 +89,7 @@ The `description` is what Claude matches against. Make it dense with relevant te
 3. Write the frontmatter and body following the structure above.
 4. Update [`README.md`](README.md) — add the skill to the relevant category table.
 5. Update [`CHANGELOG.md`](CHANGELOG.md) under the next version.
-6. Update [`claude-skills.json`](claude-skills.json) if it exists (run `python tools/build_manifest.py` if available).
+6. Update the generated manifests (`claude-skills.json` and `codex-skills.json`) by running `python tools/build_manifest.py`.
 7. Run any local lint:
    ```bash
    ./tools/check-skill.sh Skills/<category>/<skill-name>/SKILL.md
@@ -131,7 +131,7 @@ Expect one round of review. Maintainers may request edits before merging.
 - Tooling that has destructive defaults without warnings
 - Bypasses for vendor-mandated security telemetry without legitimate red team context
 - Content under non-MIT-compatible licenses
-- AI-generated skills without operator review (use Claude to draft, then verify and edit)
+- AI-generated skills without operator review (use Codex or Claude to draft, then verify and edit)
 
 ---
 

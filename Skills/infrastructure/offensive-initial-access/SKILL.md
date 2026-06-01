@@ -1,3 +1,8 @@
+---
+name: offensive-initial-access
+description: "Initial access techniques checklist: phishing (spear/smishing), credential stuffing, exposed service exploitation, supply chain attacks, watering hole, VPN/RDP brute force, public-facing application exploitation. Maps to MITRE ATT&CK TA0001. Use when planning initial access phases of red team engagements."
+---
+
 # SKILL: Modern Initial Access
 
 ## Metadata
@@ -12,7 +17,7 @@ Initial access techniques checklist: phishing (spear/smishing), credential stuff
 Use this skill when the conversation involves any of:
 `initial access, phishing, spear phishing, credential stuffing, exposed service, supply chain, watering hole, VPN brute force, RDP attack, MITRE TA0001, initial foothold`
 
-## Instructions for Claude
+## Operational Instructions
 
 When this skill is active:
 1. Load and apply the full methodology below as your operational checklist

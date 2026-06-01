@@ -1,8 +1,19 @@
 # Changelog
 
-All notable changes to `claude-red` are documented here. The library follows a phased roadmap (see [README.md](README.md#roadmap)). Versions follow [Semantic Versioning](https://semver.org/) where breaking changes mean skill renames, removals, or category restructures.
+All notable changes to `codex-red` are documented here. The library follows a phased roadmap (see [README.md](README.md#roadmap)). Versions follow [Semantic Versioning](https://semver.org/) where breaking changes mean skill renames, removals, or category restructures.
 
 ## [Unreleased]
+
+### Added
+
+- Codex-first installation path in `install.sh` that flattens skills into `$CODEX_HOME/skills/<skill-name>`.
+- `codex-skills.json` manifest generated alongside the Claude-compatible manifest.
+- Root `AGENTS.md` with Codex-oriented repository operating guidance.
+
+### Changed
+
+- README and contributor guidance now document Codex as the optimized default while preserving Claude-compatible usage.
+- Legacy platform-specific skill headings now use platform-neutral `Operational Instructions`.
 
 ### Planned
 

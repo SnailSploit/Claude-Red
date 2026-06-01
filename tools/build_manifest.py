@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Generate claude-skills.json manifest from Skills/ tree.
+"""Generate Claude and Codex skill manifests from the Skills/ tree.
 
-Reads YAML frontmatter from each SKILL.md and emits a compact JSON manifest
+Reads YAML frontmatter from each SKILL.md and emits compact JSON manifests
 of all skills, grouped by category, for tooling that needs a machine-readable
 index of the library.
 """
 from __future__ import annotations
 
+import argparse
 import json
 import re
 import sys
@@ -14,12 +15,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 SKILLS_DIR = ROOT / "Skills"
-OUT = ROOT / "claude-skills.json"
+MANIFESTS = {
+    "claude": ROOT / "claude-skills.json",
+    "codex": ROOT / "codex-skills.json",
+}
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 
 
-def parse_frontmatter(text: str) -> dict:
+def parse_frontmatter(text: str) -> dict[str, str]:
     m = FRONTMATTER_RE.match(text)
     if not m:
         return {}
@@ -46,19 +50,39 @@ def parse_frontmatter(text: str) -> dict:
     return out
 
 
-def main() -> int:
-    if not SKILLS_DIR.is_dir():
-        print(f"Error: {SKILLS_DIR} not found", file=sys.stderr)
-        return 1
+def validate_skill_metadata(skill_dir: Path, fm: dict[str, str]) -> list[str]:
+    errors: list[str] = []
+    name = fm.get("name", "").strip()
+    description = fm.get("description", "").strip()
+    if not fm:
+        errors.append(f"{skill_dir}: missing YAML frontmatter")
+    if not name:
+        errors.append(f"{skill_dir}: missing frontmatter name")
+    elif name != skill_dir.name:
+        errors.append(f"{skill_dir}: frontmatter name '{name}' does not match folder '{skill_dir.name}'")
+    if not description:
+        errors.append(f"{skill_dir}: missing frontmatter description")
+    return errors
 
+
+def build_manifest(platform: str) -> tuple[dict, list[str]]:
+    homepage = (
+        "https://github.com/trewwwsec/codex-Red"
+        if platform == "codex"
+        else "https://github.com/SnailSploit/claude-red"
+    )
     manifest: dict = {
-        "name": "claude-red",
+        "name": f"{platform}-red",
         "version": "0.2.0",
+        "platform": platform,
         "license": "MIT",
-        "homepage": "https://github.com/SnailSploit/claude-red",
+        "homepage": homepage,
         "categories": {},
         "skills": [],
     }
+
+    errors: list[str] = []
+    seen_names: dict[str, Path] = {}
 
     for category_dir in sorted(SKILLS_DIR.iterdir()):
         if not category_dir.is_dir():
@@ -70,10 +94,21 @@ def main() -> int:
             if not skill_md.is_file():
                 continue
             fm = parse_frontmatter(skill_md.read_text(encoding="utf-8"))
+            errors.extend(validate_skill_metadata(skill_dir, fm))
+            skill_name = fm.get("name", skill_dir.name)
+            if skill_name in seen_names:
+                errors.append(
+                    f"{skill_dir}: duplicate skill name '{skill_name}' also used by {seen_names[skill_name]}"
+                )
+            else:
+                seen_names[skill_name] = skill_dir
             entry = {
-                "name": fm.get("name", skill_dir.name),
+                "name": skill_name,
                 "category": category,
                 "path": str(skill_md.relative_to(ROOT)),
+                "install_path": f"$CODEX_HOME/skills/{skill_dir.name}"
+                if platform == "codex"
+                else f"~/.claude/skills/claude-red/{category}/{skill_dir.name}",
                 "description": fm.get("description", ""),
             }
             manifest["categories"][category].append(entry["name"])
@@ -81,9 +116,43 @@ def main() -> int:
 
     manifest["skill_count"] = len(manifest["skills"])
     manifest["category_count"] = len(manifest["categories"])
+    return manifest, errors
 
-    OUT.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    print(f"Wrote {OUT} with {manifest['skill_count']} skills across {manifest['category_count']} categories.")
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--platform",
+        choices=("all", "codex", "claude"),
+        default="all",
+        help="Which manifest to write (default: all).",
+    )
+    args = parser.parse_args()
+
+    if not SKILLS_DIR.is_dir():
+        print(f"Error: {SKILLS_DIR} not found", file=sys.stderr)
+        return 1
+
+    platforms = ("claude", "codex") if args.platform == "all" else (args.platform,)
+    all_errors: list[str] = []
+    manifests: list[tuple[str, dict]] = []
+    for platform in platforms:
+        manifest, errors = build_manifest(platform)
+        manifests.append((platform, manifest))
+        all_errors.extend(errors)
+
+    if all_errors:
+        for error in all_errors:
+            print(f"Error: {error}", file=sys.stderr)
+        return 1
+
+    for platform, manifest in manifests:
+        out = MANIFESTS[platform]
+        out.write_text(json.dumps(manifest, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        print(
+            f"Wrote {out} with {manifest['skill_count']} skills "
+            f"across {manifest['category_count']} categories."
+        )
     return 0
 
 

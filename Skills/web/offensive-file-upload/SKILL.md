@@ -1,3 +1,8 @@
+---
+name: offensive-file-upload
+description: "File upload vulnerability checklist: MIME type bypass, extension bypass, magic byte manipulation, path traversal in filenames, stored XSS via SVG/HTML upload, server-side processing attacks, and race conditions. Use for assessing file upload endpoints in web app pentests or bug bounty."
+---
+
 # SKILL: File Upload Vulnerabilities
 
 ## Metadata
@@ -12,7 +17,7 @@ File upload vulnerability checklist: MIME type bypass, extension bypass, magic b
 Use this skill when the conversation involves any of:
 `file upload, MIME bypass, extension bypass, magic byte, path traversal upload, SVG XSS, polyglot, upload bypass, malicious upload, web shell upload`
 
-## Instructions for Claude
+## Operational Instructions
 
 When this skill is active:
 1. Load and apply the full methodology below as your operational checklist

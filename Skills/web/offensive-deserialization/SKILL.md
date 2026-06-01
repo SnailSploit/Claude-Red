@@ -1,3 +1,8 @@
+---
+name: offensive-deserialization
+description: "Insecure deserialization attack checklist: identifying deserialization sinks, Java/PHP/.NET/Python deserialization exploitation, ysoserial gadget chains, magic method abuse, and detection evasion. Use when testing deserialization endpoints or developing deserialization exploits."
+---
+
 # SKILL: Insecure Deserialization
 
 ## Metadata
@@ -12,7 +17,7 @@ Insecure deserialization attack checklist: identifying deserialization sinks, Ja
 Use this skill when the conversation involves any of:
 `deserialization, insecure deserialization, ysoserial, Java deserialization, PHP deserialization, .NET deserialization, pickle, gadget chain, magic method, ObjectInputStream`
 
-## Instructions for Claude
+## Operational Instructions
 
 When this skill is active:
 1. Load and apply the full methodology below as your operational checklist

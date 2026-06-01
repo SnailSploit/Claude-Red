@@ -1,3 +1,8 @@
+---
+name: offensive-fuzzing-course
+description: "Week 2 of the exploit development curriculum. Covers fuzzing methodology: target selection, corpus generation, coverage-guided fuzzing with AFL++/libFuzzer, structured fuzzing, and triage/deduplication. Use when setting up fuzz campaigns, selecting harness strategies, or triaging fuzzer output."
+---
+
 # SKILL: Week 2: Finding Vulnerabilities Through Fuzzing
 
 ## Metadata
@@ -12,7 +17,7 @@ Week 2 of the exploit development curriculum. Covers fuzzing methodology: target
 Use this skill when the conversation involves any of:
 `fuzzing curriculum, AFL++, libFuzzer, coverage-guided fuzzing, corpus generation, harness, fuzz target, mutation, triage, crash dedup, week 2, exploit dev course`
 
-## Instructions for Claude
+## Operational Instructions
 
 When this skill is active:
 1. Load and apply the full methodology below as your operational checklist

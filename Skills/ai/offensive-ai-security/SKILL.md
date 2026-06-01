@@ -1,3 +1,8 @@
+---
+name: offensive-ai-security
+description: "AI/LLM security offensive checklist: prompt injection, jailbreaking, model extraction, training data poisoning, adversarial inputs, LLM-assisted attack automation, and AI system reconnaissance. Use when assessing AI/ML systems, red-teaming LLMs, or researching AI attack vectors."
+---
+
 # SKILL: AI Pentest
 
 ## Metadata
@@ -12,7 +17,7 @@ AI/LLM security offensive checklist: prompt injection, jailbreaking, model extra
 Use this skill when the conversation involves any of:
 `AI security, LLM security, prompt injection, jailbreak, model extraction, training data poisoning, adversarial input, AI red team, ML security, RAG poisoning, AI attack`
 
-## Instructions for Claude
+## Operational Instructions
 
 When this skill is active:
 1. Load and apply the full methodology below as your operational checklist

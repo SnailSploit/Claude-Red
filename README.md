@@ -1,16 +1,16 @@
-![claude-red banner](/assets/banner.png)
+![codex-red banner](/assets/banner.png)
 
 <div align="center">
 
-# claude-red
+# codex-red
 
-**Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
+**Offensive security skills for Codex — drop-in `SKILL.md` files that turn Codex into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Skills](https://img.shields.io/badge/skills-58-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-13-orange.svg)](#categories)
-[![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
-[![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
+[![Stars](https://img.shields.io/github/stars/trewwwsec/codex-Red?style=social)](https://github.com/trewwwsec/codex-Red)
+[![Forks](https://img.shields.io/github/forks/trewwwsec/codex-Red?style=social)](https://github.com/trewwwsec/codex-Red/network/members)
 
 Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
 
@@ -46,9 +46,9 @@ Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
 
 ## What is this
 
-`claude-red` is a curated library of offensive security skills for the [Claude Skills system](https://docs.claude.com). Each skill is a structured `SKILL.md` file that primes Claude with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to ADCS abuse.
+`codex-red` is a curated library of offensive security skills for the Codex Skills system. Each skill is a structured `SKILL.md` file that primes Codex with expert-level methodology for a specific attack surface — from SQLi to shellcode, EDR evasion to ADCS abuse.
 
-Drop a skill into your Claude environment and it behaves like a specialist: it knows the techniques, the tooling, the edge cases, and the escalation paths. Skills load on demand based on conversational triggers — you don't pay context for skills you aren't using.
+Install a skill into `$CODEX_HOME/skills` (defaults to `~/.codex/skills`) and Codex can load it on demand from its `name` and `description` metadata. The same `SKILL.md` files remain portable to Claude Skills; Codex is the optimized default for this fork.
 
 **Use it for:** authorized red team engagements, bug bounty triage, security research, CTF preparation, training operators, and exploring attack surfaces methodically.
 
@@ -56,15 +56,39 @@ Drop a skill into your Claude environment and it behaves like a specialist: it k
 
 ## Quickstart
 
-### Claude Skills System (recommended)
+### Codex Skills System (recommended)
 
 ```bash
-# Clone into a directory Claude will scan
-git clone https://github.com/SnailSploit/claude-red ~/.claude/skills/claude-red
+# Clone this repo and install all skills into ~/.codex/skills/<skill-name>
+git clone https://github.com/trewwwsec/codex-Red
+cd codex-Red
+./install.sh --platform codex
 
 # Or install only one category
-git clone --filter=blob:none --sparse https://github.com/SnailSploit/claude-red
-cd claude-red && git sparse-checkout set Skills/web Skills/active-directory
+./install.sh --platform codex --category web
+```
+
+Restart Codex after installation so the skill metadata is picked up. Codex reads each skill from a directory like `$CODEX_HOME/skills/offensive-sqli/SKILL.md`, so the installer flattens category folders into individual skill directories.
+
+### Manual Codex install
+
+```bash
+mkdir -p ~/.codex/skills
+cp -R Skills/web/offensive-sqli ~/.codex/skills/offensive-sqli
+```
+
+### Claude Skills System
+
+```bash
+# Upstream Claude Red install into a directory Claude will scan
+git clone https://github.com/SnailSploit/claude-red ~/.claude/skills/claude-red
+```
+
+```bash
+# Or install this Codex-optimized fork while preserving Claude's category tree
+git clone https://github.com/trewwwsec/codex-Red
+cd codex-Red
+./install.sh --platform claude
 ```
 
 Claude will auto-load matching skills based on conversational triggers (e.g. mentioning SQLi loads `offensive-sqli`).
@@ -79,16 +103,15 @@ cat Skills/web/offensive-sqli/SKILL.md | claude --system-file -
 cat Skills/active-directory/**/SKILL.md | claude --system-file -
 ```
 
-### Claude.ai (Manual)
-
-Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to your conversation.
-
 ### Install Script
 
 ```bash
-./install.sh                           # interactive
-./install.sh --target ~/.claude/skills # explicit target
+./install.sh                           # Codex install (interactive target if TTY)
+./install.sh --platform codex          # explicit Codex install
+./install.sh --platform claude         # Claude-compatible install
+./install.sh --target ~/.codex/skills  # explicit target
 ./install.sh --category web            # one category
+./install.sh --dry-run                 # preview copy plan
 ```
 
 ---
@@ -308,7 +331,7 @@ Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the skill temp
 
 <div align="center">
 
-> *"Give Claude the right skill and it stops being a chatbot. It becomes an operator."*
+> *"Give the agent the right skill and it stops being a chatbot. It becomes an operator."*
 
 </div>
 
@@ -320,7 +343,7 @@ Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the skill temp
 
 This project's full writeup, methodology, and related research lives at:
 
-**[https://snailsploit.com/claude-red](https://snailsploit.com/claude-red)**
+**Upstream:** [https://snailsploit.com/claude-red](https://snailsploit.com/claude-red)
 
 Created by **Kai Aizen** — independent offensive security researcher.
 
