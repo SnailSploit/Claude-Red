@@ -256,10 +256,12 @@ description: "Comprehensive OSINT methodology skill for offensive security, red 
 - [Forensically](https://29a.ch/photo-forensics/) — Digital image forensics toolkit
 - [ExifTool](https://exiftool.org/) — Read/write/edit metadata
 - [Jimpl](https://jimpl.com/) — Online EXIF viewer
-- [Jeffrey's EXIF viewer](http://exif.regex.info/exif.cgi) — Online metadata viewer
+- [Metadata Viewer](https://metadataremover.ai/metadata-viewer) — Browser-local EXIF, IPTC, XMP, and supported C2PA inspection
 - [FOCA](https://www.elevenpaths.com/labstools/foca) — Metadata in documents
 - [Metagoofil](https://www.edge-security.com/metagoofil.php) — Extract metadata from public documents
 - [C2PA Verify](https://verify.contentauthenticity.org/) — Verify content credentials and AI provenance
+
+Preserve the original artifact and corroborate important metadata values with a second parser before drawing conclusions.
 
 ### Video Analysis
 
