@@ -101,29 +101,19 @@ curl -s https://target.example.com/ | \
 
 ### Error Messages and Stack Traces
 
-Application errors frequently leak internal package names in stack traces,
-module resolution failures, and debug output.
+Application errors leak internal package names in stack traces and module
+resolution failures. Trigger 404 pages, API errors, and debug endpoints.
 
 ```bash
-# Trigger error pages and parse for module names
-# 404 pages, API error responses, and debug endpoints
 curl -s https://target.example.com/nonexistent 2>&1 | \
   grep -oP 'Cannot find module .?\K[a-zA-Z@][a-zA-Z0-9_.-/]+'
-
-# Search for cached error pages in web archives
-# Wayback Machine and Google cache
-curl -s "https://web.archive.org/web/*/https://target.example.com/*" | \
-  grep -oP 'Error.*module.*?[a-zA-Z@][a-zA-Z0-9_.-]+'
+# Also search Wayback Machine for cached error pages with module names
 ```
 
 ### GitHub Repository Mining
 
-Public and accidentally-public repositories are rich sources of internal
-package names.
-
 ```bash
-# Search GitHub for the organization's package.json files
-# GitHub code search for internal registry references
+# Search GitHub for the organization's package manifests and registry configs
 gh api search/code \
   -X GET \
   -f q='org:targetcorp filename:package.json registry.corp' \
@@ -337,27 +327,21 @@ NuGet resolves packages from configured feeds in the order they are listed,
 but selects the highest version found across all feeds.
 
 ```xml
-<!-- Vulnerable NuGet.config -->
+<!-- Vulnerable: both feeds active, highest version wins across all -->
 <configuration>
   <packageSources>
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
     <add key="internal" value="https://nuget.corp.example.com/v3/index.json" />
   </packageSources>
 </configuration>
-```
 
-```xml
-<!-- Hardened NuGet.config (for remediation reporting) -->
+<!-- Hardened: clear + packageSourceMapping (for remediation reporting) -->
 <configuration>
-  <packageSources>
-    <clear />
+  <packageSources><clear />
     <add key="internal" value="https://nuget.corp.example.com/v3/index.json" />
   </packageSources>
   <packageSourceMapping>
-    <packageSource key="internal">
-      <package pattern="Corp.*" />
-      <package pattern="Internal.*" />
-    </packageSource>
+    <packageSource key="internal"><package pattern="Corp.*" /></packageSource>
   </packageSourceMapping>
 </configuration>
 ```
@@ -488,30 +472,22 @@ File.write("Makefile", "all:\n\ttrue\ninstall:\n\ttrue\n")
 
 ### Docker Image Tag Confusion
 
+Unqualified image names (e.g. `targetcorp/backend`) resolve to Docker Hub.
+If the Docker Hub namespace is unclaimed, you register it and push a
+trojanized image that targets pull automatically.
+
 ```bash
-# Unqualified image names resolve to Docker Hub
-# If a Dockerfile or docker-compose.yml uses:
-#   image: targetcorp/backend
-# This resolves to docker.io/targetcorp/backend
-
 # Check if the Docker Hub namespace is available
-curl -s "https://hub.docker.com/v2/repositories/targetcorp/" | \
-  jq '.detail // .count'
-
-# If the namespace is unclaimed, register it and push a trojanized image
-# The target's docker pull resolves to your image
+curl -s "https://hub.docker.com/v2/repositories/targetcorp/" | jq '.detail // .count'
 ```
 
 ```yaml
-# docker-compose.yml showing the vulnerability
+# Vulnerable docker-compose.yml -- unqualified names resolve to Docker Hub
 services:
   backend:
-    image: targetcorp/backend:latest  # resolves to Docker Hub
-    # Should be: image: registry.corp.example.com/targetcorp/backend:latest
-  
+    image: targetcorp/backend:latest  # should be registry.corp.example.com/...
   frontend:
-    image: targetcorp/frontend:v2.1   # mutable tag, replaceable
-    # Should be: image: registry.corp.example.com/targetcorp/frontend@sha256:abc123...
+    image: targetcorp/frontend:v2.1   # mutable tag; should use @sha256:... digest
 ```
 
 ---
@@ -570,24 +546,16 @@ remediation guidance in your engagement reports.
 | Ruby      | Default gem sources                   | `source` block with private gem server    |
 | Docker    | Unqualified image names               | FQDN registry prefix + digest pinning     |
 
-**Detection signals:**
-
-1. Unexpected outbound DNS/HTTP during `npm install`, `pip install`, or `dotnet restore`.
-2. Lock file changes referencing public registries for known-internal packages.
-3. Version jumps to implausibly high numbers (999.x, 9999.x) in dependency trees.
-4. New packages appearing in build logs that were not present in prior builds.
-5. Package install scripts executing network calls during CI/CD builds.
+**Detection signals**: unexpected outbound DNS/HTTP during install/build
+phases; lock file changes pointing to public registries for known-internal
+packages; version jumps to 999.x or 9999.x; new packages in build logs
+not present in prior builds.
 
 ```bash
-# Monitor for suspicious install-time network activity
+# Monitor install-time network activity; audit install scripts
 strace -f -e trace=network npm install 2>&1 | grep -i connect
-
-# Audit npm packages for install scripts before allowing them
 npx can-i-ignore-scripts
-
-# Check Python packages for setup.py execution
-pip download --no-deps --no-binary :all: suspicious-package
-tar xzf *.tar.gz && cat */setup.py
+pip download --no-deps --no-binary :all: suspicious-package && tar xzf *.tar.gz && cat */setup.py
 ```
 
 ---

