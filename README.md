@@ -7,8 +7,8 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-58-red.svg)](#skill-index)
-[![Categories](https://img.shields.io/badge/categories-13-orange.svg)](#categories)
+[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
 
@@ -35,6 +35,16 @@ Built by **[SnailSploit](https://snailsploit.com)** — GenAI Security Research.
   - [Exploit Development](#exploit-development)
   - [Fuzzing & Vulnerability Research](#fuzzing--vulnerability-research)
   - [Reconnaissance](#reconnaissance)
+  - [API Security](#api-security)
+  - [Container & Kubernetes](#container--kubernetes)
+  - [CI/CD & Pipeline](#cicd--pipeline)
+  - [Cryptography](#cryptography)
+  - [Privilege Escalation](#privilege-escalation)
+  - [Post-Exploitation](#post-exploitation)
+  - [Forensics & C2](#forensics--c2)
+  - [Supply Chain](#supply-chain)
+  - [Social Engineering](#social-engineering)
+  - [Network Attacks](#network-attacks)
   - [AI Security](#ai-security)
   - [Utility](#utility)
 - [Roadmap](#roadmap)
@@ -104,10 +114,20 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to 
 | [Cloud](#cloud) | 1 | AWS / Azure / GCP attack paths *(expanding)* |
 | [Mobile](#mobile) | 1 | Android + iOS pentest *(expanding)* |
 | [IoT & Embedded](#iot--embedded) | 1 | Hardware, firmware, RTOS, ICS *(expanding)* |
-| [Infrastructure & Red Team](#infrastructure--red-team) | 7 | Initial access, EDR evasion, Windows ops |
+| [Infrastructure & Red Team](#infrastructure--red-team) | 7 | Initial access, EDR evasion, advanced red team ops, Windows internals |
 | [Exploit Development](#exploit-development) | 6 | Stack/heap, mitigations, crash analysis, TOCTOU |
 | [Fuzzing & VR](#fuzzing--vulnerability-research) | 4 | libFuzzer, AFL++, bug ID, vuln classes |
 | [Reconnaissance](#reconnaissance) | 2 | OSINT tooling and methodology |
+| [API Security](#api-security) | 2 | REST/gRPC/WebSocket testing, business logic abuse |
+| [Container & Kubernetes](#container--kubernetes) | 2 | Container escape, K8s cluster attacks |
+| [CI/CD & Pipeline](#cicd--pipeline) | 2 | Pipeline exploitation, secrets extraction |
+| [Cryptography](#cryptography) | 2 | Crypto implementation attacks, TLS/SSL |
+| [Privilege Escalation](#privilege-escalation) | 2 | Linux and Windows privesc |
+| [Post-Exploitation](#post-exploitation) | 3 | Lateral movement, persistence, data exfiltration |
+| [Forensics & C2](#forensics--c2) | 2 | Anti-forensics, C2 framework tradecraft |
+| [Supply Chain](#supply-chain) | 2 | Supply chain attacks, dependency confusion |
+| [Social Engineering](#social-engineering) | 2 | Phishing campaigns, physical/vishing/smishing |
+| [Network Attacks](#network-attacks) | 1 | Layer 2/3 attacks, MITM, poisoning |
 | [AI Security](#ai-security) | 1 | Prompt injection, jailbreaks, RAG poisoning |
 | [Utility](#utility) | 2 | Fast-checking, professional reporting |
 
@@ -253,6 +273,96 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to 
 | [`offensive-osint`](Skills/recon/offensive-osint/SKILL.md) | OSINT tools — recon-ng, theHarvester, Maltego pipelines |
 | [`offensive-osint-methodology`](Skills/recon/offensive-osint-methodology/SKILL.md) | OSINT methodology — structured intelligence collection |
 
+### API Security
+
+`Skills/api/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-api-security`](Skills/api/offensive-api-security/SKILL.md) | API testing — OWASP API Top 10, REST/gRPC/WebSocket, BOLA, BFLA, mass assignment |
+| [`offensive-api-abuse`](Skills/api/offensive-api-abuse/SKILL.md) | API business logic — chaining, batching, JWT manipulation, webhook hijacking |
+
+### Container & Kubernetes
+
+`Skills/container/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-container-escape`](Skills/container/offensive-container-escape/SKILL.md) | Container breakout — privileged escape, Docker socket, capabilities, cgroup, runc CVEs |
+| [`offensive-k8s-attacks`](Skills/container/offensive-k8s-attacks/SKILL.md) | Kubernetes — RBAC abuse, etcd access, kubelet API, pod escape, secrets, CRD exploitation |
+
+### CI/CD & Pipeline
+
+`Skills/cicd/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-cicd-pipeline`](Skills/cicd/offensive-cicd-pipeline/SKILL.md) | CI/CD exploitation — GitHub Actions injection, Jenkins RCE, GitLab CI, Azure DevOps |
+| [`offensive-cicd-secrets`](Skills/cicd/offensive-cicd-secrets/SKILL.md) | CI/CD secrets — env var extraction, vault misconfigs, OIDC federation, runner token abuse |
+
+### Cryptography
+
+`Skills/crypto/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-crypto-attacks`](Skills/crypto/offensive-crypto-attacks/SKILL.md) | Crypto attacks — padding oracle, ECB manipulation, hash extension, RSA, weak PRNG |
+| [`offensive-tls-attacks`](Skills/crypto/offensive-tls-attacks/SKILL.md) | TLS/SSL — POODLE, DROWN, Heartbleed, pinning bypass, HSTS bypass, 0-RTT replay |
+
+### Privilege Escalation
+
+`Skills/privesc/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-linux-privesc`](Skills/privesc/offensive-linux-privesc/SKILL.md) | Linux privesc — SUID, capabilities, sudo, cron, kernel exploits, Docker group |
+| [`offensive-windows-privesc`](Skills/privesc/offensive-windows-privesc/SKILL.md) | Windows privesc — Potato family, service misconfigs, DLL hijacking, UAC bypass, PrintNightmare |
+
+### Post-Exploitation
+
+`Skills/post-exploitation/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-lateral-movement`](Skills/post-exploitation/offensive-lateral-movement/SKILL.md) | Lateral movement — PTH, PTT, NTLM relay, WMI/WinRM/DCOM, tunneling (chisel, ligolo-ng) |
+| [`offensive-persistence`](Skills/post-exploitation/offensive-persistence/SKILL.md) | Persistence — registry, scheduled tasks, WMI subs, Golden/Silver tickets, PAM backdoors |
+| [`offensive-data-exfiltration`](Skills/post-exploitation/offensive-data-exfiltration/SKILL.md) | Data exfiltration — DNS/HTTPS/ICMP tunneling, cloud dead drops, steganography |
+
+### Forensics & C2
+
+`Skills/forensics/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-anti-forensics`](Skills/forensics/offensive-anti-forensics/SKILL.md) | Anti-forensics — log clearing, timestomping, ADS hiding, memory cleanup, anti-VM |
+| [`offensive-c2-frameworks`](Skills/forensics/offensive-c2-frameworks/SKILL.md) | C2 tradecraft — Cobalt Strike, Sliver, Mythic, Havoc, Metasploit, redirectors, domain fronting |
+
+### Supply Chain
+
+`Skills/supply-chain/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-supply-chain`](Skills/supply-chain/offensive-supply-chain/SKILL.md) | Supply chain — dependency confusion, typosquatting, build system attacks, image trojaning |
+| [`offensive-dependency-confusion`](Skills/supply-chain/offensive-dependency-confusion/SKILL.md) | Dependency confusion — npm/PyPI/NuGet/Maven/Go namespace attacks, safe PoC methodology |
+
+### Social Engineering
+
+`Skills/social-engineering/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-phishing`](Skills/social-engineering/offensive-phishing/SKILL.md) | Phishing — GoPhish, EvilGinx2, payload delivery, email auth bypass, MFA phishing |
+| [`offensive-social-engineering`](Skills/social-engineering/offensive-social-engineering/SKILL.md) | Social engineering — pretexting, vishing, smishing, physical SE, USB drops, watering holes |
+
+### Network Attacks
+
+`Skills/network/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-network-attacks`](Skills/network/offensive-network-attacks/SKILL.md) | Network L2/L3 — ARP spoofing, LLMNR/NBT-NS poisoning, VLAN hopping, IPv6 attacks, MITM |
+
 ### AI Security
 
 `Skills/ai/`
@@ -280,13 +390,15 @@ The library is being expanded in seven phases. Track progress in [CHANGELOG.md](
 |---|---|---:|---|
 | 1 | Internal AD/Windows (rename `active-directory/` → `internal/`) | +16 | Planned |
 | 2 | Cloud Identity (Entra/AAD, ADFS, Okta, M365) | +10 | Planned |
-| 3 | Wireless split (WPA2/3, EAP, BLE, Zigbee, Z-Wave, LoRa, sub-GHz) | +12 | **Mandatory** |
+| 3 | Wireless split (WPA2/3, EAP, BLE, Zigbee, Z-Wave, LoRa, sub-GHz) | +12 | **Done** |
 | 4 | IoT split (UART/JTAG, flash, fault injection, RTOS, ICS) | +10 | Planned |
 | 5 | Web Basics (recon, auth bypass, access control, CSRF, headers, CORS, cache, clickjack) | +8 | Planned |
 | 6 | Web Advanced (proto pollution, SAML, OIDC, WebSocket, gRPC, postMessage, SSI/ESI, CSTI) | +10 | Planned |
-| 7 | Polish (README, LICENSE, manifest, install) | — | **In progress** |
+| 7 | Polish (README, LICENSE, manifest, install) | — | **Done** |
+| 8 | New categories (API, container, CI/CD, crypto, privesc, post-exploitation, forensics/C2, supply chain, social engineering, network) | +20 | **Done** |
+| 9 | Deep rewrites (deserialization, GraphQL, advanced red team, SSTI) | — | **Done** |
 
-End state: ~107 skills across the same 13+ categories.
+End state: ~130 skills across 23+ categories.
 
 ---
 
