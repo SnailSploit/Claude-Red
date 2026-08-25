@@ -394,36 +394,7 @@ openssl s_client -connect target.com:443 -tls1_3 -sess_in session.pem \
 testssl.sh --grease target.com:443
 ```
 
-```python
-import ssl
-import socket
-
-def test_0rtt_replay(host, port=443, early_data=b"GET /api/transfer HTTP/1.1\r\nHost: target.com\r\n\r\n"):
-    """
-    Test whether a server accepts 0-RTT early data.
-    If accepted, the early data can be replayed by a network attacker.
-    """
-    # First connection: establish session and get ticket
-    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
-    ctx.minimum_version = ssl.TLSVersion.TLSv1_3
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
-    with socket.create_connection((host, port)) as sock:
-        with ctx.wrap_socket(sock, server_hostname=host) as ssock:
-            ssock.send(b"GET / HTTP/1.1\r\nHost: " + host.encode() + b"\r\n\r\n")
-            ssock.recv(4096)
-            # Session ticket is now cached in the context
-
-    # Second connection: attempt 0-RTT with early data
-    # This requires low-level TLS manipulation; the concept is:
-    # If the server accepts and processes early_data before the handshake
-    # completes, a MitM can replay that exact early_data blob
-
-    print("Check server configuration for 0-RTT acceptance")
-    print("Non-idempotent operations in 0-RTT = replay vulnerability")
-    return True
-```
+The two-step openssl test above is definitive: if the second connection succeeds and the server processes the early data file, 0-RTT is accepted. A network attacker who captures the ClientHello and early data from a legitimate connection can replay it verbatim. Target non-idempotent endpoints -- fund transfers, account modifications, order submissions -- where replay has material impact. Servers should implement anti-replay per RFC 8446 Section 8 or reject 0-RTT entirely for state-changing operations.
 
 ---
 

