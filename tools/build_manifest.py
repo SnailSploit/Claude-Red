@@ -53,7 +53,7 @@ def main() -> int:
 
     manifest: dict = {
         "name": "claude-red",
-        "version": "0.2.0",
+        "version": "0.3.0",
         "license": "MIT",
         "homepage": "https://github.com/SnailSploit/claude-red",
         "categories": {},

