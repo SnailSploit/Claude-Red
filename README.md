@@ -153,7 +153,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend to 
 
 | Skill | Description |
 |---|---|
-| [`offensive-active-directory`](Skills/active-directory/offensive-active-directory/SKILL.md) | AD — Kerberoast, ASREProast, ACL abuse, ADCS ESC1-15, delegation, persistence, hybrid AAD |
+| [`offensive-active-directory`](Skills/active-directory/offensive-active-directory/SKILL.md) | AD — Kerberoast, ASREProast, Pre-Windows 2000 computers, ACL abuse, ADCS ESC1-15, delegation, persistence, hybrid AAD |
 
 > **Note:** This category is being expanded. The AD overview is being split into 16 focused skills (Kerberoasting, ASREProasting, ADCS, coercion, NTLM relay, BloodHound, ticket forgery, GPO abuse, etc.). See [Roadmap](#roadmap).
 
