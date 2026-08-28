@@ -107,22 +107,6 @@ hashcat -m 18200 asrep.txt rockyou.txt
 
 ### Pre-Windows 2000 Compatible Access (Pre2k)
 
-**What it is:** Legacy backward-compatibility configuration where computer accounts are created with **"Assign this computer account as a pre-Windows 2000 computer"** enabled. Instead of a random machine password managed by Kerberos, the password defaults to the **lowercase sAMAccountName without the trailing `$`**.
-
-**Why it exists:** Maintained compatibility with NT 4.0 and older clients that needed simpler authentication. Still found in:
-- Lab/CTF environments (intentional weak config)
-- Aged enterprise networks with pre-2000 migration artifacts never cleaned up
-- Domains where administrators use the legacy "pre-Windows 2000 computer" checkbox during computer object creation
-
-**Indicators (check these FIRST before attempting):**
-- Computer account in `Pre-Windows 2000 Compatible Access` group (check group membership via BloodHound or LDAP)
-- Computer has **no SPNs** registered (unusual — real Windows hosts always have `HOST/`, `RestrictedKrbHost/`, etc.)
-- Computer object **absent from BloodHound attack-path edges** (no delegation, no ACL inbound/outbound, "orphaned" appearance)
-- `pwdLastSet` timestamp unchanged since `whenCreated` (password never rotated)
-- `userAccountControl` includes flag `4128` (WORKSTATION_TRUST_ACCOUNT + PASSWD_NOTREQD) and `logonCount=0` (never logged on)
-
-**Example:** Computer `FS01$` → default password = `fs01` (lowercase, no `$`)
-
 ```bash
 # 1. Identify pre2k candidates via LDAP (authenticated or anonymous if allowed)
 ldapsearch -x -H ldap://dc.corp.local -D 'user@corp.local' -w 'password' \
