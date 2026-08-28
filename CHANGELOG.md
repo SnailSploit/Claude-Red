@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-active-directory` — Added Pre-Windows 2000 Compatible Access section covering legacy computer account password exploitation, detection indicators (userAccountControl 4128, logonCount=0, group membership), LDAP enumeration, automated pre2k tool usage, and post-compromise escalation paths (ReadGMSAPassword → gMSA → ACL abuse). References HTB Vintage writeups and The Hacker Recipes.
+
 ### Planned
 
 - Phase 1 — Internal AD/Windows split (16 skills)
