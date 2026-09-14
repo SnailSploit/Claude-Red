@@ -504,7 +504,7 @@ A specific case of parameter pollution that affects social sharing functionality
    https://target.com/article
 
    # Polluted share URL
-   https://target.com/article?u=https://attacker.com&text=malicious_text
+   https://target.com/article?u=https://attacker.example&text=malicious_text
    ```
 
 2. **Common Parameters**:

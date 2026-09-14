@@ -196,7 +196,7 @@ A combination of my own methodology and the Web Application Hacker's Handbook Ta
   - [ ] Test client‑side template injection (Angular/React) via DOM sinks.
 - [ ] Test for file inclusion
   - [ ] LFI: Test including local files (`/etc/passwd`, `C:\windows\win.ini`).
-  - [ ] RFI: Test including remote files (`http://attacker.com/shell.txt`). Requires `allow_url_include` in PHP.
+  - [ ] RFI: Test including remote files (`http://attacker.invalid/shell.txt`). Requires `allow_url_include` in PHP.
   - [ ] Check PHP wrappers: `php://filter/convert.base64-encode/resource=`, `php://input`, `data://`.
   - [ ] Can this be escalated to RCE? (Log poisoning, /proc/self/environ, PHP sessions, file uploads).
   - [ ] Blind LFI via zip/tar traversal and image processing libraries.

