@@ -70,6 +70,7 @@ description: "Comprehensive OSINT methodology skill for offensive security, red 
 - [Pipl](https://pipl.com/) — Deep web people search (paid)
 - [Clearbit](https://clearbit.com/) — Company/individual data enrichment
 - [FaceCheck](https://facecheck.id/) / [FaceSeek](https://faceseek.online/) — Reverse face search
+- [Face2social](https://face2social.com/) [Freemium] — Face search across public social profiles
 
 ---
 
