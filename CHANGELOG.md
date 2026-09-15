@@ -10,13 +10,13 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ### Added
 
-- `tools/validate_skills.py` — fails CI when a `SKILL.md` lacks valid frontmatter, when `name` drifts from its directory, on duplicate names, when `README.md`'s skill-count badge disagrees with reality, or when `claude-skills.json` is out of sync.
+- `tools/validate_skills.py` — fails CI when a `SKILL.md` lacks valid frontmatter, when `name` drifts from its directory, violates the slug pattern, or uses a reserved word, on XML tags in either field, on duplicate names, when `README.md`'s skill-count badge disagrees with reality, or when `claude-skills.json` is out of sync.
 - `tools/backfill_frontmatter.py` — idempotent migration for legacy `SKILL.md` files (dry-run by default).
 - `.github/workflows/skills-lint.yml` — runs the validator, the manifest freshness check, and the backfill dry-run on every change to a skill.
 
 ### Known issue
 
-- 18 descriptions exceed the 1024-character recommendation (longest: `offensive-windows-privesc` at 1522). Installers currently accept them, so this is reported as a warning rather than an error. A separate pass should tighten these.
+- 18 descriptions exceed the [Agent Skills spec](https://agentskills.io/specification) limit of 1024 characters (longest: `offensive-windows-privesc` at 1522). They predate this fix and current installers accept them, so `validate_skills.py` reports them as warnings rather than errors. Tracked separately.
 
 ### Planned
 

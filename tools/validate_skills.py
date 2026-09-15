@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Validate every SKILL.md in the library.
+"""Validate every SKILL.md in the library against the Agent Skills spec
+(https://agentskills.io/specification).
 
 Guards against the class of defect where a skill file cannot be discovered by a
 spec-compliant installer (``npx skills add``, Claude Skills) because its YAML
@@ -12,14 +13,15 @@ Checks performed:
 2. ``name`` and ``description`` are both present and non-empty.
 3. ``name`` matches its directory name (repo convention; also what the
    installer uses for the on-disk skill folder).
-4. ``name`` matches ``^[a-z0-9]+(-[a-z0-9]+)*$`` and is <= 64 characters.
-5. No two skills share a ``name``.
-6. ``README.md`` advertises the real skill count (the ``skills-NN-`` badge).
-7. ``claude-skills.json``, when present, lists every skill and no empty
+4. ``name`` matches ``^[a-z0-9]+(-[a-z0-9]+)*$``, is <= 64 characters, and
+   contains no reserved words.
+5. Neither field contains an XML tag.
+6. No two skills share a ``name``.
+7. ``README.md`` advertises the real skill count (the ``skills-NN-`` badge).
+8. ``claude-skills.json``, when present, lists every skill and no empty
    description.
 
-Exits 0 when clean, 1 when any error is found. Over-long descriptions are
-reported as warnings only -- they do not block installs.
+Exits 0 when clean, 1 when any error is found.
 
 Usage::
 
@@ -41,7 +43,15 @@ SLUG_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 README_BADGE_RE = re.compile(r"skills-(\d+)-\w+\.svg")
 
 MAX_NAME_LEN = 64
-RECOMMENDED_DESC_LEN = 1024  # Anthropic guidance; long descriptions still install.
+SPEC_MAX_DESC_LEN = 1024  # Agent Skills spec: description "Must be 1-1024 characters".
+RESERVED_NAME_WORDS = ("anthropic", "claude")  # per the spec's name constraints.
+XML_TAG_RE = re.compile(r"<[^>]+>")  # the spec forbids XML tags in name and description.
+
+# Over-long descriptions are reported as warnings, not errors, because 18 skills
+# already exceed the limit and predate this validator. Turning them into hard
+# failures would make CI red on day one and block unrelated work. Tracked
+# separately; flip this to an error once those are trimmed.
+DESC_OVERFLOW_IS_ERROR = False
 
 
 def unquote(value: str) -> str:
@@ -106,6 +116,11 @@ def main() -> int:
                 errors.append(f"{rel}: `name: {name}` must be lowercase alphanumeric with single hyphens")
             if len(name) > MAX_NAME_LEN:
                 errors.append(f"{rel}: `name` is {len(name)} chars (max {MAX_NAME_LEN})")
+            for word in RESERVED_NAME_WORDS:
+                if word in name.lower():
+                    errors.append(f"{rel}: `name: {name}` contains the reserved word {word!r}")
+            if XML_TAG_RE.search(name):
+                errors.append(f"{rel}: `name` contains an XML tag")
             if name in seen:
                 errors.append(f"{rel}: duplicate `name: {name}` (also used by {seen[name]})")
             else:
@@ -113,8 +128,15 @@ def main() -> int:
 
         if not description:
             errors.append(f"{rel}: frontmatter is missing a non-empty `description`")
-        elif len(description) > RECOMMENDED_DESC_LEN:
-            warnings.append(f"{rel}: description is {len(description)} chars (recommended max {RECOMMENDED_DESC_LEN})")
+        else:
+            if XML_TAG_RE.search(description):
+                errors.append(f"{rel}: `description` contains an XML tag")
+            if len(description) > SPEC_MAX_DESC_LEN:
+                message = (
+                    f"{rel}: description is {len(description)} chars, over the "
+                    f"{SPEC_MAX_DESC_LEN}-char spec limit"
+                )
+                (errors if DESC_OVERFLOW_IS_ERROR else warnings).append(message)
 
     print(f"Scanned {count} SKILL.md files under {skills_dir.relative_to(root).as_posix()}/")
 
