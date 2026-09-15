@@ -140,7 +140,7 @@
       "name": "offensive-ai-security",
       "category": "ai",
       "path": "Skills/ai/offensive-ai-security/SKILL.md",
-      "description": ""
+      "description": "AI/LLM security offensive checklist: prompt injection, jailbreaking, model extraction, training data poisoning, adversarial inputs, LLM-assisted attack automation, and AI system reconnaissance. Use when assessing AI/ML systems, red-teaming LLMs, or researching AI attack vectors."
     },
     {
       "name": "offensive-api-abuse",
@@ -164,7 +164,7 @@
       "name": "offensive-oauth",
       "category": "auth",
       "path": "Skills/auth/offensive-oauth/SKILL.md",
-      "description": ""
+      "description": "OAuth 2.0 attack checklist: authorization code interception, redirect_uri bypass, CSRF on OAuth flow, state parameter abuse, open redirector chaining, token leakage via Referer, PKCE bypass, and scope escalation. Use when testing OAuth implementations in web apps or bug bounty."
     },
     {
       "name": "offensive-cicd-pipeline",
@@ -212,31 +212,31 @@
       "name": "offensive-basic-exploitation",
       "category": "exploit-dev",
       "path": "Skills/exploit-dev/offensive-basic-exploitation/SKILL.md",
-      "description": ""
+      "description": "Week 5 exploit development curriculum. Foundational exploitation techniques: controlling EIP/RIP, ROP chain construction, ret2libc, shellcode injection, heap spraying, bypass techniques for ASLR/NX/stack canaries. Use when building initial PoCs or understanding classic exploitation primitives."
     },
     {
       "name": "offensive-crash-analysis",
       "category": "exploit-dev",
       "path": "Skills/exploit-dev/offensive-crash-analysis/SKILL.md",
-      "description": ""
+      "description": "Week 4 exploit development curriculum. Crash triage and analysis methodology: WinDbg/GDB analysis, ASAN/MSAN output interpretation, exploitability assessment, register/stack trace reading, root cause identification. Use when analyzing crash dumps, assessing exploitability, or understanding fuzzer-generated crashes."
     },
     {
       "name": "offensive-exploit-dev-course",
       "category": "exploit-dev",
       "path": "Skills/exploit-dev/offensive-exploit-dev-course/SKILL.md",
-      "description": ""
+      "description": "Full exploit development course roadmap and syllabus: weekly topics, recommended reading, lab setup, and learning path from vulnerability classes through advanced exploitation. Use to structure exploit dev training or onboard new researchers."
     },
     {
       "name": "offensive-exploit-development",
       "category": "exploit-dev",
       "path": "Skills/exploit-dev/offensive-exploit-development/SKILL.md",
-      "description": ""
+      "description": "Exploit development operational guide: environment setup, debugging workflow, PoC development lifecycle, writing reliable exploits, using pwntools/pwndbg, heap exploitation techniques, and weaponization considerations. Use when actively developing exploits or setting up an exploit dev environment."
     },
     {
       "name": "offensive-mitigations",
       "category": "exploit-dev",
       "path": "Skills/exploit-dev/offensive-mitigations/SKILL.md",
-      "description": ""
+      "description": "Security mitigation reference and bypass catalog: ASLR, DEP/NX, RELRO, stack canaries, CFI, sandboxing, seccomp. Covers both detection of enabled mitigations and known bypass techniques. Use when assessing target hardening or planning exploit mitigation bypasses."
     },
     {
       "name": "offensive-toctou",
@@ -260,7 +260,7 @@
       "name": "offensive-bug-identification",
       "category": "fuzzing",
       "path": "Skills/fuzzing/offensive-bug-identification/SKILL.md",
-      "description": ""
+      "description": "Systematic bug identification methodology: source code review patterns, black-box testing strategies, taint analysis, dangerous function hunting, data flow tracing, and automated scanning setup. Use for code audits, bug bounty triage, or building vulnerability identification pipelines."
     },
     {
       "name": "offensive-fuzzing",
@@ -272,13 +272,13 @@
       "name": "offensive-fuzzing-course",
       "category": "fuzzing",
       "path": "Skills/fuzzing/offensive-fuzzing-course/SKILL.md",
-      "description": ""
+      "description": "Week 2 of the exploit development curriculum. Covers fuzzing methodology: target selection, corpus generation, coverage-guided fuzzing with AFL++/libFuzzer, structured fuzzing, and triage/deduplication. Use when setting up fuzz campaigns, selecting harness strategies, or triaging fuzzer output."
     },
     {
       "name": "offensive-vuln-classes",
       "category": "fuzzing",
       "path": "Skills/fuzzing/offensive-vuln-classes/SKILL.md",
-      "description": ""
+      "description": "Exploit development curriculum covering core vulnerability classes with real-world CVE case studies: stack/heap buffer overflows, use-after-free, integer overflows, format strings, type confusion, and race conditions. Use when learning or teaching vuln classes, researching specific CVE patterns, or building exploit dev knowledge."
     },
     {
       "name": "offensive-advanced-redteam",
@@ -290,19 +290,19 @@
       "name": "offensive-edr-evasion",
       "category": "infrastructure",
       "path": "Skills/infrastructure/offensive-edr-evasion/SKILL.md",
-      "description": ""
+      "description": "EDR evasion offensive checklist: hook unhooking (user/kernel), direct syscalls, PPID spoofing, process injection variants, AMSI bypass, ETW patching, memory encryption, and behavior-based evasion. Use when planning EDR bypass during red team engagements or researching AV/EDR evasion techniques."
     },
     {
       "name": "offensive-initial-access",
       "category": "infrastructure",
       "path": "Skills/infrastructure/offensive-initial-access/SKILL.md",
-      "description": ""
+      "description": "Initial access techniques checklist: phishing (spear/smishing), credential stuffing, exposed service exploitation, supply chain attacks, watering hole, VPN/RDP brute force, public-facing application exploitation. Maps to MITRE ATT&CK TA0001. Use when planning initial access phases of red team engagements."
     },
     {
       "name": "offensive-keylogger-arch",
       "category": "infrastructure",
       "path": "Skills/infrastructure/offensive-keylogger-arch/SKILL.md",
-      "description": ""
+      "description": "Low-level keylogger architecture design: kernel driver hooks (WH_KEYBOARD_LL, SetWindowsHookEx), ETW-based input capture, user-mode vs kernel-mode approaches, stealth techniques, and data exfiltration. Use for understanding input capture mechanisms, EDR evasion research, or malware architecture analysis."
     },
     {
       "name": "offensive-shellcode",
@@ -314,13 +314,13 @@
       "name": "offensive-windows-boundaries",
       "category": "infrastructure",
       "path": "Skills/infrastructure/offensive-windows-boundaries/SKILL.md",
-      "description": ""
+      "description": "Windows security boundary taxonomy and attack surface enumeration: kernel/user boundary, sandbox boundaries (LPAC, AppContainer), COM/RPC boundaries, hypervisor boundary, trust level transitions. Use when planning privilege escalation paths, sandbox escapes, or understanding Windows security architecture."
     },
     {
       "name": "offensive-windows-mitigations",
       "category": "infrastructure",
       "path": "Skills/infrastructure/offensive-windows-mitigations/SKILL.md",
-      "description": ""
+      "description": "Deep-dive on Windows exploit mitigations: ASLR, DEP/NX, CFG, CET/Shadow Stack, SEHOP, Heap Guard, ACG, Arbitrary Code Guard. Covers both the protection mechanism and known bypass techniques. Use when researching Windows exploit mitigations, planning bypass strategies, or understanding protection depth."
     },
     {
       "name": "offensive-iot",
@@ -380,7 +380,7 @@
       "name": "offensive-osint-methodology",
       "category": "recon",
       "path": "Skills/recon/offensive-osint-methodology/SKILL.md",
-      "description": ""
+      "description": "Structured OSINT methodology framework: target definition, source selection, collection workflows, data correlation, timeline reconstruction, and reporting. Use to guide systematic OSINT campaigns or teach OSINT methodology."
     },
     {
       "name": "offensive-phishing",
@@ -410,7 +410,7 @@
       "name": "offensive-fast-checking",
       "category": "utility",
       "path": "Skills/utility/offensive-fast-checking/SKILL.md",
-      "description": ""
+      "description": "Speed-optimized offensive checklist for rapid assessment: quick-win vulnerability patterns, fast recon shortcuts, automated scanner configurations, and triage shortcuts. Use for time-boxed assessments, CTF-speed engagements, or initial rapid surface mapping."
     },
     {
       "name": "offensive-reporting",
@@ -434,7 +434,7 @@
       "name": "offensive-file-upload",
       "category": "web",
       "path": "Skills/web/offensive-file-upload/SKILL.md",
-      "description": ""
+      "description": "File upload vulnerability checklist: MIME type bypass, extension bypass, magic byte manipulation, path traversal in filenames, stored XSS via SVG/HTML upload, server-side processing attacks, and race conditions. Use for assessing file upload endpoints in web app pentests or bug bounty."
     },
     {
       "name": "offensive-graphql",
@@ -446,37 +446,37 @@
       "name": "offensive-idor",
       "category": "web",
       "path": "Skills/web/offensive-idor/SKILL.md",
-      "description": ""
+      "description": "IDOR (Insecure Direct Object Reference) testing checklist: object ID enumeration, horizontal/vertical privilege escalation, GUID predictability, indirect references via hashes, chained IDOR, and API endpoint IDOR. Use for web app pentests and bug bounty IDOR discovery."
     },
     {
       "name": "offensive-open-redirect",
       "category": "web",
       "path": "Skills/web/offensive-open-redirect/SKILL.md",
-      "description": ""
+      "description": "Open redirect vulnerability checklist: parameter identification, bypass techniques (URL encoding, double slashes, CRLF injection, protocol handlers), chaining with OAuth/SSRF, and impact escalation paths. Use for web app testing and bug bounty open redirect discovery."
     },
     {
       "name": "offensive-parameter-pollution",
       "category": "web",
       "path": "Skills/web/offensive-parameter-pollution/SKILL.md",
-      "description": ""
+      "description": "HTTP parameter pollution (HPP) checklist: duplicate parameter injection, backend vs frontend parsing differences, WAF bypass via HPP, server-side vs client-side HPP, and practical exploitation patterns. Use when testing web applications for parameter handling flaws."
     },
     {
       "name": "offensive-race-condition",
       "category": "web",
       "path": "Skills/web/offensive-race-condition/SKILL.md",
-      "description": ""
+      "description": "Race condition (TOCTOU) testing checklist: identifying timing windows, Burp Suite Turbo Intruder, Last-Byte sync technique, rate limit bypass, double-spend attacks, and concurrent request exploitation. Use for web app race condition testing or bug bounty time-of-check-to-time-of-use bugs."
     },
     {
       "name": "offensive-rce",
       "category": "web",
       "path": "Skills/web/offensive-rce/SKILL.md",
-      "description": ""
+      "description": "Remote Code Execution testing checklist: OS command injection, SSTI-to-RCE, deserialization RCE, file upload RCE, XXE with SSRF to RCE, RCE via dependency confusion, and CVE-based RCE patterns. Use for web app pentests and bug bounty RCE discovery."
     },
     {
       "name": "offensive-request-smuggling",
       "category": "web",
       "path": "Skills/web/offensive-request-smuggling/SKILL.md",
-      "description": ""
+      "description": "HTTP request smuggling checklist: CL.TE, TE.CL, TE.TE variants, detection with timing and differential responses, WAF bypass, cache poisoning, credential hijacking, and request smuggling via HTTP/2. Use when testing reverse proxy/load balancer configurations."
     },
     {
       "name": "offensive-sqli",
@@ -488,7 +488,7 @@
       "name": "offensive-ssrf",
       "category": "web",
       "path": "Skills/web/offensive-ssrf/SKILL.md",
-      "description": ""
+      "description": "Server-Side Request Forgery testing checklist: SSRF discovery, blind SSRF with out-of-band, cloud metadata endpoints (AWS/GCP/Azure), SSRF filter bypass techniques (IP encoding, DNS rebinding, redirect chains), and SSRF to RCE escalation. Use for web app SSRF testing and bug bounty."
     },
     {
       "name": "offensive-ssti",
@@ -500,19 +500,19 @@
       "name": "offensive-waf-bypass",
       "category": "web",
       "path": "Skills/web/offensive-waf-bypass/SKILL.md",
-      "description": ""
+      "description": "WAF bypass techniques checklist: encoding bypass (URL/HTML/Unicode/double encoding), case variation, comment injection, HTTP header manipulation, chunked encoding, IP rotation, timing attacks, and payload obfuscation per WAF vendor. Use when WAF is blocking payloads during web app tests."
     },
     {
       "name": "offensive-xss",
       "category": "web",
       "path": "Skills/web/offensive-xss/SKILL.md",
-      "description": ""
+      "description": "Cross-Site Scripting testing checklist: stored/reflected/DOM/blind XSS discovery, polyglot payloads, CSP bypass, XSS filter bypass, event handler injection, DOM clobbering, mutation XSS, and impact escalation (session hijack, phishing, keylogging). Use for web app XSS testing and bug bounty."
     },
     {
       "name": "offensive-xxe",
       "category": "web",
       "path": "Skills/web/offensive-xxe/SKILL.md",
-      "description": ""
+      "description": "XML External Entity injection testing checklist: classic XXE, blind XXE (out-of-band), XXE via file upload (SVG/docx), XXE in SOAP/REST, error-based XXE, XInclude attacks, and XXE filter bypass. Use for web app XXE testing and bug bounty."
     },
     {
       "name": "offensive-bluetooth-ble",

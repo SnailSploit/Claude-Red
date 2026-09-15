@@ -1,3 +1,8 @@
+---
+name: offensive-fast-checking
+description: "Speed-optimized offensive checklist for rapid assessment: quick-win vulnerability patterns, fast recon shortcuts, automated scanner configurations, and triage shortcuts. Use for time-boxed assessments, CTF-speed engagements, or initial rapid surface mapping."
+---
+
 # SKILL: Fast Testing Checklist
 
 ## Metadata

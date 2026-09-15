@@ -4,6 +4,20 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Fixed
+
+- **28 skills were undiscoverable by spec-compliant installers.** `npx skills add SnailSploit/Claude-Red` reported `Found 50 skills` instead of 78, because 28 `SKILL.md` files still used the pre-conversion layout (a `# SKILL:` heading plus `## Metadata` / `## Description` sections) with no YAML frontmatter. Installers require `name` and `description` in frontmatter, so those files were skipped with a warning and never installed. The loss was concentrated in `web/` (16 → 5), `infrastructure/` (7 → 2), `exploit-dev/` (6 → 1), and `fuzzing/` (4 → 1). All 28 files now carry frontmatter derived from the metadata already present in their body; `claude-skills.json` was regenerated with the 28 previously-empty descriptions filled in. Verified with `npx skills add --list`: 50 → 78 skills, 28 warnings → 0.
+
+### Added
+
+- `tools/validate_skills.py` — fails CI when a `SKILL.md` lacks valid frontmatter, when `name` drifts from its directory, violates the slug pattern, or uses a reserved word, on XML tags in either field, on duplicate names, when `README.md`'s skill-count badge disagrees with reality, or when `claude-skills.json` is out of sync.
+- `tools/backfill_frontmatter.py` — idempotent migration for legacy `SKILL.md` files (dry-run by default).
+- `.github/workflows/skills-lint.yml` — runs the validator, the manifest freshness check, and the backfill dry-run on every change to a skill.
+
+### Known issue
+
+- 18 descriptions exceed the [Agent Skills spec](https://agentskills.io/specification) limit of 1024 characters (longest: `offensive-windows-privesc` at 1522). They predate this fix and current installers accept them, so `validate_skills.py` reports them as warnings rather than errors. Tracked separately.
+
 ### Planned
 
 - Phase 1 — Internal AD/Windows split (16 skills)
