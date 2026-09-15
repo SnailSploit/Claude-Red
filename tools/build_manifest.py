@@ -73,7 +73,7 @@ def main() -> int:
             entry = {
                 "name": fm.get("name", skill_dir.name),
                 "category": category,
-                "path": str(skill_md.relative_to(ROOT)),
+                "path": skill_md.relative_to(ROOT).as_posix(),
                 "description": fm.get("description", ""),
             }
             manifest["categories"][category].append(entry["name"])
