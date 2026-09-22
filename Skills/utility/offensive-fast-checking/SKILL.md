@@ -29,7 +29,6 @@ When this skill is active:
 
 A combination of my own methodology and the Web Application Hacker's Handbook Task checklist, as a Github-Flavored Markdown file
 
-- use [lostsec](https://lostsec.xyz/)
 - maintain a personal payloads repo synced with BLNS/SecLists; keep a tiny “golden” set for smoke tests
 
 ## Reconnaissance and Analysis
