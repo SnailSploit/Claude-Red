@@ -5,9 +5,13 @@ on:
 
 jobs:
   apply:
+    # Only trusted users may trigger this write-capable job. Without an
+    # author-association gate, any GitHub user could post "/apply-optimize"
+    # on a PR and run a job that holds contents:write / pull-requests:write.
     if: >
       github.event.issue.pull_request &&
-      contains(github.event.comment.body, '/apply-optimize')
+      contains(github.event.comment.body, '/apply-optimize') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
     permissions:
       pull-requests: write
