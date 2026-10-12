@@ -392,6 +392,7 @@ Preserve the original artifact and corroborate important metadata values with a 
 
 - [TGStat](https://tgstat.com/) — Channel analytics and search
 - [Telemetr](https://telemetr.io/) — Channel growth, overlaps, forwards
+- [TGScope](https://tgscope.io/) — Channel search across 3M+ public channels; free [creation date](https://tgscope.io/tools/telegram-channel-creation-date) (dates a channel or supergroup by its ID), [ad network](https://tgscope.io/tools/telegram-channel-network) and [real reach](https://tgscope.io/tools/telegram-channel-audit) checks
 - [Combot](https://combot.org/) — Group analytics (partially paid)
 - [TelegramDB Search Bot](https://t.me/TGdb_bot) — Basic Telegram OSINT
 - [Discord ID](https://discord.id/) — Basic Discord account information
