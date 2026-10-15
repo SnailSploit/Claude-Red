@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **cicd/** — `offensive-claude-code-action`: offensively assessing AI coding agents wired into CI (`anthropics/claude-code-action` and the Codex/Gemini/Copilot equivalents). Prompt injection from issue, PR and comment text into an agent holding a write token; context-file injection via `CLAUDE.md`/`AGENTS.md` loaded from the PR head; tool-allowlist abuse for `Bash`/`Write`/`WebFetch`; `pull_request_target` with an untrusted checkout; exfiltration through the agent's own reply, commits and PRs; repository persistence by rewriting workflows; OIDC trust-policy abuse; MCP tool poisoning; and denial-of-wallet. Includes recon commands, per-surface payload shapes, an execution-marker technique for reproducible proof, a defender view, and a hardening checklist to verify.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.

@@ -86,7 +86,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | [Reconnaissance](#reconnaissance) | 2 | OSINT tooling and structured intelligence collection |
 | [API Security](#api-security) | 2 | REST/gRPC/WebSocket testing, business logic abuse |
 | [Container & Kubernetes](#container--kubernetes) | 2 | Container escape, Kubernetes cluster exploitation |
-| [CI/CD & Pipeline](#cicd--pipeline) | 2 | Pipeline exploitation, secrets extraction |
+| [CI/CD & Pipeline](#cicd--pipeline) | 3 | Pipeline exploitation, agent-in-CI abuse, secrets extraction |
 | [Cryptography](#cryptography) | 2 | Cryptographic implementation attacks, TLS/SSL |
 | [Privilege Escalation](#privilege-escalation) | 2 | Linux and Windows privilege escalation |
 | [Post-Exploitation](#post-exploitation) | 3 | Lateral movement, persistence mechanisms, data exfiltration |
@@ -259,6 +259,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 |---|---|
 | [`offensive-cicd-pipeline`](Skills/cicd/offensive-cicd-pipeline/SKILL.md) | CI/CD exploitation — GitHub Actions injection, Jenkins RCE, GitLab CI abuse |
 | [`offensive-cicd-secrets`](Skills/cicd/offensive-cicd-secrets/SKILL.md) | CI/CD secrets — environment variable extraction, vault misconfigs, runner token abuse |
+| [`offensive-claude-code-action`](Skills/cicd/offensive-claude-code-action/SKILL.md) | AI coding agents in CI — prompt injection from issue/PR text into an agent holding a write token, tool-allowlist abuse, exfiltration |
 
 ### Cryptography
 

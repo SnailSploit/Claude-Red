@@ -5,7 +5,8 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
@@ -20,7 +21,8 @@
     ],
     "cicd": [
       "offensive-cicd-pipeline",
-      "offensive-cicd-secrets"
+      "offensive-cicd-secrets",
+      "offensive-claude-code-action"
     ],
     "cloud": [
       "offensive-cloud"
@@ -137,6 +139,12 @@
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
     },
     {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
+    },
+    {
       "name": "offensive-ai-security",
       "category": "ai",
       "path": "Skills/ai/offensive-ai-security/SKILL.md",
@@ -177,6 +185,12 @@
       "category": "cicd",
       "path": "Skills/cicd/offensive-cicd-secrets/SKILL.md",
       "description": "Comprehensive secrets extraction methodology targeting CI/CD environments across all major platforms. Covers environment variable extraction from build contexts, exploitation of vault and secrets-manager misconfigurations (HashiCorp Vault, AWS Secrets Manager, Azure Key Vault, GCP Secret Manager), runner and agent token abuse for lateral movement, OIDC federation attacks exploiting trust relationships between CI/CD providers and cloud platforms, build log leakage analysis for inadvertently exposed credentials, cache poisoning techniques for credential exfiltration, platform-specific credential store exploitation (GitHub Actions secrets, GitLab CI variables, Jenkins credential providers), service connection and service account abuse in Azure DevOps and GCP, and Docker registry credential theft from build environments. Maps to MITRE ATT&CK T1552 (Unsecured Credentials) and its sub-techniques. Each section provides enumeration procedures, extraction techniques, and post-exploitation pivoting guidance for using recovered secrets to expand access."
+    },
+    {
+      "name": "offensive-claude-code-action",
+      "category": "cicd",
+      "path": "Skills/cicd/offensive-claude-code-action/SKILL.md",
+      "description": "Offensive methodology for AI coding agents wired into CI — Claude Code Action (@claude mentions, anthropics/claude-code-action) and the equivalent Codex, Gemini CLI and Copilot coding-agent workflows. Covers reconnaissance of agent workflows and their permission block, mapping the attacker-controlled text surfaces that reach the model prompt (issue and PR titles, bodies, comments, commit messages, branch names, filenames, diff hunks), direct and indirect prompt injection that converts a text surface into a tool call, jailbreaking the action's own guardrail prompt, abusing over-broad allowed_tools and claude_args tool permissions for Bash/Write/WebFetch, exploiting pull_request_target combined with an untrusted checkout, secret exfiltration through agent-authored comments, commits, PR bodies and outbound network calls, repository persistence by having the agent rewrite .github/workflows, CODEOWNERS or release automation, OIDC id-token abuse against cloud trust policies, tool poisoning through attacker-supplied MCP server config, artifact and cache poisoning between agent jobs, and denial-of-wallet token burn. Includes workflow enumeration commands, payload patterns for each text surface, a triage decision tree for which surfaces are reachable from an unauthenticated position, what defenders see in audit logs, and the hardening checklist to test against. Use when assessing a repository that runs an AI coding agent in CI, when a program scope includes a GitHub organisation's automation, or when validating that agent guardrails actually hold."
     },
     {
       "name": "offensive-cloud",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }
