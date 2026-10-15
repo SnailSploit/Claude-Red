@@ -187,7 +187,7 @@ sequenceDiagram
 
     Note over Attacker,CallbackServer: Phase 3: Bypass Testing
 
-    Attacker->>WebApp: Request with Obfuscated URL<br>(http://127.0.0.1.attacker.com)
+    Attacker->>WebApp: Request with Obfuscated URL<br>(http://127.0.0.1.attacker.example)
     WebApp->>CallbackServer: Makes request due to parser confusion
     CallbackServer->>Attacker: Log notification of successful bypass
 ```

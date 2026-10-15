@@ -417,13 +417,13 @@ graph TD
   - Adding excessive headers to confuse WAF processing
   - Using duplicate headers with different values
   - Adding headers that make the request appear to come from internal networks or spoof identity. Many applications, especially behind misconfigured reverse proxies, trust headers like `X-Forwarded-For` or `X-Forwarded-Host` to determine the client's IP or the requested host. Manipulating these can lead to various vulnerabilities:
-    - Password Reset Poisoning: Injecting headers like `X-Forwarded-Host: attacker.com` can cause the application to generate password reset links pointing to the attacker's domain.
+    - Password Reset Poisoning: Injecting headers like `X-Forwarded-Host: attacker.example` can cause the application to generate password reset links pointing to the attacker's domain.
     - Bypassing IP Restrictions: Using `X-Forwarded-For: <trusted_ip>` or similar headers can bypass IP-based access controls if the server trusts the header.
     - Open Redirects: Manipulating host-related headers (`X-Forwarded-Host`, `Referer`) can redirect users to malicious sites.
     - SSRF: Headers like `X-Forwarded-For` or `X-Real-IP` can be manipulated to target internal IPs (e.g., `169.254.169.254` for AWS metadata service).
   - Common Headers for Spoofing/Bypass: Attackers may use a variety of headers to manipulate server behavior or bypass WAF rules. Some common examples include:
     ```
-    X-Forwarded-Host: attacker.com
+    X-Forwarded-Host: attacker.example
     X-Forwarded-For: 127.0.0.1
     X-Client-IP: 127.0.0.1
     Client-IP: 127.0.0.1
@@ -431,9 +431,9 @@ graph TD
     X-Originating-IP: 127.0.0.1
     X-Remote-IP: 127.0.0.1
     X-Remote-Addr: 127.0.0.1
-    Forwarded: for=127.0.0.1;host=attacker.com
-    Referer: attacker.com
-    Origin: null / attacker.com
+    Forwarded: for=127.0.0.1;host=attacker.example
+    Referer: attacker.example
+    Origin: null / attacker.example
     # And many variations like X-Forwarded, X-Forwarded-By, etc.
     ```
 

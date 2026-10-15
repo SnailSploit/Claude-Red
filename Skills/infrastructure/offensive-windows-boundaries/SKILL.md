@@ -1225,8 +1225,8 @@ Mark of the Web (MOTW) is a critical security boundary that determines whether d
 │     ┌──────────────────────────────────────────────────────┐    │
 │     │ [ZoneTransfer]                                       │    │
 │     │ ZoneId=3          ← Internet zone (untrusted)        │    │
-│     │ ReferrerUrl=https://attacker.com/payload.exe         │    │
-│     │ HostUrl=https://attacker.com/payload.exe             │    │
+│     │ ReferrerUrl=https://attacker.invalid/payload.exe         │    │
+│     │ HostUrl=https://attacker.invalid/payload.exe             │    │
 │     └──────────────────────────────────────────────────────┘    │
 │                          ↓                                      │
 │  3. Execution Attempt                                           │

