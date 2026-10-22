@@ -5,7 +5,8 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
@@ -82,6 +83,9 @@
       "offensive-osint",
       "offensive-osint-methodology"
     ],
+    "reverse-engineering": [
+      "offensive-reverse-engineering"
+    ],
     "social-engineering": [
       "offensive-phishing",
       "offensive-social-engineering"
@@ -135,6 +139,12 @@
       "category": "active-directory",
       "path": "Skills/active-directory/offensive-active-directory/SKILL.md",
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
+    },
+    {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
     },
     {
       "name": "offensive-ai-security",
@@ -383,6 +393,12 @@
       "description": ""
     },
     {
+      "name": "offensive-reverse-engineering",
+      "category": "reverse-engineering",
+      "path": "Skills/reverse-engineering/offensive-reverse-engineering/SKILL.md",
+      "description": "Disciplined methodology for reverse-engineering and triaging an unknown binary, crackme, malware sample, or CTF reverse-engineering challenge. Covers the cheap-first order of operations (file/magic-bytes/structure/strings before disassembly), static analysis with Ghidra, IDA, and radare2 and when to abandon it for dynamic analysis (debugger, emulation), handling obfuscation and junk-code pollution (Hex-Rays hooks, microcode patching), packers and loaders (PyInstaller, Nuitka, UPX, .NET), crypto-primitive recognition by constant and S-box signature (AES, RC5/RC6, TEA/XTEA 0x9E3779B9), parameter and arithmetic reasoning (modular exponentiation mod 2^n inversion, matrix power inversion via Lagrange, known-plaintext XOR recovery), Python and .NET bytecode handling when decompilers fail (xdis/pydisasm, dnSpy), embedded-runtime targets that defeat static reading (V8/Tauri/Electron, WASM, bundled Go/Rust) and the pivot to runtime script/input replacement, mass-duplicate template recognition with automated recognizers (regex on disassembly, angr), emulation of small child functions with Unicorn Engine, and the measured discipline that prevents derailment: state every assumption, the two-dead-ends rule, a three-column KNOWN/ASSUMED/RULED-OUT ledger, reading a parameter in both directions, checking the operation rather than whether output looks pretty, verifying file identity before concluding, measuring before reading for unusual compilers, treating an obvious win-screen string as a possible decoy, and going dynamic the moment static reading stops answering. Distilled from a reverse-engineering agent's playbook (FLARE-On grade). Use when analysing an unknown, obfuscated, or packed binary rather than a live network target."
+    },
+    {
       "name": "offensive-phishing",
       "category": "social-engineering",
       "path": "Skills/social-engineering/offensive-phishing/SKILL.md",
@@ -599,6 +615,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
-  "category_count": 23
+  "skill_count": 80,
+  "category_count": 24
 }
