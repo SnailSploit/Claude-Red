@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-dom-clobbering` (web) — named HTML elements overriding globals and document properties, form/id/name collisions, and script gadgets, plus a defender view on sanitizers and locked-down globals.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
