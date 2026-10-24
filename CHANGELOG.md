@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-prototype-pollution` (web) — client- and server-side JavaScript prototype pollution: `__proto__` / `constructor.prototype` sources, vulnerable merge libraries, DOM XSS and RCE gadgets (including CVE-2019-7609), and remediation.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.

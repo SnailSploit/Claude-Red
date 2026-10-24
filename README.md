@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-80-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -73,7 +73,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 
 | Category | Skills | Focus |
 |---|---:|---|
-| [Web Application](#web-application) | 16 | OWASP Top 10, business logic, advanced web vulnerability classes |
+| [Web Application](#web-application) | 17 | OWASP Top 10, business logic, advanced web vulnerability classes |
 | [Auth & Identity](#auth--identity) | 2 | JWT exploitation, OAuth/OIDC abuse |
 | [Active Directory](#active-directory) | 1 | On-prem AD attack methodology |
 | [Wireless](#wireless) | 14 | 802.11, WPA2/3, EAP, WPS, evil-twin, BLE, Zigbee, Z-Wave, LoRa, sub-GHz |
@@ -123,6 +123,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | [`offensive-graphql`](Skills/web/offensive-graphql/SKILL.md) | GraphQL — introspection abuse, batching attacks, alias-based IDOR |
 | [`offensive-waf-bypass`](Skills/web/offensive-waf-bypass/SKILL.md) | WAF bypass — encoding tricks, chunked transfer, case mutation |
 | [`offensive-business-logic`](Skills/web/offensive-business-logic/SKILL.md) | Business logic — workflow bypass, pricing abuse, multi-step chains |
+| [`offensive-prototype-pollution`](Skills/web/offensive-prototype-pollution/SKILL.md) | Prototype pollution — client/server JS, __proto__ sources, DOM XSS and RCE gadgets |
 
 ### Auth & Identity
 
