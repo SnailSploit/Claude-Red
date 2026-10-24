@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-nosql-injection` (web) — MongoDB operator injection (`$gt`, `$ne`, `$regex`, `$where`), JSON versus URL syntax, authentication-bypass validation, and a short distinction from CouchDB and Redis command injection.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
