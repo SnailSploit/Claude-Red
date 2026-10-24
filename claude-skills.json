@@ -5,7 +5,8 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
@@ -31,6 +32,7 @@
     ],
     "crypto": [
       "offensive-crypto-attacks",
+      "offensive-padding-oracle",
       "offensive-tls-attacks"
     ],
     "exploit-dev": [
@@ -137,6 +139,12 @@
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
     },
     {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
+    },
+    {
       "name": "offensive-ai-security",
       "category": "ai",
       "path": "Skills/ai/offensive-ai-security/SKILL.md",
@@ -201,6 +209,12 @@
       "category": "crypto",
       "path": "Skills/crypto/offensive-crypto-attacks/SKILL.md",
       "description": "Systematic methodology for identifying and exploiting cryptographic implementation weaknesses in real-world applications. Covers padding oracle attacks against CBC-mode ciphers with PKCS7 padding (Vaudenay's original attack through modern padbuster automation), ECB mode exploitation including block cut-and-paste and byte-at-a-time decryption, hash length extension attacks against SHA1/SHA256/MD5-based MACs using HashPump, RSA vulnerabilities including small public exponent, common modulus, Bleichenbacher PKCS1v1.5 padding oracle, and Coppersmith's method for partial key recovery. Addresses weak PRNG exploitation targeting time-seeded generators and Mersenne Twister MT19937 state recovery from observed outputs, timing side-channel attacks against comparison operations, nonce reuse in AES-GCM leading to authentication key recovery, and key derivation weaknesses including insufficient iteration counts and missing salts. Primary tooling includes padbuster, RsaCtfTool, hashpump, and PyCryptodome for building custom exploit payloads. Maps to CWE-327 (Use of a Broken or Risky Cryptographic Algorithm), CWE-328 (Use of Weak Hash), and CWE-330 (Use of Insufficiently Random Values). Emphasizes black-box identification of vulnerable implementations before transitioning to targeted exploitation."
+    },
+    {
+      "name": "offensive-padding-oracle",
+      "category": "crypto",
+      "path": "Skills/crypto/offensive-padding-oracle/SKILL.md",
+      "description": "Dedicated methodology for finding and weaponizing padding and decryption oracles in real-world applications. Focuses on CBC-mode PKCS#7 padding oracle attacks (Vaudenay 2002): how the XOR relationship between adjacent CBC blocks lets you recover plaintext byte-by-byte from a single valid/invalid padding signal, and how the same primitive runs in reverse (CBC-R) to forge ciphertext that decrypts to arbitrary attacker-chosen plaintext for privilege escalation via encrypted cookies, session tokens, ASP.NET __VIEWSTATE, JSF/Mojarra view state, and encrypted URL parameters. Covers oracle identification in the wild through differential responses (distinct HTTP status codes, error strings, response lengths) and timing side channels, verbose crypto stack traces, and MAC-then-encrypt ordering mistakes. Includes step-by-step manual single-block decryption, then automation with padbuster and the python-paddingoracle library and custom requests-based scripts. Extends to transport-level padding oracles via POODLE against SSLv3 CBC and the TLS CBC MAC-padding timing lineage (Lucky Thirteen). Points to adjacent decryption oracles — Bleichenbacher RSA PKCS#1 v1.5 / ROBOT and AES-GCM nonce-reuse forgery — with remediation toward authenticated encryption (AES-GCM, ChaCha20-Poly1305, encrypt-then-MAC), constant-time padding validation, and uniform error handling. Use when you encounter encrypted blobs, cookies, view-states, or tokens and need to decrypt or forge them without the key. Maps to CWE-209 (Information Exposure Through an Error Message) and CWE-347 (Improper Verification of Cryptographic Signature). Complementary to offensive-crypto-attacks — this skill is the deep dive on the padding/decryption-oracle surface specifically."
     },
     {
       "name": "offensive-tls-attacks",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }

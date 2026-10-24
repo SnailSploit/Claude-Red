@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-80-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -87,7 +87,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | [API Security](#api-security) | 2 | REST/gRPC/WebSocket testing, business logic abuse |
 | [Container & Kubernetes](#container--kubernetes) | 2 | Container escape, Kubernetes cluster exploitation |
 | [CI/CD & Pipeline](#cicd--pipeline) | 2 | Pipeline exploitation, secrets extraction |
-| [Cryptography](#cryptography) | 2 | Cryptographic implementation attacks, TLS/SSL |
+| [Cryptography](#cryptography) | 3 | Cryptographic implementation attacks, padding/decryption oracles, TLS/SSL |
 | [Privilege Escalation](#privilege-escalation) | 2 | Linux and Windows privilege escalation |
 | [Post-Exploitation](#post-exploitation) | 3 | Lateral movement, persistence mechanisms, data exfiltration |
 | [Forensics & C2](#forensics--c2) | 2 | Anti-forensics tradecraft, C2 framework operations |
@@ -267,6 +267,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | Skill | Description |
 |---|---|
 | [`offensive-crypto-attacks`](Skills/crypto/offensive-crypto-attacks/SKILL.md) | Cryptographic attacks — padding oracle, ECB manipulation, hash extension, weak PRNG |
+| [`offensive-padding-oracle`](Skills/crypto/offensive-padding-oracle/SKILL.md) | Padding/decryption oracles — CBC PKCS#7 byte-at-a-time, CBC-R forgery, POODLE, ROBOT |
 | [`offensive-tls-attacks`](Skills/crypto/offensive-tls-attacks/SKILL.md) | TLS/SSL attacks — POODLE, DROWN, Heartbleed, pinning bypass, 0-RTT replay |
 
 ### Privilege Escalation

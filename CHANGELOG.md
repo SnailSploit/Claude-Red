@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **crypto/** — `offensive-padding-oracle`: dedicated deep dive on padding/decryption oracles (CBC PKCS#7 byte-at-a-time recovery and CBC-R forgery theory, oracle identification via differential responses/timing/verbose errors, manual single-block decryption, padbuster and python-paddingoracle automation, POODLE/Lucky Thirteen transport oracles, and pointers to Bleichenbacher/ROBOT and GCM nonce reuse). Complements `offensive-crypto-attacks`.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
