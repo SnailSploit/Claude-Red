@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-ldap-injection` (web) — LDAP filter and bind injection: metacharacters, AND/OR logic abuse, authentication-bypass patterns, and blind true/false checks, plus a defender view on parameterized filters and RFC 4515 escaping.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
