@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-cors` (web) — CORS misconfiguration discovery and exploitation: origin reflection with `Access-Control-Allow-Credentials: true`, `null` origin abuse, flawed allowlist logic, trust-all-subdomains, scheme downgrade, `Vary: Origin` cache interplay, and a credentialed `fetch` PoC.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
