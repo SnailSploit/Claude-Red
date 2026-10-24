@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-ssi` (web) — Server-Side Include and Edge Side Include injection: `echo`/`exec`/`include`/`fsize`, `Surrogate-Control`, `<esi:include>` and `<esi:vars>`, and host-header cache confusion, plus a defender view.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
