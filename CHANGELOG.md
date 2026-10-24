@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-web-cache-poisoning` (web) — web cache poisoning and web cache deception: cacheable-response fingerprinting, unkeyed inputs, Param Miner, cache-key injection, fat GET, parameter cloaking, CPDoS, and path-confusion deception.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
