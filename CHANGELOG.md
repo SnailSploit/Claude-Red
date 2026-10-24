@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **web/** — `offensive-csrf` (Cross-Site Request Forgery: classic GET/POST state-changing CSRF, CSRF-token weaknesses, SameSite bypasses, JSON/CORS CSRF, Referer/Origin validation bypasses, login/logout and multi-step CSRF, clickjacking-assisted CSRF, Burp CSRF PoC generator, defender view)
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
