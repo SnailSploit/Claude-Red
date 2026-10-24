@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **recon/** — `offensive-subdomain-takeover` (dangling DNS detection via CNAME/A/NS records, subdomain enumeration with subfinder/amass/assetfinder/crt.sh, provider fingerprinting per can-i-take-over-xyz for S3/CloudFront/GitHub Pages/Heroku/Azure/Fastly/Shopify/Zendesk, resource claiming PoC, NS-level takeover, cookie/CSP/CORS/OAuth trust chaining, subjack/tko-subs/nuclei/dnsReaper tooling, DNS hygiene defense)
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.

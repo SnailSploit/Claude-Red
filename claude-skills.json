@@ -5,7 +5,8 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
@@ -80,7 +81,8 @@
     ],
     "recon": [
       "offensive-osint",
-      "offensive-osint-methodology"
+      "offensive-osint-methodology",
+      "offensive-subdomain-takeover"
     ],
     "social-engineering": [
       "offensive-phishing",
@@ -135,6 +137,12 @@
       "category": "active-directory",
       "path": "Skills/active-directory/offensive-active-directory/SKILL.md",
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
+    },
+    {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
     },
     {
       "name": "offensive-ai-security",
@@ -383,6 +391,12 @@
       "description": ""
     },
     {
+      "name": "offensive-subdomain-takeover",
+      "category": "recon",
+      "path": "Skills/recon/offensive-subdomain-takeover/SKILL.md",
+      "description": "Subdomain takeover testing skill for offensive security assessments and bug bounty hunting. Covers subdomain enumeration (subfinder, amass, assetfinder, crt.sh / certificate transparency, passive DNS sources), detecting dangling DNS records (CNAME/A/NS pointing at deprovisioned cloud resources), fingerprinting vulnerable third-party services (AWS S3/CloudFront, GitHub Pages, Heroku, Azure, Fastly, Shopify, Zendesk, and others per the can-i-take-over-xyz matrix) by their error signatures, claiming orphaned resources to serve attacker content, and NS/DNS-delegation takeover. Includes impact chaining (cookie theft on parent domain, phishing, CSP/CORS/OAuth-redirect bypass, session fixation), tooling (subjack, tko-subs, nuclei takeover templates, dnsReaper), and defender DNS hygiene. Use when hunting for dangling DNS, claimable cloud buckets or app endpoints, orphaned CNAME targets, or wildcard/NS delegation abuse against a target domain."
+    },
+    {
       "name": "offensive-phishing",
       "category": "social-engineering",
       "path": "Skills/social-engineering/offensive-phishing/SKILL.md",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }

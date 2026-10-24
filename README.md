@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-80-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -83,7 +83,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | [Infrastructure & Red Team](#infrastructure--red-team) | 7 | Initial access, EDR evasion, advanced red team operations, Windows internals |
 | [Exploit Development](#exploit-development) | 6 | Stack/heap corruption, ROP, mitigations, crash analysis, TOCTOU |
 | [Fuzzing & Vulnerability Research](#fuzzing--vulnerability-research) | 4 | libFuzzer, AFL++, coverage-guided fuzzing, vulnerability taxonomy |
-| [Reconnaissance](#reconnaissance) | 2 | OSINT tooling and structured intelligence collection |
+| [Reconnaissance](#reconnaissance) | 3 | OSINT tooling, structured intelligence collection, subdomain takeover |
 | [API Security](#api-security) | 2 | REST/gRPC/WebSocket testing, business logic abuse |
 | [Container & Kubernetes](#container--kubernetes) | 2 | Container escape, Kubernetes cluster exploitation |
 | [CI/CD & Pipeline](#cicd--pipeline) | 2 | Pipeline exploitation, secrets extraction |
@@ -232,6 +232,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 |---|---|
 | [`offensive-osint`](Skills/recon/offensive-osint/SKILL.md) | OSINT tooling — recon-ng, theHarvester, Maltego, Spiderfoot |
 | [`offensive-osint-methodology`](Skills/recon/offensive-osint-methodology/SKILL.md) | OSINT methodology — structured intelligence collection and analysis |
+| [`offensive-subdomain-takeover`](Skills/recon/offensive-subdomain-takeover/SKILL.md) | Subdomain takeover — dangling DNS (CNAME/A/NS), provider fingerprinting, claiming orphaned cloud resources |
 
 ### API Security
 
