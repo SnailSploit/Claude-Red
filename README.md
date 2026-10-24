@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-80-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -94,7 +94,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | [Supply Chain](#supply-chain) | 2 | Supply chain attacks, dependency confusion |
 | [Social Engineering](#social-engineering) | 2 | Phishing campaigns, physical/vishing/smishing |
 | [Network Attacks](#network-attacks) | 1 | Layer 2/3 attacks, MITM, protocol poisoning |
-| [AI Security](#ai-security) | 1 | Prompt injection, jailbreaking, RAG poisoning |
+| [AI Security](#ai-security) | 2 | Prompt injection, jailbreaking, RAG poisoning |
 | [Utility](#utility) | 2 | Fast triage checklists, professional reporting |
 
 ---
@@ -330,6 +330,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | Skill | Description |
 |---|---|
 | [`offensive-ai-security`](Skills/ai/offensive-ai-security/SKILL.md) | AI/ML security — prompt injection, jailbreaking, RAG poisoning, model extraction |
+| [`offensive-prompt-injection`](Skills/ai/offensive-prompt-injection/SKILL.md) | Prompt injection & jailbreak — direct/indirect injection, system-prompt leakage, agent tool abuse, multimodal, garak/PyRIT |
 
 ### Utility
 

@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **ai/** — `offensive-prompt-injection` (dedicated LLM prompt-injection surface: direct/indirect injection, system-prompt leakage, jailbreak families — obfuscation/encoding, payload splitting, many-shot, Crescendo — agent tool abuse via markdown-image exfil/SSRF/confused-deputy, multimodal injection, guardrail bypass; garak/PyRIT/promptmap/Giskard harness; mapped to OWASP LLM Top 10 and MITRE ATLAS). Companion to `offensive-ai-security`.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.

@@ -5,10 +5,12 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-netexec"
     ],
     "ai": [
-      "offensive-ai-security"
+      "offensive-ai-security",
+      "offensive-prompt-injection"
     ],
     "api": [
       "offensive-api-abuse",
@@ -137,10 +139,22 @@
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
     },
     {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
+    },
+    {
       "name": "offensive-ai-security",
       "category": "ai",
       "path": "Skills/ai/offensive-ai-security/SKILL.md",
       "description": ""
+    },
+    {
+      "name": "offensive-prompt-injection",
+      "category": "ai",
+      "path": "Skills/ai/offensive-prompt-injection/SKILL.md",
+      "description": "Prompt-injection and jailbreak testing skill for authorized LLM/agent red-team assessments. Covers direct prompt injection, indirect/second-order injection via untrusted retrieved content (RAG documents, web pages, emails, file metadata, HTML comments, image alt text), system-prompt and instruction extraction/leakage, and jailbreak families (role-play/persona/DAN, payload splitting, obfuscation and encoding with base64/rot13/leetspeak/unicode homoglyphs/zero-width, token smuggling, many-shot, Crescendo multi-turn, refusal suppression, context overflow). Also covers tool/agent abuse (data exfiltration via markdown-image and link beaconing, SSRF and function-call abuse in agentic pipelines, confused-deputy), multimodal injection (image/audio), and guardrail/classifier bypass. Includes a structured assessment methodology, example harness code, and tooling with NVIDIA garak, Microsoft PyRIT, promptmap, and Giskard. Maps findings to OWASP Top 10 for LLM Applications (LLM01 Prompt Injection, LLM02 Sensitive Information Disclosure, LLM06 Excessive Agency) and MITRE ATLAS tactics. Use when red-teaming chatbots, RAG systems, LLM agents, copilots, or any LLM-integrated application for prompt injection, jailbreak, or instruction-leakage weaknesses. Companion to offensive-ai-security; this skill is the dedicated prompt-injection surface."
     },
     {
       "name": "offensive-api-abuse",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }
