@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-path-traversal` (web) — relative and absolute path traversal, encoding and normalization bypasses, wrapper-style local file reads, and the distinction from remote file inclusion, plus a canonicalize-then-jail defender view.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
