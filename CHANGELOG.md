@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **web/** — `offensive-clickjacking` (framability detection via `X-Frame-Options`/CSP `frame-ancestors`, transparent iframe overlay PoC, frame-buster bypass via sandbox/double-framing/`onbeforeunload`, drag-and-drop data exfiltration, likejacking/cursorjacking, multi-step and prefilled-form clickjacking, clickjacking+CSRF to defeat token protections, mobile tapjacking, Burp Clickbandit)
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
