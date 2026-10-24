@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-adcs` — Active Directory Certificate Services escalation (ESC1-ESC16): enrollee-supplied SAN, EKU abuse, template/CA ACLs, EDITF_ATTRIBUTESUBJECTALTNAME2, ManageCA/ManageCertificates, web-enrollment and ICertPassage NTLM relay, weak certificate mapping, issuance-policy group links, EKUwu/CVE-2024-49019, plus Certipy/Certify enumeration, PKINIT, UnPAC-the-hash, pass-the-cert, shadow credentials, and Certifried/CVE-2022-26923.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.

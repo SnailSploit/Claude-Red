@@ -5,7 +5,9 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-adcs",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
@@ -135,6 +137,18 @@
       "category": "active-directory",
       "path": "Skills/active-directory/offensive-active-directory/SKILL.md",
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
+    },
+    {
+      "name": "offensive-adcs",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-adcs/SKILL.md",
+      "description": "Active Directory Certificate Services (AD CS) domain-escalation skill covering the full ESC1-ESC16 misconfiguration catalogue for red team engagements. Covers vulnerable-template enumeration with Certipy (certipy find -vulnerable) and Certify, enrollee-supplied SAN abuse (ESC1), Any Purpose / SubCA EKU (ESC2), Enrollment Agent templates (ESC3), template and PKI-object ACL abuse (ESC4, ESC5), EDITF_ATTRIBUTESUBJECTALTNAME2 SAN injection (ESC6), ManageCA / ManageCertificates role abuse (ESC7), NTLM relay to HTTP web enrollment and ICertPassage RPC with PetitPotam / Coercer coercion (ESC8, ESC11), certificate-mapping and altSecurityIdentities weaknesses (ESC9, ESC10, ESC14), issuance-policy-to-group links (ESC13), application-policy injection / EKUwu CVE-2024-49019 (ESC15), and disabled security extension on the CA (ESC16). Includes PKINIT certificate authentication (certipy auth), UnPAC-the-hash, pass-the-cert via LDAP shadow credentials and Schannel, certipy shadow auto, and Certifried CVE-2022-26923. Use when assessing AD CS / PKI, escalating from a low-privileged domain user to Domain Admin or Domain Controller via certificates, or hunting certificate-based persistence and defender mitigations."
+    },
+    {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
     },
     {
       "name": "offensive-ai-security",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }
