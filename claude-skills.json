@@ -5,7 +5,9 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-kerberoasting",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
@@ -135,6 +137,18 @@
       "category": "active-directory",
       "path": "Skills/active-directory/offensive-active-directory/SKILL.md",
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
+    },
+    {
+      "name": "offensive-kerberoasting",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-kerberoasting/SKILL.md",
+      "description": "Kerberoasting and AS-REP Roasting skill for Active Directory credential-access assessments. Covers SPN discovery (setspn -Q, PowerView Get-DomainUser -SPN, impacket GetUserSPNs.py, raw LDAP queries, BloodHound/SharpHound), requesting TGS-REP service tickets (Rubeus kerberoast with /tgtdeleg /rc4opsec /aes /nowrap /stats, impacket), and targeted Kerberoasting by writing an SPN onto a controlled account via GenericWrite/GenericAll/WriteSPN then roasting. Includes AS-REP Roasting against DONT_REQ_PREAUTH accounts (Rubeus asreproast, GetNPUsers.py), offline cracking with hashcat (-m 13100 RC4 TGS-REP, -m 19600/19700 AES, -m 18200 AS-REP) and john, wordlist and rule strategy, RC4 (etype 0x17) vs AES (etype 0x12) encryption-type selection and downgrade OPSEC, honeypot/decoy SPN account awareness, and the defender view (event 4769 ticket encryption type, 4768, honeytoken alerts, gMSA, AES-only enforcement, strong service-account passwords). Use when you have any authenticated domain foothold (even a low-privilege user or just a valid username list) and want offline, password-cracking paths to service-account and user credentials without touching LSASS or a domain controller's disk, when escalating via a weak service account, or when assessing resistance to offline Kerberos ticket cracking."
+    },
+    {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
     },
     {
       "name": "offensive-ai-security",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }

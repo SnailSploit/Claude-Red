@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **active-directory/** — `offensive-kerberoasting` (focused Kerberoasting + AS-REP Roasting split from `offensive-active-directory`): SPN discovery (setspn, PowerView, GetUserSPNs.py, raw LDAP, BloodHound), TGS-REP requesting (Rubeus `/tgtdeleg` `/rc4opsec` `/aes` `/nowrap` `/stats`, impacket), targeted Kerberoasting via GenericWrite/GenericAll/WriteSPN, AS-REP Roasting (Rubeus asreproast, GetNPUsers.py), offline cracking (hashcat -m 13100/18200/19600/19700, john), RC4-vs-AES downgrade OPSEC, honeypot SPN awareness, and defender view (4769/4768, gMSA, AES-only)
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
