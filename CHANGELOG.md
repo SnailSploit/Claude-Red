@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-crlf-injection` (web) — CRLF and HTTP response splitting: header injection, response splitting, log injection, and encoded newline bypasses, plus a defender view that rejects CR/LF in header values.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
