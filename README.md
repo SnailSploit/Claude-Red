@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-80-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -74,7 +74,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | Category | Skills | Focus |
 |---|---:|---|
 | [Web Application](#web-application) | 16 | OWASP Top 10, business logic, advanced web vulnerability classes |
-| [Auth & Identity](#auth--identity) | 2 | JWT exploitation, OAuth/OIDC abuse |
+| [Auth & Identity](#auth--identity) | 3 | JWT exploitation, OAuth/OIDC abuse, SAML/SSO attacks |
 | [Active Directory](#active-directory) | 1 | On-prem AD attack methodology |
 | [Wireless](#wireless) | 14 | 802.11, WPA2/3, EAP, WPS, evil-twin, BLE, Zigbee, Z-Wave, LoRa, sub-GHz |
 | [Cloud](#cloud) | 1 | AWS, Azure, GCP attack paths |
@@ -132,6 +132,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 |---|---|
 | [`offensive-jwt`](Skills/auth/offensive-jwt/SKILL.md) | JWT attacks — alg:none, key confusion, secret cracking, claim tampering |
 | [`offensive-oauth`](Skills/auth/offensive-oauth/SKILL.md) | OAuth/OIDC — redirect URI abuse, token leakage, PKCE bypass |
+| [`offensive-saml`](Skills/auth/offensive-saml/SKILL.md) | SAML/SSO — XML signature wrapping (XSW1-8), comment injection, Golden SAML |
 
 ### Active Directory
 

@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- **auth/** — `offensive-saml` — SAML 2.0 / SSO attacks: XML Signature Wrapping (XSW1-XSW8), signature exclusion, comment-injection truncation (CVE-2017-11427 family), XXE, audience/recipient confusion, replay, RelayState open redirect, and Golden SAML.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.

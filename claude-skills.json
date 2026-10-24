@@ -5,7 +5,8 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
@@ -16,7 +17,8 @@
     ],
     "auth": [
       "offensive-jwt",
-      "offensive-oauth"
+      "offensive-oauth",
+      "offensive-saml"
     ],
     "cicd": [
       "offensive-cicd-pipeline",
@@ -137,6 +139,12 @@
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
     },
     {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
+    },
+    {
       "name": "offensive-ai-security",
       "category": "ai",
       "path": "Skills/ai/offensive-ai-security/SKILL.md",
@@ -165,6 +173,12 @@
       "category": "auth",
       "path": "Skills/auth/offensive-oauth/SKILL.md",
       "description": ""
+    },
+    {
+      "name": "offensive-saml",
+      "category": "auth",
+      "path": "Skills/auth/offensive-saml/SKILL.md",
+      "description": "SAML 2.0 / SSO attack methodology for penetration testers and red teamers. Covers SAML Response/Assertion structure and flow (SP-initiated vs IdP-initiated, HTTP-Redirect vs HTTP-POST binding), XML Signature Wrapping (XSW1-XSW8), signature exclusion/stripping, signature-validation-disabled and unsigned-assertion acceptance, XML comment injection / canonicalization truncation (user@example.com vs user@example.<!---->com, Duo advisory, CVE-2017-11427 family), XXE/DTD injection in SAML messages, recipient/audience/destination/InResponseTo confusion, assertion replay and missing NotOnOrAfter, RelayState open redirect, certificate and key confusion, and Golden SAML (stealing the ADFS token-signing private key to forge arbitrary assertions with shimit, ADFSDump, ADFSpoof). Tooling: Burp SAML Raider, SAMLRereplay, xmlsec1. Use when testing SAML single sign-on, federated authentication, SP/IdP integrations, ADFS, Shibboleth, Okta, Keycloak, OneLogin, or hunting authentication bypass and account takeover via SAML assertion manipulation."
     },
     {
       "name": "offensive-cicd-pipeline",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }
