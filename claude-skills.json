@@ -5,14 +5,16 @@
   "homepage": "https://github.com/SnailSploit/claude-red",
   "categories": {
     "active-directory": [
-      "offensive-active-directory"
+      "offensive-active-directory",
+      "offensive-netexec"
     ],
     "ai": [
       "offensive-ai-security"
     ],
     "api": [
       "offensive-api-abuse",
-      "offensive-api-security"
+      "offensive-api-security",
+      "offensive-mass-assignment"
     ],
     "auth": [
       "offensive-jwt",
@@ -137,6 +139,12 @@
       "description": "Active Directory attack methodology for internal network red team engagements. Covers reconnaissance (BloodHound, PowerView, ADExplorer), credential abuse (Kerberoasting, ASREProasting, NTLM relay, LLMNR/NBT-NS poisoning), privilege escalation (ACL abuse, GPO abuse, unconstrained/constrained delegation), lateral movement (Pass-the-Hash, Pass-the-Ticket, Overpass-the-Hash, WMI/WinRM/PsExec), persistence (Golden/Silver/Diamond Tickets, DCSync, DCShadow, AdminSDHolder, Skeleton Key), forest trust attacks, ADCS abuse (ESC1-ESC15), and modern MDI/Defender for Identity evasion. Use when assessing on-prem AD, hybrid AD/Entra ID environments, or ADCS deployments."
     },
     {
+      "name": "offensive-netexec",
+      "category": "active-directory",
+      "path": "Skills/active-directory/offensive-netexec/SKILL.md",
+      "description": ">\nUse this skill whenever the user asks about NetExec (nxc) — a network\nexploitation and post-exploitation tool for Active Directory environments.\nTriggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor\nquestions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS\nprotocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,\nDPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,\nmodule usage, or any pentest workflow involving Windows domain environments.\nThis skill covers ALL protocols, ALL modules, and ALL core features of NetExec.\nAlways provide full command examples with correct flags and options."
+    },
+    {
       "name": "offensive-ai-security",
       "category": "ai",
       "path": "Skills/ai/offensive-ai-security/SKILL.md",
@@ -153,6 +161,12 @@
       "category": "api",
       "path": "Skills/api/offensive-api-security/SKILL.md",
       "description": "Comprehensive API security testing methodology covering REST, gRPC, and WebSocket attack surfaces. Addresses the full OWASP API Security Top 10 2023 including BOLA/IDOR, broken authentication, excessive data exposure, rate limiting bypass, BFLA, mass assignment, SSRF, and security misconfiguration. Includes REST-specific attacks such as HTTP verb tampering, content-type switching, and parameter pollution. Covers gRPC exploitation through protobuf interception, reflection API enumeration, and metadata injection. Addresses WebSocket vulnerabilities including origin bypass, message injection, and cross-site WebSocket hijacking. Provides tooling guidance for Burp Suite, Postman, grpcurl, websocat, and mitmproxy. Each technique includes detection signatures and defensive indicators so you understand what artifacts your testing leaves behind. Designed for authorized penetration testing engagements against API-driven architectures."
+    },
+    {
+      "name": "offensive-mass-assignment",
+      "category": "api",
+      "path": "Skills/api/offensive-mass-assignment/SKILL.md",
+      "description": "Use this skill during an authorized application or API security assessment to identify and validate mass assignment, auto-binding, or over-posting. You map fields accepted from JSON and form requests, test whether sensitive properties such as role, isAdmin, ownerId, and price are bindable, and independently confirm whether the server persists or acts on them. Keep all testing within approved scope, using only authorized accounts and disposable records. This skill distinguishes unsafe binding from object-level authorization and workflow defects, and provides safe request patterns, evidence criteria, defensive controls, and concise reporting guidance for reproducible findings."
     },
     {
       "name": "offensive-jwt",
@@ -599,6 +613,6 @@
       "description": "Zigbee, Thread, and Matter mesh-protocol attack methodology — IEEE 802.15.4 sniffing with TI CC2531 / CC2540 / Sonoff Zigbee Dongle E, KillerBee toolkit, Touchlink commissioning abuse with the well-known transport key, replay/injection attacks, Zigbee Cluster Library command abuse for door locks and bulbs, Thread network credential theft, Matter commissioning chain analysis, and 6LoWPAN/IPv6 routing exploitation. Use when targeting smart-home or commercial mesh deployments, Zigbee-based door locks, lighting, or sensor networks."
     }
   ],
-  "skill_count": 78,
+  "skill_count": 80,
   "category_count": 23
 }

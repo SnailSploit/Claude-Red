@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-mass-assignment` (api) — mass assignment: hidden role, owner, and price fields bound from JSON or form bodies, with an allowlist and DTO defender view.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.

@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-80-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
@@ -84,7 +84,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | [Exploit Development](#exploit-development) | 6 | Stack/heap corruption, ROP, mitigations, crash analysis, TOCTOU |
 | [Fuzzing & Vulnerability Research](#fuzzing--vulnerability-research) | 4 | libFuzzer, AFL++, coverage-guided fuzzing, vulnerability taxonomy |
 | [Reconnaissance](#reconnaissance) | 2 | OSINT tooling and structured intelligence collection |
-| [API Security](#api-security) | 2 | REST/gRPC/WebSocket testing, business logic abuse |
+| [API Security](#api-security) | 3 | REST/gRPC/WebSocket testing, business logic abuse |
 | [Container & Kubernetes](#container--kubernetes) | 2 | Container escape, Kubernetes cluster exploitation |
 | [CI/CD & Pipeline](#cicd--pipeline) | 2 | Pipeline exploitation, secrets extraction |
 | [Cryptography](#cryptography) | 2 | Cryptographic implementation attacks, TLS/SSL |
@@ -241,6 +241,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 |---|---|
 | [`offensive-api-security`](Skills/api/offensive-api-security/SKILL.md) | API testing — OWASP API Top 10, BOLA, BFLA, mass assignment, rate limiting |
 | [`offensive-api-abuse`](Skills/api/offensive-api-abuse/SKILL.md) | API business logic — endpoint chaining, batching abuse, webhook hijacking |
+| [`offensive-mass-assignment`](Skills/api/offensive-mass-assignment/SKILL.md) | Mass assignment — auto-binding of role, owner, and price fields |
 
 ### Container & Kubernetes
 
