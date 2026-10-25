@@ -4,6 +4,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ## [Unreleased]
 
+### Added
+
+- `offensive-email-injection` (web) — SMTP header injection: newlines in To, Subject, and contact-form fields, plus a defender view that rejects CR/LF in header values and uses structured recipients.
+
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
