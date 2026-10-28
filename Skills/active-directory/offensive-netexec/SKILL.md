@@ -1,15 +1,6 @@
 ---
 name: offensive-netexec
-description: >
-  Use this skill whenever the user asks about NetExec (nxc) — a network
-  exploitation and post-exploitation tool for Active Directory environments.
-  Triggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor
-  questions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS
-  protocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS,
-  DPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection,
-  module usage, or any pentest workflow involving Windows domain environments.
-  This skill covers ALL protocols, ALL modules, and ALL core features of NetExec.
-  Always provide full command examples with correct flags and options.
+description: "Use this skill whenever the user asks about NetExec (nxc) — a network exploitation and post-exploitation tool for Active Directory environments. Triggers include: any mention of 'nxc', 'netexec', 'crackmapexec' successor questions, AD enumeration, SMB/LDAP/WinRM/MSSQL/SSH/RDP/VNC/WMI/FTP/NFS protocol attacks, password spraying, credential dumping (SAM, NTDS, LSASS, DPAPI), Kerberoasting, ASREPRoasting, lateral movement, BloodHound collection, module usage, or any pentest workflow involving Windows domain environments. This skill covers ALL protocols, ALL modules, and ALL core features of NetExec. Always provide full command examples with correct flags and options."
 ---
 
 # NetExec (nxc) — Reference Skill
