@@ -45,13 +45,21 @@ In Wireshark with the dot15d4 + zbee_nwk dissectors, you'll see frame counters, 
 
 ## Touchlink Commissioning Abuse
 
-Touchlink (used by Zigbee 3.0 commissioning, especially in lighting) uses a **well-known transport key**:
+Touchlink commissioning, especially in lighting, uses a leaked **master key**:
 
-```
-0x9F559A553B7A6B2C5C4FBB4E84956F3D
+```text
+0x9F5595F10257C8A469CBF42BC93FEE31
 ```
 
-Many consumer Zigbee bulbs / strips accept Touchlink commissioning from any nearby radio with this key — joining them to your network or stealing them from theirs.
+The transaction and response IDs derive a transport key from this master key.
+The transport key protects the network key exchanged during commissioning;
+neither the master key nor the derived transport key replaces the network key
+used to decrypt ordinary network traffic. Capture the relevant commissioning
+frames before attempting network-key recovery.
+
+The master key is documented in [P-SCAN test case ZB#3, page 43](https://www.lcie.com/medias/P-SCAN%20Test%20Case%20Specification%20-%20V1.0.pdf).
+See also the [Touchlink commissioning research](https://www.wim.uni-mannheim.de/media/Lehrstuehle/wim/ths/STAFF/mueller.christian/wisec2017_touchlink.pdf)
+for the derivation and the separate authentication weaknesses in Touchlink commands.
 
 ```bash
 # z3sec — Zigbee 3 commissioning attack toolkit

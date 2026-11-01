@@ -88,7 +88,7 @@ Pipe the result into GraphQL Voyager for visual exploration, or load InQL in Bur
 
 ### Targeted __type Queries
 
-When full introspection is disabled but `__type` lookups still work (a common misconfiguration where the server blocks `__schema` but forgets `__type`):
+When an incomplete custom filter blocks `__schema` but permits `__type`, a targeted lookup may still work. Apollo Server's built-in `introspection: false` restriction blocks both:
 
 ```graphql
 query { __type(name: "User") { name fields { name type { name kind } } } }
@@ -116,7 +116,7 @@ Automate this with clairvoyance, which iterates a wordlist, collects suggestions
 python3 clairvoyance.py -t https://target.com/graphql -w wordlist.txt -o schema.json
 ```
 
-**Apollo Sandbox.** If the target runs Apollo Server v3+, navigate to the endpoint in a browser. Apollo Sandbox performs introspection client-side even when the production toggle is off. Check Apollo Studio explorer if the server is registered there.
+**Apollo Sandbox.** Sandbox obtains the schema by sending introspection queries to the server. It cannot bypass `introspection: false`; a visible landing page does not imply schema access. See [Apollo Server's production behavior](https://www.apollographql.com/docs/apollo-server/v3/testing/build-run-queries). When introspection is disabled, use field suggestions or exposed client-side query documents; access to a schema in Apollo Studio is a separate permission.
 
 **Client-side bundles.** Search JS files for query strings, fragment definitions, and type names:
 
@@ -497,6 +497,7 @@ RECON
   Endpoint discovery       curl POST /graphql, /v1/graphql, /api/graphql with {__typename}
   Fingerprint              graphw00f -t <url>
   Introspection dump       Full __schema query via Altair or InQL
+  Apollo Sandbox           Browse schema only when server introspection is enabled
   Config audit             graphql-cop -t <url>
   Visualize schema         Introspection JSON into GraphQL Voyager
 
@@ -504,7 +505,6 @@ BLIND SCHEMA RECOVERY
   Field suggestions        Query invalid fields, collect "Did you mean" responses
   Automated recovery       clairvoyance -t <url> -w wordlist.txt
   Client bundles           grep -oP '(query|mutation|fragment)\s+\w+' main.js
-  Apollo sandbox           Navigate to endpoint in browser
 
 AUTH TESTING
   No-auth access           Replay every query/mutation without Authorization header

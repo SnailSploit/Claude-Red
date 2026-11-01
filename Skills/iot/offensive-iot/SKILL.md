@@ -282,7 +282,7 @@ zbdump -c 11 -w zigbee.pcap
 zbreplay -f zigbee.pcap -i 0
 ```
 
-Touchlink commissioning: known transport key in the wild (`0x9F559A553B7A6B2C…`) — many consumer devices accept Touchlink commissioning from any nearby radio.
+Touchlink commissioning uses a leaked **master key**, `0x9F5595F10257C8A469CBF42BC93FEE31`. The transaction and response IDs derive a transport key from it; that transport key encrypts the network key during commissioning. With the required commissioning frames, recover the network key before using it to decrypt ordinary traffic in Wireshark. See [P-SCAN test case ZB#3, page 43](https://www.lcie.com/medias/P-SCAN%20Test%20Case%20Specification%20-%20V1.0.pdf) and [Touchlink research](https://www.wim.uni-mannheim.de/media/Lehrstuehle/wim/ths/STAFF/mueller.christian/wisec2017_touchlink.pdf).
 
 ### Z-Wave
 

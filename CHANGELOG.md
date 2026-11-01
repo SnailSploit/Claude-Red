@@ -8,6 +8,12 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
 
+### Fixed
+
+- Corrected FreeMarker resolver prerequisites, Velocity constructor lookup, the PHP 8.0 PHAR boundary, and Apollo Sandbox's introspection requirement.
+- Corrected the Touchlink master key and key derivation terminology in the IoT and wireless skills, and distinguished PLC identity documents from operation logs.
+- Clarified JWT critical-header validation and signing prerequisites; corrected SQL/JSON WAF examples and their attribution to Team82's 2022 research.
+
 ### Planned
 
 - Phase 1 — Internal AD/Windows split (16 skills)

