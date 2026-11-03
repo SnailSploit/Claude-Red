@@ -7,10 +7,11 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-79-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
+<a href="https://trendshift.io/repositories/40579?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-40579" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/40579/weekly?language=Python" alt="SnailSploit%2FClaude-Red | Trendshift" width="250" height="55"/></a>
 
 [Overview](#overview) &bull; [Quickstart](#quickstart) &bull; [Categories](#categories) &bull; [Skill Index](#skill-index) &bull; [Roadmap](#roadmap) &bull; [Contributing](#contributing)
 
@@ -26,6 +27,7 @@ Drop a skill into your Claude environment and it behaves like a domain specialis
 
 **Use cases:** authorized red team engagements, bug bounty triage, security research, CTF preparation, operator training, and methodical attack surface exploration.
 
+**for our actual research using skills -> https://snailsploit.com**
 ---
 
 ## Quickstart

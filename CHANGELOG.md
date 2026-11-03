@@ -14,6 +14,10 @@ All notable changes to `claude-red` are documented here. The library follows a p
 - `tools/backfill_frontmatter.py` — idempotent migration for legacy `SKILL.md` files (dry-run by default).
 - `.github/workflows/skills-lint.yml` — runs the validator, the manifest freshness check, and the backfill dry-run on every change to a skill.
 
+### Changed
+
+- Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
+
 ### Known issue
 
 - 18 descriptions exceed the [Agent Skills spec](https://agentskills.io/specification) limit of 1024 characters (longest: `offensive-windows-privesc` at 1522). They predate this fix and current installers accept them, so `validate_skills.py` reports them as warnings rather than errors. Tracked separately.
