@@ -7,7 +7,7 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
+[![Skills](https://img.shields.io/badge/skills-79-red.svg)](#skill-index)
 [![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)

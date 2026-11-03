@@ -1,3 +1,8 @@
+---
+name: offensive-osint-methodology
+description: "Structured OSINT methodology framework: target definition, source selection, collection workflows, data correlation, timeline reconstruction, and reporting. Use to guide systematic OSINT campaigns or teach OSINT methodology."
+---
+
 # SKILL: OSINT Methodology
 
 ## Metadata

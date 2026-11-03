@@ -1,3 +1,8 @@
+---
+name: offensive-parameter-pollution
+description: "HTTP parameter pollution (HPP) checklist: duplicate parameter injection, backend vs frontend parsing differences, WAF bypass via HPP, server-side vs client-side HPP, and practical exploitation patterns. Use when testing web applications for parameter handling flaws."
+---
+
 # SKILL: HTTP Parameter Pollution (HPP)
 
 ## Metadata
