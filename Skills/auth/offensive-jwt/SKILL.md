@@ -212,10 +212,16 @@ Check Wayback Machine for historical URLs with tokens; monitor Referer headers t
    ```
 
 6. **x5u / crit Handling:**
-   ```
+   ```json
    {"alg":"RS256","typ":"JWT","x5u":"https://attacker.com/cert.pem"}
-   {"alg":"RS256","typ":"JWT","crit":["exp"],"exp":null}
+   {"alg":"RS256","typ":"JWT","crit":["test_extension"],"test_extension":true}
    ```
+   For the `crit` probe, use an otherwise valid token signed with a test key
+   trusted by the verifier, or an authorized signing oracle. A verifier that
+   does not understand `test_extension` must reject it. Acceptance indicates
+   missing critical-header validation; it does not override the payload's
+   `exp` claim. Editing a header without re-signing also invalidates its
+   signature. See [RFC 7515 §4.1.11](https://www.rfc-editor.org/rfc/rfc7515.html#section-4.1.11).
 
 7. **Brute Force HMAC Secret:**
    ```bash

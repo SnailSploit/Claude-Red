@@ -212,7 +212,9 @@ When this skill is active:
     - Analyze user profiles for location tags; examine comments and hashtags for clues
   - **Bluesky AT Protocol**
     - Resolve handles via `https://bsky.social/xrpc/com.atproto.identity.resolveHandle?handle=<handle>` to get DID
-    - Extract full identity document: `https://plc.directory/<did>` (returns PLC operations, handle history, PDS endpoint)
+    - For `did:plc` accounts, `https://plc.directory/<did>` returns the current DID document, including the PDS endpoint; it does not return the operation history. `did:web` accounts do not use the PLC directory.
+    - Read alias history from `https://plc.directory/<did>/log` with `jq '.[].alsoKnownAs'`. The `/log/audit` endpoint wraps each operation in metadata, so its selector is `.[].operation.alsoKnownAs`.
+    - Treat logged aliases as leads: the directory does not verify handle ownership. See the [PLC specification](https://web.plc.directory/spec/v0.1/did-plc) and [operation-log implementation](https://github.com/did-method-plc/did-method-plc/blob/main/packages/server/src/db/index.ts).
     - Real-time firehose: Use [Firesky](https://firesky.tv/) for live keyword/hashtag monitoring across entire network
     - Analytics: [SkyView](https://bsky.jazco.dev/) for follower graphs, post engagement, network analysis
     - Archive early: AT Protocol allows post deletion and handle migration; capture DIDs and post CIDs
