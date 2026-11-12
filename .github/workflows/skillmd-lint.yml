@@ -1,0 +1,23 @@
+name: skillmd-lint
+
+on:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install skillmd-lint
+        run: pip install "https://github.com/Mine-FNL/skillmd-lint/releases/download/v1.4.0/skillmd_lint-1.4.0-py3-none-any.whl"
+
+      - name: Lint Skills/ (report-only baseline)
+        continue-on-error: true
+        run: |
+          find Skills -name SKILL.md -print0 \
+            | xargs -0 skillmd-lint --format github
