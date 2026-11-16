@@ -1,3 +1,8 @@
+---
+name: offensive-bug-identification
+description: "Systematic bug identification methodology: source code review patterns, black-box testing strategies, taint analysis, dangerous function hunting, data flow tracing, and automated scanning setup. Use for code audits, bug bounty triage, or building vulnerability identification pipelines. Use when the task involves: bug identification, code review, taint analysis, dangerous functions, data flow, source audit, black box, vulnerability identification, static analysis, code audit, bug hunting."
+---
+
 # SKILL: Bug Identification
 
 ## Metadata

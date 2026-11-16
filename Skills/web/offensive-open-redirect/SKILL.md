@@ -1,3 +1,8 @@
+---
+name: offensive-open-redirect
+description: "Open redirect vulnerability checklist: parameter identification, bypass techniques (URL encoding, double slashes, CRLF injection, protocol handlers), chaining with OAuth/SSRF, and impact escalation paths. Use for web app testing and bug bounty open redirect discovery. Use when the task involves: open redirect, URL redirect, redirect bypass, URL encoding bypass, CRLF, protocol handler, redirect chain, OAuth redirect, SSRF chain, open redirection."
+---
+
 # SKILL: Open Redirect Vulnerabilities
 
 ## Metadata
