@@ -1,3 +1,8 @@
+---
+name: offensive-request-smuggling
+description: "HTTP request smuggling checklist: CL.TE, TE.CL, TE.TE variants, detection with timing and differential responses, WAF bypass, cache poisoning, credential hijacking, and request smuggling via HTTP/2. Use when testing reverse proxy/load balancer configurations. Use when the task involves: request smuggling, HTTP smuggling, CL.TE, TE.CL, TE.TE, HTTP/2 smuggling, cache poisoning, WAF bypass, differential response, smuggling detection, proxy desync."
+---
+
 # SKILL: HTTP Request Smuggling
 
 ## Metadata

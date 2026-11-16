@@ -1,3 +1,8 @@
+---
+name: offensive-rce
+description: "Remote Code Execution testing checklist: OS command injection, SSTI-to-RCE, deserialization RCE, file upload RCE, XXE with SSRF to RCE, RCE via dependency confusion, and CVE-based RCE patterns. Use for web app pentests and bug bounty RCE discovery. Use when the task involves: RCE, remote code execution, command injection, OS injection, SSTI RCE, deserialization RCE, file upload RCE, XXE RCE, dependency confusion, code execution."
+---
+
 # SKILL: Remote Code Execution
 
 ## Metadata

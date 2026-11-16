@@ -1,3 +1,8 @@
+---
+name: offensive-ai-security
+description: "AI/LLM security offensive checklist: prompt injection, jailbreaking, model extraction, training data poisoning, adversarial inputs, LLM-assisted attack automation, and AI system reconnaissance. Use when assessing AI/ML systems, red-teaming LLMs, or researching AI attack vectors. Use when the task involves: AI security, LLM security, prompt injection, jailbreak, model extraction, training data poisoning, adversarial input, AI red team, ML security, RAG poisoning, AI attack."
+---
+
 # SKILL: AI Pentest
 
 ## Metadata

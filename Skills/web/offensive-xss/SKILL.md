@@ -1,3 +1,8 @@
+---
+name: offensive-xss
+description: "Cross-Site Scripting testing checklist: stored/reflected/DOM/blind XSS discovery, polyglot payloads, CSP bypass, XSS filter bypass, event handler injection, DOM clobbering, mutation XSS, and impact escalation (session hijack, phishing, keylogging). Use for web app XSS testing and bug bounty. Use when the task involves: XSS, cross-site scripting, stored XSS, reflected XSS, DOM XSS, blind XSS, CSP bypass, XSS filter bypass, polyglot, DOM clobbering, mutation XSS, event handler injection."
+---
+
 # SKILL: Cross-Site Scripting (XSS)
 
 ## Metadata
