@@ -172,6 +172,17 @@ Use this table to confirm coverage of common offensive surfaces. If a row has no
 | Bootloader / secure boot | `iot/offensive-iot` |
 | RTOS exploitation | `iot/offensive-iot` |
 | ICS / OT protocols | `iot/offensive-iot` |
+
+### Hardware
+
+| Layer | Skill |
+|---|---|
+| Sub-GHz capture/replay | `hardware/offensive-flipper-zero` |
+| RFID / iButton clone | `hardware/offensive-flipper-zero` |
+| NFC read/emulate | `hardware/offensive-flipper-zero` |
+| BadUSB payload delivery | `hardware/offensive-flipper-zero` |
+| GPIO addon (nRF24 + sub-GHz) | `hardware/offensive-flipper-zero` |
+| DFU / FUS firmware recovery | `hardware/offensive-flipper-zero` |
 | MQTT / CoAP | `iot/offensive-iot` |
 
 ### Exploit Development
