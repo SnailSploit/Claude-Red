@@ -1,3 +1,8 @@
+---
+name: offensive-idor
+description: "IDOR (Insecure Direct Object Reference) testing checklist: object ID enumeration, horizontal/vertical privilege escalation, GUID predictability, indirect references via hashes, chained IDOR, and API endpoint IDOR. Use for web app pentests and bug bounty IDOR discovery."
+---
+
 # SKILL: Insecure Direct Object References (IDOR)
 
 ## Metadata
