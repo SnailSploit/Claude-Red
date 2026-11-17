@@ -7,8 +7,8 @@
 **Offensive security skills for Claude — drop-in `SKILL.md` files that turn Claude into a context-aware red team operator.**
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Skills](https://img.shields.io/badge/skills-78-red.svg)](#skill-index)
-[![Categories](https://img.shields.io/badge/categories-23-orange.svg)](#categories)
+[![Skills](https://img.shields.io/badge/skills-79-red.svg)](#skill-index)
+[![Categories](https://img.shields.io/badge/categories-24-orange.svg)](#categories)
 [![Stars](https://img.shields.io/github/stars/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red)
 [![Forks](https://img.shields.io/github/forks/SnailSploit/claude-red?style=social)](https://github.com/SnailSploit/claude-red/network/members)
 <a href="https://trendshift.io/repositories/40579?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-40579" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/40579/weekly?language=Python" alt="SnailSploit%2FClaude-Red | Trendshift" width="250" height="55"/></a>
@@ -80,6 +80,7 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | [Cloud](#cloud) | 1 | AWS, Azure, GCP attack paths |
 | [Mobile](#mobile) | 1 | Android and iOS application testing |
 | [IoT & Embedded](#iot--embedded) | 1 | Hardware, firmware, RTOS, ICS/OT |
+| [Hardware](#hardware) | 1 | Flipper Zero, sub-GHz/RFID/NFC/BadUSB, DFU firmware recovery |
 | [Infrastructure & Red Team](#infrastructure--red-team) | 7 | Initial access, EDR evasion, advanced red team operations, Windows internals |
 | [Exploit Development](#exploit-development) | 6 | Stack/heap corruption, ROP, mitigations, crash analysis, TOCTOU |
 | [Fuzzing & Vulnerability Research](#fuzzing--vulnerability-research) | 4 | libFuzzer, AFL++, coverage-guided fuzzing, vulnerability taxonomy |
@@ -185,6 +186,14 @@ Paste the contents of a `SKILL.md` into a Project's system prompt or prepend it 
 | Skill | Description |
 |---|---|
 | [`offensive-iot`](Skills/iot/offensive-iot/SKILL.md) | IoT/OT — hardware interfaces, firmware extraction, RTOS, ICS protocols, MQTT/CoAP |
+
+### Hardware
+
+`Skills/hardware/`
+
+| Skill | Description |
+|---|---|
+| [`offensive-flipper-zero`](Skills/hardware/offensive-flipper-zero/SKILL.md) | Flipper Zero — sub-GHz capture/replay, RFID/NFC/iButton clone, BadUSB, GPIO addon, DFU/FUS firmware recovery, risk-tier scope gate |
 
 ### Infrastructure & Red Team
 
