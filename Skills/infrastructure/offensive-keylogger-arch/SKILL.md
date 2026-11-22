@@ -178,6 +178,48 @@ its a syscall so you can use your favorite \*gate technique on it
 
 ---
 
+## Detection / Defender View
+
+Each technique above lists per-method IOCs; this consolidates them into what a defender actually monitors.
+
+| Capture technique | Primary detection signal | Telemetry source |
+|---|---|---|
+| `SetWindowsHookEx` (WH_KEYBOARD_LL) | Process calling `SetWindowsHookEx` with a global hook; DLL injected into many processes | EDR API telemetry; Sysmon image-load (Event ID 7) into unexpected processes |
+| `NtUserSetWindowsHookEx` (direct syscall) | Syscall to the hook routine bypassing the documented `user32` path | Kernel-telemetry EDR; call-stack origin outside `user32.dll` |
+| `RegisterRawInputDevices` / raw input | Process registering for raw keyboard input that has no UI reason to | API-hook telemetry; behavioral baselining of input-registration |
+| Foreground-window polling (`GetWindowText`, `NtUserInternalGetWindowText`) | Tight polling of foreground window title by a background process | Process behavior; high-frequency window-query pattern |
+| Local staging before exfil | Growing hidden file / registry blob of captured text | File/registry write monitoring; DLP on keystroke-shaped data |
+
+Defender takeaway: user-mode keyloggers are **loud to a behavioral EDR** even when they evade static signatures — the tell is *a background process subscribing to global input*. Hunt for the subscription, not the payload.
+
+## Mitigations / Hardening
+
+| Technique | Mitigation |
+|---|---|
+| Global hook / API-hook keylogging | EDR with tamper-protected API telemetry; alert on global `SetWindowsHookEx` from non-UI processes |
+| Direct-syscall hook installation | Kernel-mode telemetry (not userland-hook-only EDR); call-stack validation |
+| Raw input capture | Behavioral detection of input-device registration; least-privilege so untrusted code can't run |
+| Credential theft via keylogging | Enforce MFA / FIDO2 hardware keys so captured passwords alone are insufficient; use OS credential vaults and autofill instead of typing secrets |
+| Persistence of the keylogger | Application control (WDAC/AppLocker); block unsigned user-mode drivers; Protected Process Light for sensitive apps |
+
+Defender one-liner: **behavioral EDR + application control + phishing-resistant MFA** turns a working keylogger into low-value noise — the keystrokes it steals no longer unlock anything.
+
+## MITRE ATT&CK Mapping
+
+| Technique | ID |
+|---|---|
+| Input Capture: Keylogging | T1056.001 |
+| Input Capture: Credential API Hooking | T1056.004 |
+| Exfiltration Over C2 Channel | T1041 |
+
+## Key References
+
+- MITRE ATT&CK — Input Capture: Keylogging (T1056.001): https://attack.mitre.org/techniques/T1056/001/
+- MITRE ATT&CK — Credential API Hooking (T1056.004): https://attack.mitre.org/techniques/T1056/004/
+- Microsoft Learn — `SetWindowsHookEx` / low-level keyboard hooks: https://learn.microsoft.com/windows/win32/winmsg/about-hooks
+- Microsoft Learn — Raw Input (`RegisterRawInputDevices`): https://learn.microsoft.com/windows/win32/inputdev/raw-input
+- Sysmon configuration for image-load / API monitoring: https://github.com/SwiftOnSecurity/sysmon-config
+
 # Novel research
 
 Now... that's all stuff that can be figured out by anyone determined

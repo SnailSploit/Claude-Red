@@ -6,10 +6,22 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ### Changed
 
+- Expanded `offensive-z-wave` with the S0 downgrade attack (Z-Shave), a Detection / Defender View table, a Mitigations / Hardening section, MITRE ATT&CK for ICS mappings, and cited references (Fouladi & Ghanoun, Black Hat USA 2013; Pen Test Partners Z-Shave, 2018).
+- Expanded `offensive-deauth-disassoc` with a Mitigations / Defender Hardening section (PMF-Required / WPA3 enforcement, WIPS tuning, MFPR verification) and MITRE ATT&CK mappings (T1498, T1557, T1040).
+- Expanded `offensive-krack-fragattacks` with a Detection / Defender View, a Mitigations / Defender Hardening section (patch, segment unpatchable IoT, PMF/WPA3, TLS-everywhere), and MITRE ATT&CK mappings (T1557, T1040, T1498).
+- Added a Blue Team / Defender View section to `offensive-advanced-redteam` mapping each technique (domain aging, redirectors, malleable C2, DNS exfil, AMSI/ETW patching, unhooking, LOLBins, log clearing) to its detection signal and control, for purple-team debriefs.
+- Added Detection / Defender View, Mitigations / Hardening, MITRE ATT&CK mappings (T1056.001, T1056.004, T1041), and a cited Key References section to `offensive-keylogger-arch`.
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
 
 ### Fixed
 
+- Corrected non-existent commands in `offensive-z-wave`: replaced the fabricated `ezwave-sniff` / `ezwave-test` invocations with the real EZ-Wave tools (`ezstumbler.py`, `ezrecon.py`), fixed the EZ-Wave repo link to the canonical `scriptingxss/EZ-Wave`, clarified that the 32-bit HomeID space makes brute-force infeasible, and flagged the Scapy-Radio zwave class/field names as version-dependent.
+- Corrected mislabeled `mdk4` modes in `offensive-deauth-disassoc`: mode `m` is Michael/TKIP countermeasures (not a "CTS/virtual-carrier" attack) and mode `w` is WIDS confusion (not an "SAE/WPA-Enterprise flood"); replaced those lines with accurate mode `a`/`e`/`m` usage and fixed the version-dependent deauth filter flag.
+- Corrected the FragAttacks invocation in `offensive-krack-fragattacks` and `offensive-wifi`: the real script is `fragattack.py <iface> <test-name>`, not the non-existent `test-fragattacks.py`; noted the harness requires the target network credentials.
+- Fixed fabricated / misattributed tool repos in `offensive-lorawan-sub-ghz`: replaced the non-existent `IoTsec/loraserver-attack-tools` with IOActive's LoRaWAN Auditing Framework (`IOActive/laf`) + Loracrack, and the invalid `AndrewMohawk/RollingPwn` with the correctly-attributed Rolling-PWN advisory (Kevin2600 & Wesley Li, Star-V Lab; CVE-2021-46145).
+- Fixed the BLE MITM example in `offensive-bluetooth-ble`: `btproxy` is Bluetooth Classic/SPP only (canonical repo `conorpp/btproxy`, not the `Charmve` mirror) and cannot do BLE — replaced with Mirage `ble_mitm` and noted GATTacker / BtleJuice as BLE alternatives.
+- Fixed the Dragonblood tooling in `offensive-wpa3-sae`: `dragondrain` / `dragontime` are not Python scripts and do not live in `vanhoefm/dragonblood` (website only) — they are compiled C tools in `vanhoefm/dragondrain-and-time` (built with `make`); corrected the clone, invocations, and references (added dragonslayer).
+- Fixed the Z3sec commands in `offensive-zigbee-thread-matter`: the real CLI is `z3sec_touchlink --sdr -c <ch> reset/update --target <ext-addr>` (requiring the ZLL master key in `~/.config/z3sec/touchlink_crypt.ini`), not the non-existent `z3sec_inter_pan.py --command ...`.
 - Corrected FreeMarker resolver prerequisites, Velocity constructor lookup, the PHP 8.0 PHAR boundary, and Apollo Sandbox's introspection requirement.
 - Corrected the Touchlink master key and key derivation terminology in the IoT and wireless skills, and distinguished PLC identity documents from operation logs.
 - Clarified JWT critical-header validation and signing prerequisites; corrected SQL/JSON WAF examples and their attribution to Team82's 2022 research.

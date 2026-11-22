@@ -102,11 +102,12 @@ For LE Legacy Pairing with Just Works, crackle recovers the LTK in seconds. For 
 ## Active MITM During Pairing
 
 ```bash
-# btproxy / mirage-action-with-mitm — relay between device and victim's phone
-mirage-action-with-mitm
-# Or:
-git clone https://github.com/Charmve/btproxy
-sudo python btproxy.py
+# BLE MITM relay between the device and the victim's phone.
+# Use a BLE-capable framework — Mirage (RCayre) is the modern choice:
+sudo mirage "ble_mitm|INTERFACE1=hci0|INTERFACE2=hci1"   # see Mirage docs for parameters
+# Alternatives: GATTacker, BtleJuice.
+# NOTE: conorpp/btproxy is Bluetooth *Classic/SPP* only and does NOT support BLE —
+# the "Charmve/btproxy" repo is just a mirror; do not use it for BLE.
 ```
 
 If pairing is Just Works, you become the legitimate peer for both sides — read/modify GATT operations in real time.

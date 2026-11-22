@@ -59,9 +59,12 @@ ABP devices have NwkSKey + AppSKey flashed at manufacture. Common flaws:
 - DevAddr predictability (sequential allocation)
 
 ```bash
-# If you have NwkSKey + AppSKey + DevAddr, decode/inject with lorawan-test-tools
-git clone https://github.com/IoTsec/loraserver-attack-tools
-python lora_inject.py --nwkskey <NWKS> --appskey <APPS> --devaddr <ADDR>
+# With NwkSKey + AppSKey + DevAddr, craft / parse / inject LoRaWAN frames using
+# IOActive's LoRaWAN Auditing Framework (LAF) — the canonical offensive toolset.
+# (The old "IoTsec/loraserver-attack-tools" repo does not exist.)
+git clone https://github.com/IOActive/laf
+# LAF ships tools to craft, parse, send and crack LoRaWAN packets — see its README
+# for the exact CLI. For session-key cracking from captures, see applied-risk/Loracrack.
 ```
 
 ### Frame Counter Replay
@@ -97,8 +100,11 @@ KeeLoq uses a 32-bit block cipher with a manufacturer key. The manufacturer key 
 - Combined with capture-replay, take over the remote
 
 ```bash
-# rolling-code-tools (research)
-git clone https://github.com/AndrewMohawk/RollingPwn
+# Rolling-code research. Rolling-PWN (Honda counter-resync, Kevin2600 & Wesley Li /
+# Star-V Lab; CVE-2021-46145, see also disputed CVE-2022-27254) has NO reliably-
+# attributed public PoC — the "AndrewMohawk/RollingPwn" repo is not a valid source.
+# Work from the advisory and capture/replay with rtl_433 + Universal Radio Hacker.
+urh   # Universal Radio Hacker — capture, analyze, and replay the sub-GHz frames
 ```
 
 Modern KeeLoq deployments (last 5 years) have rotated manufacturer keys, but legacy hardware (older garage doors, some industrial equipment) is in scope.
@@ -177,6 +183,8 @@ gqrx                           # spectrum view to find activity
 
 - rtl_433 protocol database: github.com/merbanan/rtl_433
 - Universal Radio Hacker: github.com/jopohl/urh
-- RollingPwn (KeeLoq research): github.com/AndrewMohawk/RollingPwn
+- LoRaWAN Auditing Framework (LAF), IOActive: https://github.com/IOActive/laf
+- Loracrack (LoRaWAN session-key cracking): https://github.com/applied-risk/Loracrack
+- Rolling-PWN (Honda rolling-code resync; Kevin2600 & Wesley Li, Star-V Lab; CVE-2021-46145): https://www.rtl-sdr.com/rollingpwn-wireless-rolling-code-security-completely-defeated-on-all-honda-vehicles-since-2012/
 - LoRaWAN Specification: lora-alliance.org
 - Source: https://github.com/SnailSploit/offensive-checklist/blob/main/wireless.md

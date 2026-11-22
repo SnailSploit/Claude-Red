@@ -51,10 +51,14 @@ FragAttacks abuse 802.11 fragmentation and aggregation to inject frames that mix
 
 ```bash
 git clone https://github.com/vanhoefm/fragattacks
-cd fragattacks
-sudo ./test-fragattacks.py wlan0 --interface wlan0
-# Suite of ~12 tests covering each variant
+cd fragattacks && make          # builds the modified hostap/wpa_supplicant
+
+# Run one test at a time: ./fragattack.py <iface> <test-name>
+# Test names (ping, ping-frag-sep, amsdu-inject, linux-plain, ...) are in the README.
+sudo ./fragattack.py wlan0 ping-frag-sep
 ```
+
+> The script is `fragattack.py` (singular), invoked as `fragattack.py <iface> <test-name>` — **not** `test-fragattacks.py --interface …` (a name that only appears in copied cheatsheets). The harness needs the target network's credentials, so it tests a client/AP you control rather than attacking a blind target.
 
 | CVE | Mechanism |
 |---|---|
@@ -88,11 +92,28 @@ sudo aireplay-ng --deauth 5 -a <real-BSSID> -c <client-MAC> wlan0mon
 sudo ./krack-test-client.py --interface wlan0
 ```
 
-## Detection
+## Detection / Defender View
 
-- WIPS may flag deauth-driven roams to attacker AP
-- Test scripts generate distinctive frame patterns; modern WIPS recognizes Vanhoef's tooling
-- Successful exploitation is essentially silent at protocol level
+- WIPS may flag the **deauth-driven roam** to the attacker AP — this is the loudest, most reliable signal, since exploitation itself is near-silent.
+- Vanhoef's test scripts generate distinctive frame patterns; modern WIPS signatures recognize the tooling.
+- Successful exploitation is essentially silent at the protocol level — so detection leans on the *setup* (rogue AP, forced roam), not the exploit.
+- An unexpected A-MSDU / fragmented-frame mix from a client that normally doesn't fragment is an anomaly worth hunting if you have frame-level capture.
+
+Blue-team takeaway: you will rarely catch the exploit; you catch the **rogue AP + forced association** that precedes it. Monitor for both.
+
+## Mitigations / Defender Hardening
+
+The counter — and for these families it is decisive, because both are patched upstream:
+
+| Technique | Mitigation |
+|---|---|
+| KRACK key reinstallation | **Patch the supplicant** — every major OS has shipped fixes since 2017–2018. This closes it outright |
+| FragAttacks splicing/aggregation | Patch client and AP firmware (2021–2022 fixes); ensure the stack drops plaintext frames inside a protected network (CVE-2020-26140/26139 are acceptance bugs) |
+| Unpatchable embedded / IoT long tail | Inventory them; **segment onto an isolated VLAN/SSID** carrying no sensitive traffic; deny inter-VLAN routing |
+| Forced-roam precondition | Enforce **PMF-Required / WPA3** so the attacker cannot deauth the client onto a rogue AP in the first place (see `offensive-deauth-disassoc`) |
+| Residual injection impact (DNS poison, HTTP redirect) | Defense-in-depth: enforce HTTPS/HSTS and encrypted DNS so a spliced frame can't downgrade traffic to plaintext |
+
+Defender one-liner: **patch + segment the unpatchable + PMF/WPA3 + TLS-everywhere** reduces KRACK/FragAttacks from a decryption-and-inject primitive to a dead end on anything that matters.
 
 ## Reporting
 
@@ -104,6 +125,14 @@ For each vulnerable CVE:
 - Remediation: vendor patch URL, mitigation (WPA3 + PMF blocks most)
 
 ---
+
+## MITRE ATT&CK Mapping
+
+| Technique | ID | Where it appears here |
+|---|---|---|
+| Adversary-in-the-Middle | T1557 | Rogue AP + frame injection (HTTP redirect, DNS poison) |
+| Network Sniffing | T1040 | Decryption of WPA2 frames via key reinstallation |
+| Network Denial of Service | T1498 | Deauth used to force the client onto the attacker AP |
 
 ## Key References
 
