@@ -229,7 +229,8 @@ Test a network's patch status:
 git clone https://github.com/vanhoefm/krackattacks-scripts
 ./krack-test-client.py
 git clone https://github.com/vanhoefm/fragattacks
-./test-fragattacks.py wlan0
+cd fragattacks && make
+./fragattack.py wlan0 ping-frag-sep   # script is fragattack.py <iface> <test-name>; see README
 ```
 
 ---

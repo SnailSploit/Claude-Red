@@ -512,6 +512,25 @@ C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe payload.xml
 
 ---
 
+## Blue Team / Defender View
+
+The whole point of adversary simulation is to make the defense better. For every technique in this skill, here is what a mature defender can see and the control that blunts it — hand this table to the blue team during the purple-team debrief.
+
+| Offensive technique (this skill) | Detection signal | Control that stops / raises cost |
+|---|---|---|
+| Domain categorization / aging | Newly-categorized domain with near-zero history contacted by an internal host | DNS/proxy reputation + newly-seen-domain alerting; block uncategorized + freshly-registered domains |
+| Redirectors / traffic filtering | Beacon-like periodicity to a CDN or "business" domain; JA3/JA3S mismatch | TLS fingerprint (JA3) baselining; egress proxy with inspection; alert on long-lived periodic flows |
+| Malleable C2 profile blending | HTTP(S) that mimics M365 but to the wrong tenant/endpoint; consistent byte sizes | Known-good SaaS endpoint allow-listing; NetFlow beacon analysis (RITA-style) |
+| Sleep / jitter / fallback channels | Low-and-slow periodic callbacks; sudden channel switch (HTTP→DNS) | Long-window beacon detection; alert when a host starts high-volume DNS TXT |
+| DNS exfiltration (TXT chunking) | High entropy, high-volume TXT queries to one domain | DNS query-length/volume thresholds; block or sinkhole; DNS logging to SIEM |
+| AMSI patching | `amsi.dll` in-memory modification; AMSI bypass behavioral signatures | AMSI + EDR behavioral detection; alert on self-patching of security DLLs |
+| ETW patching | ETW provider going silent on an active process; `ntdll` ETW stubs modified | EDR tamper-protection; monitor for ETW blinding |
+| Unhooking / direct syscalls | Syscall instructions from non-`ntdll` memory; missing userland hooks | Kernel-telemetry EDR (not just userland hooks); call-stack validation |
+| LOLBins (certutil, mshta, MSBuild) | Signed binary spawning network/child-process it never normally does | LOLBAS-informed detection rules; application control (WDAC/AppLocker); block unused LOLBins |
+| Indicator cleanup / log clearing | Event-log gaps; `1102` (log cleared); deleted-artifact timeline holes | Ship logs off-host in real time; alert on log clears; immutable log store |
+
+Purple-team framing: the deliverable is not "we got in" — it is **which of these rows alerted, which didn't, and what the blue team will change**. Track each row as detected / partial / missed in the debrief.
+
 ## Reporting
 
 The report is the primary deliverable of a red team engagement. It must communicate
