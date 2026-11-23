@@ -10,6 +10,7 @@ All notable changes to `claude-red` are documented here. The library follows a p
 
 ### Fixed
 
+- Shortened 18 over-long `description` fields to the Agent Skills 1024-character limit, keeping the trigger phrases, tool names and CVE/ATT&CK/CWE mappings. `tools/check_descriptions.py` checks `name` and `description` against the spec for the whole `Skills/` tree.
 - Corrected FreeMarker resolver prerequisites, Velocity constructor lookup, the PHP 8.0 PHAR boundary, and Apollo Sandbox's introspection requirement.
 - Corrected the Touchlink master key and key derivation terminology in the IoT and wireless skills, and distinguished PLC identity documents from operation logs.
 - Clarified JWT critical-header validation and signing prerequisites; corrected SQL/JSON WAF examples and their attribution to Team82's 2022 research.
