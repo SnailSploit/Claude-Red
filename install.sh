@@ -96,9 +96,11 @@ mkdir -p "$DEST"
 
 # Use rsync if available for nicer output, else cp -r
 if command -v rsync >/dev/null 2>&1; then
-  rsync -a --info=stats1 "$SOURCE/" "$DEST/"
+  # --stats is supported by both modern rsync and the old BSD rsync (2.6.9)
+  # that ships with macOS; fall back to cp if rsync fails for any reason.
+  rsync -a --stats "$SOURCE/" "$DEST/" || cp -R "$SOURCE/." "$DEST/"
 else
-  cp -r "$SOURCE/." "$DEST/"
+  cp -R "$SOURCE/." "$DEST/"
   echo "Copied via cp (install rsync for progress info)."
 fi
 
