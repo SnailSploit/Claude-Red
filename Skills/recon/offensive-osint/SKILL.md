@@ -153,8 +153,8 @@ description: "Comprehensive OSINT methodology skill for offensive security, red 
 - [Amass](https://github.com/owasp-amass/amass) / [Subfinder](https://github.com/projectdiscovery/subfinder) — Passive subdomain discovery
 - [BuiltWith](https://builtwith.com/) — Tech stack enumeration
 - [Netlas](https://netlas.io/) — Large-scale HTTP/DNS/certificate pivots
-- [BinaryEdge](https://www.binaryedge.io/) / [FOFA](https://fofa.so/) / [ZoomEye](https://www.zoomeye.org/) — Infra pivots complementing Shodan/Censys
-- [RiskIQ PassiveTotal](https://community.riskiq.com/) — Passive DNS/cert/host pivots
+- [FOFA](https://fofa.so/) / [ZoomEye](https://www.zoomeye.ai/) — Infra pivots complementing Shodan/Censys
+- [NetAPI](https://netapi.com/lookup-ip/) — Reverse IP (domains hosted on an address) and domain lookups: registrar, dates, nameservers, hosting IP
 - [Spur](https://spur.us/) — IP lookups and tracking
 - [Robtex](https://www.robtex.com/) — Passive DNS and infrastructure pivots
 
@@ -162,7 +162,6 @@ description: "Comprehensive OSINT methodology skill for offensive security, red 
 
 - [Hurricane Electric BGP Toolkit](https://bgp.he.net/) — ASN, prefix, peers, IRR data
 - [RIPEstat](https://stat.ripe.net/) — IP/ASN history, routing, geolocation, abuse contacts
-- [BGPView](https://bgpview.io/) — ASN and prefix explorer
 - [bgp.tools](https://bgp.tools/) — Clean ASN/IX views, routing details
 - [PeeringDB](https://www.peeringdb.com/) — Facility and peering info
 
