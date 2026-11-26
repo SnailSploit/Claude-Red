@@ -7,6 +7,7 @@ All notable changes to `claude-red` are documented here. The library follows a p
 ### Changed
 
 - Replaced an inactive EXIF viewer reference in `offensive-osint` with a browser-local metadata viewer and added evidence-corroboration guidance.
+- Removed three retired references from the infrastructure section of `offensive-osint` (BinaryEdge, RiskIQ PassiveTotal community, BGPView), pointed ZoomEye at its current domain and added NetAPI reverse IP and domain lookups.
 
 ### Fixed
 
